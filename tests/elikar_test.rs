@@ -5,9 +5,7 @@ fn elikar_test(){
     use elikar::elikar::Elikar;
 
     #[allow(unused_variables)]
-    let ek = Elikar::new("elikar_test",(0,1,0))
+    let ek = Elikar::new()
         .unwrap();
 
-    println!("{}",ek.name());
-    println!("{:?}",ek.version());
 }
