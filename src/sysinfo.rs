@@ -9,10 +9,11 @@ pub fn get_platform() -> &'static str{
     }
 }
 
+pub type Bytes = u32;
 #[inline]
-pub fn get_cpu_cache_line_size() -> i32{
+pub fn get_cpu_cache_line_size() -> Bytes{
     unsafe {
-        sdl2_sys::SDL_GetCPUCacheLineSize()
+        sdl2_sys::SDL_GetCPUCacheLineSize() as u32
     }
 }
 
