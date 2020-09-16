@@ -130,6 +130,12 @@ impl Window {
         }
     }
 
+    pub fn show(&mut self){
+        unsafe {
+            SDL_ShowWindow(self.raw_window);
+        }
+    }
+
     pub fn maximize(&mut self){
         unsafe {
             SDL_MaximizeWindow(self.raw_window);

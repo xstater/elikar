@@ -24,6 +24,7 @@ fn window_test(){
     println!("title:{}",window.title());
 
     // window.hide();
+    // window.show();
     // window.maximize();
     // window.minimize();
     // window.raise();
