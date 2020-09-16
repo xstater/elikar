@@ -28,9 +28,9 @@ pub fn get_error() -> String{
 impl Elikar {
     pub fn new() -> Result<Elikar,SdlInitError> {
         unsafe {
-            if SDL_InitSubSystem(SDL_INIT_TIMER) != 0 {
-                 return Err(SdlInitError::Timer(get_error()));
-            }
+            // if SDL_InitSubSystem(SDL_INIT_TIMER) != 0 {
+            //      return Err(SdlInitError::Timer(get_error()));
+            // }
             // if SDL_InitSubSystem(SDL_INIT_AUDIO) != 0 {
             //     return Err(SdlInitError::Audio(get_error()));
             // }
