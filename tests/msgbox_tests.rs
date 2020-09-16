@@ -8,18 +8,18 @@ fn msgbox_test(){
         .information()
         .title("nmsl test")
         .message("nmsl ?")
-        .add_button(ButtonDefaultKey::Nope,0,"Yes")
-        .add_button(ButtonDefaultKey::Return,1,"No")
+        .add_button(ButtonDefaultKey::Return,0,"Yes")
+        .add_button(ButtonDefaultKey::Nope,1,"No")
         .add_button(ButtonDefaultKey::Escape,2,"Cancel")
         .build()
         .unwrap();
 
     match id {
         0 => {
-            println!("nmsl")
+            alert("nmsl test","nmsl")
         },
         1 | 2 => {
-            println!("nmms")
+            alert("nmsl test","nmms")
         },
         _ => {
             println!("cnm")

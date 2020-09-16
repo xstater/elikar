@@ -133,3 +133,13 @@ impl MsgboxBuilder {
     }
 
 }
+
+pub fn alert(title : &str,message : &str){
+    MsgboxBuilder::new()
+        .warning()
+        .title(title)
+        .message(message)
+        .add_button(ButtonDefaultKey::Return,0,"Ok")
+        .build()
+        .unwrap();
+}
