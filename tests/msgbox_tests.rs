@@ -6,8 +6,8 @@ fn msgbox_test(){
 
     let id = elikar::msgbox::MsgboxBuilder::new()
         .information()
-        .title("nmsl test")
-        .message("nmsl ?")
+        .title("死妈测试")
+        .message("你妈死了 ?")
         .add_button(ButtonDefaultKey::Return,0,"Yes")
         .add_button(ButtonDefaultKey::Nope,1,"No")
         .add_button(ButtonDefaultKey::Escape,2,"Cancel")
@@ -16,10 +16,10 @@ fn msgbox_test(){
 
     match id {
         0 => {
-            alert("nmsl test","nmsl")
+            alert("死妈测试","你妈死了")
         },
         1 | 2 => {
-            alert("nmsl test","nmms")
+            alert("死妈测试","你妈没死")
         },
         _ => {
             println!("cnm")
