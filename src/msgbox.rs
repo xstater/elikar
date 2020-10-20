@@ -42,41 +42,52 @@ impl MsgboxBuilder {
         }
     }
 
-    pub fn error(&mut self) -> &mut Self {
-        self.box_type = Type::Error;
-        self
+    pub fn error(self) -> Self {
+        Self{
+            box_type : Type::Error,
+            ..self
+        }
     }
 
-    pub fn warning(&mut self) -> &mut Self {
-        self.box_type = Type::Warning;
-        self
+    pub fn warning(self) -> Self {
+       Self{
+            box_type : Type::Warning,
+            ..self
+        }
     }
 
-    pub fn information(&mut self) -> &mut Self {
-        self.box_type = Type::Information;
-        self
+    pub fn information(self) -> Self {
+        Self{
+            box_type : Type::Information,
+            ..self
+        }
     }
 
-    pub fn title(&mut self,t : &str) -> &mut Self{
-        self.title = t.to_owned();
-        self
+    pub fn title(self,t : &str) -> Self{
+        Self{
+            title : t.to_owned(),
+            ..self
+        }
     }
 
-    pub fn message(&mut self, t : &str) -> &mut Self {
-        self.message = t.to_owned();
-        self
+    pub fn message(self, t : &str) -> Self {
+        Self{
+            message : t.to_owned(),
+            ..self
+        }
     }
 
-    pub fn add_button(&mut self,default_key : ButtonDefaultKey,id : i32,text : &str) -> &mut Self{
-        self.buttons.push(ButtonInfo{
+    pub fn add_button(self, default_key : ButtonDefaultKey, id : i32, text : &str) -> Self{
+        let mut t = self;
+        t.buttons.push(ButtonInfo{
             default_key,
             id,
             text : text.to_owned()
         });
-        self
+        t
     }
 
-    pub fn build(&self) -> Result<i32,String> {
+    pub fn build(self) -> Result<i32,String> {
         let mut sdl_buttons : Vec<SDL_MessageBoxButtonData> = Vec::new();
         let mut button_text_cstr : Vec<CString> = Vec::new();
         for btn in self.buttons.iter().rev() {
