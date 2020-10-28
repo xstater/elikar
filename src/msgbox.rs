@@ -3,7 +3,7 @@ extern crate sdl2_sys;
 use sdl2_sys::*;
 use std::ffi::CString;
 use std::os::raw::{c_char, c_int};
-use crate::elikar::get_error;
+use crate::common::get_error;
 
 #[derive(Debug)]
 enum Type{

@@ -1,7 +1,7 @@
 extern crate sdl2_sys;
 
 use sdl2_sys::*;
-use crate::elikar::get_error;
+use crate::common::get_error;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 
