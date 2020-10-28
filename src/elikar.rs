@@ -1,10 +1,11 @@
 extern crate sdl2_sys;
 
 use sdl2_sys::*;
-use std::ffi::CStr;
+use crate::common::get_error;
+use crate::clipboard::Clipboard;
 
 pub struct Elikar{
-    //nothing for now
+    clipboard : Clipboard
 }
 
 #[derive(Debug)]
@@ -18,12 +19,7 @@ pub enum SdlInitError{
     Events(String)
 }
 
-pub fn get_error() -> String{
-    unsafe {
-        let err = SDL_GetError();
-        CStr::from_ptr(err as *const _).to_str().unwrap().to_owned()
-    }
-}
+
 
 impl Elikar {
     pub fn new() -> Result<Elikar,SdlInitError> {
@@ -50,7 +46,13 @@ impl Elikar {
                 return Err(SdlInitError::Events(get_error()));
             }
         }
-        Ok(Elikar{})
+        Ok(Elikar{
+            clipboard : Clipboard::new()
+        })
+    }
+
+    pub fn clipboard(&self) -> &Clipboard{
+        &self.clipboard
     }
 }
 
