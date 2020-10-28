@@ -2,6 +2,7 @@ extern crate elikar;
 
 #[test]
 fn sysinfo_test(){
+    println!("Platform:{}"                  ,elikar::sysinfo::get_platform());
     println!("CPU Cache Line Size:{} bytes" ,elikar::sysinfo::get_cpu_cache_line_size());
     println!("CPU count:{}"                 ,elikar::sysinfo::get_cpu_count());
     println!("System Ram:{} MiB"            ,elikar::sysinfo::get_system_ram());
