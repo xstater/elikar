@@ -2,9 +2,6 @@ extern crate elikar;
 
 #[test]
 fn sysinfo_test(){
-    #[allow(unused_variables)]
-    let game = elikar::Elikar::new().unwrap();
-
     println!("CPU Cache Line Size:{} bytes" ,elikar::sysinfo::get_cpu_cache_line_size());
     println!("CPU count:{}"                 ,elikar::sysinfo::get_cpu_count());
     println!("System Ram:{} MiB"            ,elikar::sysinfo::get_system_ram());
