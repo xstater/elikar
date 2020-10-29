@@ -5,9 +5,9 @@ fn test(){
     use elikar::Elikar;
 
     #[allow(unused)]
-    let game = Elikar::new().unwrap();
+    let mut game = Elikar::new().unwrap();
     #[allow(unused)]
-    let clipboard = game.clipboard();
+    let clipboard = game.clipboard_mut();
 
     println!("{}",clipboard.has());
     println!("{}",clipboard.get().unwrap());

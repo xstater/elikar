@@ -20,7 +20,7 @@ impl Clipboard {
         unsafe { SDL_HasClipboardText() == SDL_bool::SDL_TRUE }
     }
 
-    pub fn set(&self,text: &str) -> Result<(), String> {
+    pub fn set(&mut self,text: &str) -> Result<(), String> {
         let cstr : &CStr = unsafe { CStr::from_ptr(text.as_ptr() as *const c_char) };
         let cstring : CString =  CString::from(cstr);
         let res : c_int = unsafe { SDL_SetClipboardText(cstring.as_ptr()) };

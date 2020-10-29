@@ -1,11 +1,15 @@
 extern crate sdl2_sys;
 
+use std::collections::LinkedList;
 use sdl2_sys::*;
 use crate::common::get_error;
+use crate::window::Window;
 use crate::clipboard::Clipboard;
+use std::thread::Builder;
 
 pub struct Elikar{
-    clipboard : Clipboard
+    clipboard : Clipboard,
+    windows : LinkedList<Window>
 }
 
 #[derive(Debug)]
@@ -18,7 +22,6 @@ pub enum SdlInitError{
     GameController(String),
     Events(String)
 }
-
 
 
 impl Elikar {
@@ -47,12 +50,17 @@ impl Elikar {
             }
         }
         Ok(Elikar{
-            clipboard : Clipboard::new()
+            clipboard : Clipboard::new(),
+            windows : LinkedList::new()
         })
     }
 
     pub fn clipboard(&self) -> &Clipboard{
         &self.clipboard
+    }
+
+    pub fn clipboard_mut(&mut self) -> &mut Clipboard{
+        &mut self.clipboard
     }
 }
 
