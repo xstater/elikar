@@ -5,16 +5,23 @@ fn window_test(){
     use elikar::elikar::Elikar;
 
     #[allow(unused_variables)]
-    let ek = Elikar::new()
+    let mut ek = Elikar::new()
         .unwrap();
 
     #[allow(unused_variables)]
-    let mut window = elikar::window::Window::new("Fuck Rust",100,100,1280,800)
+    let window = ek
+        .window_builder()
+        .title("测试窗口")
+        .position_centred()
+        .size(1280,700)
+        .maximized()
+        .opengl()
+        .build_mut()
         .unwrap();
 
     // window.set_size(1288,888);
     println!("size:{:?}",window.size());
-    window.set_position(200,200);
+    // window.set_position(200,200);
     println!("position:{:?}",window.position());
     // window.set_brightness(0.5).unwrap();
     println!("brightness:{}",window.brightness());

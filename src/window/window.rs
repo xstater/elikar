@@ -11,23 +11,9 @@ pub struct Window{
 }
 
 impl Window {
-    pub fn new(title : &str, x : u32, y : u32,w : u32,h : u32) -> Result<Window,String>{
-        let title_str = CString::new(title)
-            .map_err(|_| "Invalid Title") ?;
-        let window_ptr : *mut SDL_Window = unsafe {
-            SDL_CreateWindow(
-                title_str.as_ptr() as *const c_char,
-                x as i32,y as i32,
-                w as i32,h as i32,
-                SDL_WindowFlags::SDL_WINDOW_OPENGL as u32)
-        };
-
-        if window_ptr.is_null() {
-            Err(get_error())
-        } else {
-            Ok(Window {
-                raw_window : window_ptr
-            })
+    pub unsafe fn from_ptr(ptr : *mut SDL_Window) -> Window{
+        Window{
+            raw_window : ptr
         }
     }
 
@@ -76,16 +62,8 @@ impl Window {
         }
     }
 
-    pub fn id(&self) -> Result<u32,String>{
-        let code = unsafe {
-            SDL_GetWindowID(self.raw_window)
-        };
-
-        if code == 0 {
-            Err(get_error())
-        } else {
-            Ok(code)
-        }
+    pub fn id(&self) -> u32{
+        unsafe { SDL_GetWindowID(self.raw_window) }
     }
 
     pub fn opacity(&self) -> Result<f32,String> {

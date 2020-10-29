@@ -3,13 +3,12 @@ extern crate sdl2_sys;
 use std::collections::LinkedList;
 use sdl2_sys::*;
 use crate::common::get_error;
-use crate::window::Window;
+use crate::window::{Window, WindowBuilder};
 use crate::clipboard::Clipboard;
-use std::thread::Builder;
 
 pub struct Elikar{
     clipboard : Clipboard,
-    windows : LinkedList<Window>
+    windows_list : LinkedList<Window>
 }
 
 #[derive(Debug)]
@@ -51,7 +50,7 @@ impl Elikar {
         }
         Ok(Elikar{
             clipboard : Clipboard::new(),
-            windows : LinkedList::new()
+            windows_list: LinkedList::new()
         })
     }
 
@@ -61,6 +60,10 @@ impl Elikar {
 
     pub fn clipboard_mut(&mut self) -> &mut Clipboard{
         &mut self.clipboard
+    }
+
+    pub fn window_builder(&mut self) -> WindowBuilder{
+        WindowBuilder::new(&mut self.windows_list)
     }
 }
 
