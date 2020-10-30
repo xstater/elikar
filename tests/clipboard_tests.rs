@@ -7,7 +7,7 @@ fn test(){
     #[allow(unused)]
     let mut game = Elikar::new().unwrap();
     #[allow(unused)]
-    let clipboard = game.clipboard_mut();
+    let mut clipboard = game.clipboard();
 
     println!("{}",clipboard.has());
     println!("{}",clipboard.get().unwrap());

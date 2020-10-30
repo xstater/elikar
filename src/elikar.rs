@@ -7,7 +7,6 @@ use crate::window::{Window, WindowBuilder};
 use crate::clipboard::Clipboard;
 
 pub struct Elikar{
-    clipboard : Clipboard,
     windows_list : LinkedList<Window>
 }
 
@@ -49,18 +48,14 @@ impl Elikar {
             }
         }
         Ok(Elikar{
-            clipboard : Clipboard::new(),
             windows_list: LinkedList::new()
         })
     }
 
-    pub fn clipboard(&self) -> &Clipboard{
-        &self.clipboard
+    pub fn clipboard(&self) -> Clipboard{
+        Clipboard::new()
     }
 
-    pub fn clipboard_mut(&mut self) -> &mut Clipboard{
-        &mut self.clipboard
-    }
 
     pub fn window_builder(&mut self) -> WindowBuilder{
         WindowBuilder::new(&mut self.windows_list)
