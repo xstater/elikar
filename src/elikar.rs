@@ -1,13 +1,12 @@
 extern crate sdl2_sys;
 
-use std::collections::LinkedList;
 use sdl2_sys::*;
 use crate::common::get_error;
-use crate::window::{Window, WindowBuilder};
+use crate::window::WindowsManager;
 use crate::clipboard::Clipboard;
 
 pub struct Elikar{
-    windows_list : LinkedList<Window>
+    windows_manager : WindowsManager
 }
 
 #[derive(Debug)]
@@ -46,7 +45,7 @@ impl Elikar {
             return Err(SdlInitError::Events(get_error()));
         }
         Ok(Elikar{
-            windows_list: LinkedList::new()
+            windows_manager : WindowsManager::new()
         })
     }
 
@@ -54,10 +53,14 @@ impl Elikar {
         Clipboard::new()
     }
 
-
-    pub fn window_builder(&mut self) -> WindowBuilder{
-        WindowBuilder::new(&mut self.windows_list)
+    pub fn windows_manager(&self) -> &WindowsManager{
+        &self.windows_manager
     }
+
+    pub fn windows_manager_mut(&mut self) -> &mut WindowsManager{
+        &mut self.windows_manager
+    }
+
 }
 
 impl Drop for Elikar {
