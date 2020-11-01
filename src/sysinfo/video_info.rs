@@ -51,7 +51,7 @@ impl VideoInfo{
         let cname : *const c_char = unsafe { SDL_GetCurrentVideoDriver() };
         unsafe { CStr::from_ptr(cname) }
             .to_str()
-            .unwrap_or("Invalid UTF8 Stting")
+            .unwrap_or("Invalid UTF8 String")
             .to_owned()
     }
 
