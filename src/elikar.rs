@@ -4,9 +4,11 @@ use sdl2_sys::*;
 use crate::common::get_error;
 use crate::window::WindowsManager;
 use crate::clipboard::Clipboard;
+use crate::sysinfo::SystemInfo;
 
 pub struct Elikar{
-    windows_manager : WindowsManager
+    windows_manager : WindowsManager,
+    system_info : SystemInfo
 }
 
 #[derive(Debug)]
@@ -45,7 +47,8 @@ impl Elikar {
             return Err(SdlInitError::Events(get_error()));
         }
         Ok(Elikar{
-            windows_manager : WindowsManager::new()
+            windows_manager : WindowsManager::new(),
+            system_info : SystemInfo::new()
         })
     }
 
@@ -59,6 +62,10 @@ impl Elikar {
 
     pub fn windows_manager_mut(&mut self) -> &mut WindowsManager{
         &mut self.windows_manager
+    }
+
+    pub fn system_info(&self) -> &SystemInfo{
+        &self.system_info
     }
 
 }

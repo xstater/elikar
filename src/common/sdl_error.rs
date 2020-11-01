@@ -1,3 +1,5 @@
+extern crate sdl2_sys;
+
 use sdl2_sys::*;
 use std::ffi::CStr;
 
