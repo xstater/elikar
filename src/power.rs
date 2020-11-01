@@ -11,7 +11,7 @@ pub enum PowerState {
     Charged
 }
 
-pub fn get_power_state() -> Option<PowerState>{
+pub fn power_state() -> Option<PowerState>{
     let state = unsafe { sdl2_sys::SDL_GetPowerInfo(0 as *mut c_int,0 as *mut c_int) };
     match state {
         SDL_PowerState::SDL_POWERSTATE_UNKNOWN => Option::None,
@@ -22,7 +22,7 @@ pub fn get_power_state() -> Option<PowerState>{
     }
 }
 
-pub fn get_battery_time() -> Option<std::time::Duration> {
+pub fn battery_time() -> Option<std::time::Duration> {
     let mut sec : i32 = -1;
     unsafe {
         sdl2_sys::SDL_GetPowerInfo(&mut sec as *mut c_int,0 as *mut c_int);
@@ -34,7 +34,7 @@ pub fn get_battery_time() -> Option<std::time::Duration> {
     }
 }
 
-pub fn get_battery_percentage() -> Option<u32> {
+pub fn battery_percentage() -> Option<u32> {
     let mut psc : i32 = -1;
     unsafe {
         sdl2_sys::SDL_GetPowerInfo(0 as *mut c_int,&mut psc as *mut c_int);
