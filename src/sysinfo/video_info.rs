@@ -115,7 +115,7 @@ impl Display for DisplayMode {
 
 impl Display for Screen{
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f,"Screen:\n\t{}\n\tbound:({},{},{},{})\n\t{}\n\tdisplay modes:\n",
+        write!(f,"Screen:\n\tname:{}\n\tbound:({},{},{},{})\n\tdpi:{}\n\tdisplay modes:\n",
             self.name,
             self.bound.0,
             self.bound.1,
