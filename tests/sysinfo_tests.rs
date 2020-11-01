@@ -27,8 +27,8 @@ fn sysinfo_test(){
     println!("Has SSE41:{}"                 ,cpuinfo.has_sse41());
     println!("Has SSE42:{}"                 ,cpuinfo.has_sse42());
 
-    println!("video drivers:{:?}",videoinfo.all_drivers_name().unwrap());
-    println!("current video drivers:{}",videoinfo.current_drivers_name());
+    println!("video drivers:{:?}"           ,videoinfo.all_drivers_name().unwrap());
+    println!("current video drivers:{}"     ,videoinfo.current_drivers_name());
     for screen in videoinfo.screens().unwrap(){
         println!("{}",screen);
     }
