@@ -1,13 +1,15 @@
 extern crate sdl2_sys;
 
+use crate::common::unit::{Data, Byte};
+
 pub struct CPUInfo{}
 
 impl CPUInfo{
     #[inline]
-    pub fn cpu_cache_line_size(&self) -> u32{
+    pub fn cpu_cache_line_size(&self) -> Data{
         unsafe {
             sdl2_sys::SDL_GetCPUCacheLineSize() as u32
-        }
+        }.byte()
     }
     #[inline]
     pub fn cpu_count(&self) -> u32{

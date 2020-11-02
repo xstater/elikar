@@ -11,9 +11,9 @@ fn sysinfo_test(){
     let videoinfo = sysinfo.video_info();
 
     println!("Platform:{}"                  ,platinfo.name());
-    println!("System Ram:{} MiB"            ,platinfo.system_ram());
+    println!("System Ram:{} MiB"            ,platinfo.system_ram().as_mb());
 
-    println!("CPU Cache Line Size:{} bytes" ,cpuinfo.cpu_cache_line_size());
+    println!("CPU Cache Line Size:{} bytes" ,cpuinfo.cpu_cache_line_size().as_byte());
     println!("CPU count:{}"                 ,cpuinfo.cpu_count());
     println!("Has 3DNow:{}"                 ,cpuinfo.has_3d_now());
     println!("Has AVX:{}"                   ,cpuinfo.has_avx());
