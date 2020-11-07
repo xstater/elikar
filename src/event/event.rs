@@ -240,4 +240,13 @@ fn target_sem(){
     src4.emit(&1);
     src3.emit(&4);
 
+    let mut src5 = Event::new();
+    {
+        let mut aa = src5.map(|x| *x);
+        let id = aa.listen(|_| println!("aa"));
+        src5.emit(&3);
+        aa.unlisten(id);
+    }
+    src5.emit(&3);
+
 }
