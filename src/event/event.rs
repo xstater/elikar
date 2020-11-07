@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use std::cell::RefCell;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 use crate::common::Either;
 
 pub type ID = usize;
@@ -42,15 +42,19 @@ impl<'a,T> Event<'a,T>{
         event
     }
 
-    pub fn fold<U : 'a>(&mut self,value : U,f : impl 'a + Fn(&T,&U) -> U) -> Event<'a,U>{
+    pub fn fold<U>(&mut self,value : U,f : impl 'a + Fn(&T,&U) -> U) -> Event<'a,U>
+        where T : 'a,
+              U : 'a{
         let event = Event::new();
         let mut event_closure = event.clone();
-        let mut value_closure = value;
-        self.listen(move|x|{
-            let output = f(x,&value_closure);
-            event_closure.emit(&output);
-            value_closure = output;
-        });
+        let make_closure = || -> Box<dyn FnMut(&T)>{
+            let mut v = value;
+            Box::new(move |x|{
+                v = f(x,&v);
+                event_closure.emit(&v);
+            })
+        };
+        self.listen(make_closure());
         event
     }
 
@@ -79,6 +83,58 @@ impl<'a,T> Event<'a,T>{
            event_comb_closure2.emit(&Either::Right(x.clone()));
         });
         event_comb
+    }
+
+    pub fn drop(&mut self,count : usize) -> Event<'a,T>
+        where T : 'a{
+        let event = Event::new();
+        let mut event_closure = event.clone();
+        let make_closure = move || -> Box<dyn FnMut(&T)> {
+            let mut cnt = count;
+            Box::new(move |x| {
+                if cnt == 0 {
+                    event_closure.emit(x);
+                }else{
+                    cnt -= 1;
+                }
+            })
+        };
+        self.listen(make_closure());
+        event
+    }
+
+    pub fn take(&mut self,count : usize) -> Event<'a,T>
+        where T : 'a{
+        let event = Event::new();
+        let mut event_closure = event.clone();
+        let make_closure = move || -> Box<dyn FnMut(&T)> {
+            let mut cnt = count;
+            Box::new(move |x| {
+                if cnt > 0 {
+                    cnt -= 1;
+                    event_closure.emit(x);
+                }
+            })
+        };
+        self.listen(make_closure());
+        event
+    }
+
+    pub fn until<U>(&mut self,event_rhs : &mut Event<'a,U>) -> Event<'a,T>
+        where T : 'a{
+        let event = Event::new();
+        let mut event_closure = event.clone();
+        let is_stopped = Rc::new(RefCell::new(false));
+        let is_stopped_for_self = is_stopped.clone();
+        event_rhs.listen(move |_|{
+            *is_stopped.borrow_mut().deref_mut() = true;
+        });
+        self.listen(move |x|{
+            if !*is_stopped_for_self.borrow().deref() {
+                event_closure.emit(x);
+            }
+        });
+        event
     }
 
     pub fn unlisten(&mut self,id : ID){
@@ -132,9 +188,37 @@ impl<'a,T,U> Event<'a,Either<T,U>>{
 
 #[test]
 fn target_sem(){
-    let mut sum = Event::<i32>::new().fold(0,|x,y| *x + *y);
+    let mut src = Event::<i32>::new();
+    let mut sum = src
+        .map(|x| x + 1)
+        .fold(0,|x,y| {
+        *x + *y
+    });
     sum.listen(|x|println!("sum:{}",*x));
-    sum.emit(&1);
-    sum.emit(&1);
-    sum.emit(&1);
+    src.emit(&1);
+    src.emit(&1);
+    src.emit(&1);
+    src.emit(&4);
+
+    let mut src2 = Event::new();
+    let mut dp = src2.drop(3);
+    let mut tk = src2.take(3);
+    dp.listen(|x| println!("dropped : {}",x));
+    tk.listen(|x| println!("took:{}",x));
+    src2.emit(&1);
+    src2.emit(&2);
+    src2.emit(&3);
+    src2.emit(&4);
+    src2.emit(&5);
+
+    let mut src3 = Event::new();
+    let mut src4 = Event::new();
+    let mut unt = src3.until(&mut src4);
+    unt.listen(|x| println!("until:{}",x));
+    src3.emit(&1);
+    src3.emit(&2);
+    src3.emit(&3);
+    src4.emit(&1);
+    src3.emit(&4);
+
 }
