@@ -5,10 +5,14 @@ use crate::common::get_error;
 use crate::window::WindowsManager;
 use crate::clipboard::Clipboard;
 use crate::sysinfo::SystemInfo;
+use crate::mouse::Mouse;
+use crate::event::Event;
 
-pub struct Elikar{
+pub struct Elikar<'a>{
+    is_quit : bool,
     windows_manager : WindowsManager,
-    system_info : SystemInfo
+    system_info : SystemInfo,
+    mouse : Mouse<'a>
 }
 
 #[derive(Debug)]
@@ -23,8 +27,8 @@ pub enum SdlInitError{
 }
 
 
-impl Elikar {
-    pub fn new() -> Result<Elikar,SdlInitError> {
+impl<'a> Elikar<'a>{
+    pub fn new() -> Result<Elikar<'a>,SdlInitError> {
         // if unsafe { SDL_InitSubSystem(SDL_INIT_TIMER) } != 0 {
         //     return Err(SdlInitError::Timer(get_error()));
         // }
@@ -47,9 +51,33 @@ impl Elikar {
             return Err(SdlInitError::Events(get_error()));
         }
         Ok(Elikar{
+            is_quit : false,
             windows_manager : WindowsManager::new(),
-            system_info : SystemInfo::new()
+            system_info : SystemInfo::new(),
+            mouse : Mouse{
+                on_button_down : Event::new(),
+                on_button_up : Event::new(),
+                on_motion : Event::new()
+            }
         })
+    }
+
+    pub fn run(&mut self){
+        let mut sdlevent : SDL_Event = SDL_Event{type_ : 0};
+        while !self.is_quit {
+            while unsafe{ SDL_PollEvent(&mut sdlevent) } == 1 {
+                match unsafe { sdlevent.type_ } {
+                    x if x == SDL_EventType::SDL_QUIT as u32 => {
+                        self.is_quit = true;
+                    },
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    pub fn quit(&mut self){
+        self.is_quit = true;
     }
 
     pub fn clipboard(&self) -> Clipboard{
@@ -68,9 +96,17 @@ impl Elikar {
         &self.system_info
     }
 
+    pub fn mouse(&self) -> &Mouse<'a> {
+        &self.mouse
+    }
+
+    pub fn mouse_mut(&mut self) -> &mut Mouse<'a> {
+        &mut self.mouse
+    }
+
 }
 
-impl Drop for Elikar {
+impl<'a> Drop for Elikar<'a>{
     fn drop(&mut self) {
         unsafe {
             SDL_Quit();
