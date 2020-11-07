@@ -137,6 +137,23 @@ impl<'a,T> Event<'a,T>{
         event
     }
 
+    pub fn start<U>(&mut self,event_rhs : &mut Event<'a,U>) -> Event<'a,T>
+        where T : 'a{
+        let event = Event::new();
+        let mut event_closure = event.clone();
+        let is_stopped = Rc::new(RefCell::new(true));
+        let is_stopped_for_self = is_stopped.clone();
+        event_rhs.listen(move |_|{
+            *is_stopped.borrow_mut().deref_mut() = false;
+        });
+        self.listen(move |x|{
+            if !*is_stopped_for_self.borrow().deref() {
+                event_closure.emit(x);
+            }
+        });
+        event
+    }
+
     pub fn unlisten(&mut self,id : ID){
         let slots = &mut self.base.deref().borrow_mut().slots;
         for (i,(slot_id,_)) in slots.iter().enumerate(){
@@ -214,7 +231,9 @@ fn target_sem(){
     let mut src3 = Event::new();
     let mut src4 = Event::new();
     let mut unt = src3.until(&mut src4);
+    let mut stt = src3.start(&mut src4);
     unt.listen(|x| println!("until:{}",x));
+    stt.listen(|x| println!("start:{}",x));
     src3.emit(&1);
     src3.emit(&2);
     src3.emit(&3);
