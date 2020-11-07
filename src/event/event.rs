@@ -6,7 +6,7 @@ use crate::common::Either;
 pub type ID = usize;
 struct EventBase<'a,T>{
     next_id : ID,
-    slots : Vec<(ID,Box<dyn 'a + Fn(&T)>)>
+    slots : Vec<(ID,Box<dyn 'a + FnMut(&T)>)>
 }
 
 pub struct Event<'a,T>{
@@ -35,9 +35,21 @@ impl<'a,T> Event<'a,T>{
 
     pub fn map<U : 'a>(&mut self,f : impl 'a + Fn(&T) -> U) -> Event<'a,U>{
         let event = Event::new();
-        let event_closure = event.clone();
+        let mut event_closure = event.clone();
         self.listen(move|x|{
             event_closure.emit(&f(x))
+        });
+        event
+    }
+
+    pub fn fold<U : 'a>(&mut self,value : U,f : impl 'a + Fn(&T,&U) -> U) -> Event<'a,U>{
+        let event = Event::new();
+        let mut event_closure = event.clone();
+        let mut value_closure = value;
+        self.listen(move|x|{
+            let output = f(x,&value_closure);
+            event_closure.emit(&output);
+            value_closure = output;
         });
         event
     }
@@ -45,7 +57,7 @@ impl<'a,T> Event<'a,T>{
     pub fn filter(&mut self,f : impl 'a + Fn(&T) -> bool) -> Event<'a,T>
         where T : 'a{
         let event = Event::new();
-        let event_closure = event.clone();
+        let mut event_closure = event.clone();
         self.listen(move|x|{
             if f(x) {
                 event_closure.emit(x)
@@ -58,11 +70,11 @@ impl<'a,T> Event<'a,T>{
         where T : 'a + Clone,
               U : 'a + Clone{
         let event_comb : Event<Either<T,U>> = Event::new();
-        let event_comb_closure1 = event_comb.clone();
+        let mut event_comb_closure1 = event_comb.clone();
         self.listen(move|x|{
             event_comb_closure1.emit(&Either::Left(x.clone()));
         });
-        let event_comb_closure2 = event_comb.clone();
+        let mut event_comb_closure2 = event_comb.clone();
         event_rhs.listen(move|x|{
            event_comb_closure2.emit(&Either::Right(x.clone()));
         });
@@ -79,7 +91,7 @@ impl<'a,T> Event<'a,T>{
         }
     }
 
-    pub fn listen(&mut self,f : impl 'a + Fn(&T)) -> ID{
+    pub fn listen(&mut self,f : impl 'a + FnMut(&T)) -> ID{
         let mut refc = self.base.deref().borrow_mut();
         let id = refc.next_id;
         refc.next_id += 1;
@@ -87,12 +99,12 @@ impl<'a,T> Event<'a,T>{
         id
     }
 
-    pub fn emit(&self,data : &T){
-        let slots = &self.base
+    pub fn emit(&mut self,data : &T){
+        let slots = &mut self.base
             .deref()
-            .borrow()
+            .borrow_mut()
             .slots;
-        for (_,f) in slots{
+        for (_,f) in slots.iter_mut(){
             f(data)
         }
     }
@@ -103,9 +115,9 @@ impl<'a,T,U> Event<'a,Either<T,U>>{
         where T : 'a ,
               U : 'a{
         let event_left = Event::new();
-        let event_left_closure = event_left.clone();
+        let mut event_left_closure = event_left.clone();
         let event_right = Event::new();
-        let event_right_closure = event_right.clone();
+        let mut event_right_closure = event_right.clone();
         self.listen(move|x| match x {
             Either::Left(left) => {
                 event_left_closure.emit(left);
@@ -120,16 +132,9 @@ impl<'a,T,U> Event<'a,Either<T,U>>{
 
 #[test]
 fn target_sem(){
-    let mut e1 = Event::new();
-    let mut e2 = Event::new();
-    let mut comb = e1.merge(&mut e2);
-    let id = comb.listen(|x| println!("{:?}",*x));
-    e1.emit(&1);
-    e2.emit(&"asd".to_string());
-    let (mut e11,mut e22) = comb.split();
-    e11.listen(|x|println!("{}",x));
-    e22.listen(|x|println!("{}",x));
-    comb.unlisten(id);
-    e1.emit(&2);
-    e2.emit(&"asdsad".to_string());
+    let mut sum = Event::<i32>::new().fold(0,|x,y| *x + *y);
+    sum.listen(|x|println!("sum:{}",*x));
+    sum.emit(&1);
+    sum.emit(&1);
+    sum.emit(&1);
 }
