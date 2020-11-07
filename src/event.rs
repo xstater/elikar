@@ -80,7 +80,7 @@ impl<'a,T> Event<'a,T>{
         });
         let mut event_comb_closure2 = event_comb.clone();
         event_rhs.listen(move|x|{
-           event_comb_closure2.emit(&Either::Right(x.clone()));
+            event_comb_closure2.emit(&Either::Right(x.clone()));
         });
         event_comb
     }
@@ -209,8 +209,8 @@ fn target_sem(){
     let mut sum = src
         .map(|x| x + 1)
         .fold(0,|x,y| {
-        *x + *y
-    });
+            *x + *y
+        });
     sum.listen(|x|println!("sum:{}",*x));
     src.emit(&1);
     src.emit(&1);
