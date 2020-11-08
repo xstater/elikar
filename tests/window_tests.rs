@@ -1,13 +1,14 @@
 extern crate elikar;
 
+use elikar::window::WindowsManager;
+
 #[test]
 fn window_test(){
     use elikar::elikar::Elikar;
 
-    let mut ek = Elikar::new()
-        .unwrap();
+    let ek = Elikar::new().unwrap();
 
-    let wm = ek.windows_manager_mut();
+    let mut wm = WindowsManager::new(&ek);
     let wid;
     {
         let window = wm

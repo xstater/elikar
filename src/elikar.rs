@@ -2,17 +2,9 @@ extern crate sdl2_sys;
 
 use sdl2_sys::*;
 use crate::common::get_error;
-use crate::window::WindowsManager;
-use crate::clipboard::Clipboard;
-use crate::sysinfo::SystemInfo;
-use crate::mouse::Mouse;
-use crate::event::Event;
 
-pub struct Elikar<'a>{
+pub struct Elikar{
     is_quit : bool,
-    windows_manager : WindowsManager,
-    system_info : SystemInfo,
-    mouse : Mouse<'a>
 }
 
 #[derive(Debug)]
@@ -27,8 +19,8 @@ pub enum SdlInitError{
 }
 
 
-impl<'a> Elikar<'a>{
-    pub fn new() -> Result<Elikar<'a>,SdlInitError> {
+impl Elikar{
+    pub fn new() -> Result<Elikar,SdlInitError> {
         // if unsafe { SDL_InitSubSystem(SDL_INIT_TIMER) } != 0 {
         //     return Err(SdlInitError::Timer(get_error()));
         // }
@@ -52,13 +44,6 @@ impl<'a> Elikar<'a>{
         }
         Ok(Elikar{
             is_quit : false,
-            windows_manager : WindowsManager::new(),
-            system_info : SystemInfo::new(),
-            mouse : Mouse{
-                on_button_down : Event::new(),
-                on_button_up : Event::new(),
-                on_motion : Event::new()
-            }
         })
     }
 
@@ -80,33 +65,9 @@ impl<'a> Elikar<'a>{
         self.is_quit = true;
     }
 
-    pub fn clipboard(&self) -> Clipboard{
-        Clipboard::new()
-    }
-
-    pub fn windows_manager(&self) -> &WindowsManager{
-        &self.windows_manager
-    }
-
-    pub fn windows_manager_mut(&mut self) -> &mut WindowsManager{
-        &mut self.windows_manager
-    }
-
-    pub fn system_info(&self) -> &SystemInfo{
-        &self.system_info
-    }
-
-    pub fn mouse(&self) -> &Mouse<'a> {
-        &self.mouse
-    }
-
-    pub fn mouse_mut(&mut self) -> &mut Mouse<'a> {
-        &mut self.mouse
-    }
-
 }
 
-impl<'a> Drop for Elikar<'a>{
+impl Drop for Elikar{
     fn drop(&mut self) {
         unsafe {
             SDL_Quit();

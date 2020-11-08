@@ -7,4 +7,4 @@ pub mod window;
 pub mod msgbox;
 pub mod clipboard;
 pub mod mouse;
-pub mod event;
+mod event;

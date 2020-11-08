@@ -6,15 +6,14 @@ pub mod wheel;
 
 use sdl2_sys::*;
 use std::ptr::null_mut;
-use crate::common::get_error;
-use crate::event::Event;
+use crate::common::{Signal,get_error};
 use crate::mouse::button::ButtonInfo;
 use crate::mouse::motion::MotionInfo;
 
 pub struct Mouse<'a>{
-    pub on_button_down : Event<'a,ButtonInfo>,
-    pub on_button_up : Event<'a,ButtonInfo>,
-    pub on_motion : Event<'a,MotionInfo>
+    pub on_button_down : Signal<'a,ButtonInfo>,
+    pub on_button_up : Signal<'a,ButtonInfo>,
+    pub on_motion : Signal<'a,MotionInfo>
 }
 
 pub struct ButtonState(u32);

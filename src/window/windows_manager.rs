@@ -1,12 +1,14 @@
 use std::collections::LinkedList;
 use crate::window::{Window, WindowBuilder};
+use crate::Elikar;
 
 pub struct WindowsManager{
     windows : LinkedList<Window>
 }
 
 impl WindowsManager{
-    pub fn new() -> WindowsManager{
+    ///you must use this function after Elikar has been built
+    pub fn new(_ : &Elikar) -> WindowsManager{
         WindowsManager{
             windows : LinkedList::new()
         }
