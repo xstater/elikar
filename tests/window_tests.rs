@@ -1,6 +1,6 @@
 extern crate elikar;
 
-use elikar::window::WindowsManager;
+use elikar::window::{WindowsManager, WindowBuilder};
 
 #[test]
 fn window_test(){
@@ -9,19 +9,16 @@ fn window_test(){
     let ek = Elikar::new().unwrap();
 
     let mut wm = WindowsManager::new(&ek);
-    let wid;
+    let wid  = wm.add_windows(WindowBuilder::new()
+        .title("测试窗口")
+        .position_centred()
+        .size(1280, 700)
+        .maximized()
+        .opengl()
+        .build(&ek)
+        .unwrap());
     {
-        let window = wm
-            .window_builder()
-            .title("测试窗口")
-            .position_centred()
-            .size(1280, 700)
-            .maximized()
-            .opengl()
-            .build_mut()
-            .unwrap();
-
-        wid = window.id();
+        let window = wm.window_mut(wid).unwrap();
 
         // window.set_size(1288,888);
         println!("size:{:?}", window.size());
@@ -35,8 +32,9 @@ fn window_test(){
         println!("title:{}", window.title());
     }
     println!("count:{}",wm.count());
-    let window = wm.find_by_id_mut(wid).unwrap();
-    println!("title:{}",window.title());
+    {
+        println!("title:{}", wm.window(wid).unwrap().title());
+    }
     // window.hide();
     // window.show();
     // window.maximize();

@@ -1,23 +1,21 @@
 extern crate sdl2_sys;
 
 use sdl2_sys::*;
-use std::collections::LinkedList;
 use crate::window::window::Window;
 use std::ffi::{CString};
 use crate::common::get_error;
+use crate::Elikar;
 
-pub struct WindowBuilder<'a>{
-    windows_list: &'a mut LinkedList<Window>,
+pub struct WindowBuilder{
     title : String,
     x : i32,y : i32,
     w : i32,h : i32,
     flags : u32
 }
 
-impl<'a> WindowBuilder<'a> {
-    pub fn new(windows_list : &'a mut LinkedList<Window>) -> WindowBuilder<'a>{
+impl WindowBuilder {
+    pub fn new() -> WindowBuilder{
         WindowBuilder{
-            windows_list,
             title : "elikar".to_owned(),
             x : SDL_WINDOWPOS_UNDEFINED_MASK as i32,
             y : SDL_WINDOWPOS_UNDEFINED_MASK as i32,
@@ -128,7 +126,7 @@ impl<'a> WindowBuilder<'a> {
         }
     }
 
-    pub fn build(self) -> Result<&'a Window,String>{
+    pub fn build(self,_ : &Elikar) -> Result<Window,String>{
         let title_str = CString::new(self.title)
             .map_err(|_| "Invalid Title") ?;
         let window_ptr : *mut SDL_Window = unsafe {
@@ -142,29 +140,9 @@ impl<'a> WindowBuilder<'a> {
         if window_ptr.is_null() {
             Err(get_error())
         } else {
-            self.windows_list.push_back(unsafe { Window::from_ptr(window_ptr) });
-            self.windows_list.back().ok_or("Window List is Empty".to_owned())
+            Ok(unsafe {  Window::from_ptr(window_ptr) })
         }
     }
-    pub fn build_mut(self) -> Result<&'a mut Window,String>{
-        let title_str = CString::new(self.title)
-            .map_err(|_| "Invalid Title") ?;
-        let window_ptr : *mut SDL_Window = unsafe {
-            SDL_CreateWindow(
-                title_str.as_ptr(),
-                self.x,self.y,
-                self.w,self.h,
-                self.flags)
-        };
-
-        if window_ptr.is_null() {
-            Err(get_error())
-        } else {
-            self.windows_list.push_back(unsafe { Window::from_ptr(window_ptr) });
-            self.windows_list.back_mut().ok_or("Window List is Empty".to_owned())
-        }
-    }
-
 
 }
 
