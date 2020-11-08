@@ -4,28 +4,28 @@ use std::ops::{Deref, DerefMut};
 use crate::common::Either;
 
 pub type ID = usize;
-struct EventBase<'a,T>{
+struct SignalBase<'a,T>{
     next_id : ID,
     slots : Vec<(ID,Box<dyn 'a + FnMut(&T)>)>
 }
 
-pub struct Event<'a,T>{
-    base : Rc<RefCell<EventBase<'a,T>>>
+pub struct Signal<'a,T>{
+    base : Rc<RefCell<SignalBase<'a,T>>>
 }
 
-impl<'a,T> Clone for Event<'a,T>{
+impl<'a,T> Clone for Signal<'a,T>{
     fn clone(&self) -> Self {
-        Event{
+        Signal {
             base : self.base.clone()
         }
     }
 }
 
-impl<'a,T> Event<'a,T>{
-    pub fn new() -> Event<'a,T>{
-        Event{
+impl<'a,T> Signal<'a,T>{
+    pub fn new() -> Signal<'a,T>{
+        Signal {
             base : Rc::new(RefCell::new(
-                EventBase{
+                SignalBase {
                     next_id : 0,
                     slots : vec![]
                 }
@@ -33,47 +33,47 @@ impl<'a,T> Event<'a,T>{
         }
     }
 
-    pub fn map<U : 'a>(&mut self,f : impl 'a + Fn(&T) -> U) -> Event<'a,U>{
-        let event = Event::new();
-        let mut event_closure = event.clone();
+    pub fn map<U : 'a>(&mut self,f : impl 'a + Fn(&T) -> U) -> Signal<'a,U>{
+        let signal = Signal::new();
+        let mut signal_closure = signal.clone();
         self.listen(move|x|{
-            event_closure.emit(&f(x))
+            signal_closure.emit(&f(x))
         });
-        event
+        signal
     }
 
-    pub fn fold<U>(&mut self,value : U,f : impl 'a + Fn(&T,&U) -> U) -> Event<'a,U>
+    pub fn fold<U>(&mut self,value : U,f : impl 'a + Fn(&T,&U) -> U) -> Signal<'a,U>
         where T : 'a,
               U : 'a{
-        let event = Event::new();
-        let mut event_closure = event.clone();
+        let signal = Signal::new();
+        let mut signal_closure = signal.clone();
         let make_closure = || -> Box<dyn FnMut(&T)>{
             let mut v = value;
             Box::new(move |x|{
                 v = f(x,&v);
-                event_closure.emit(&v);
+                signal_closure.emit(&v);
             })
         };
         self.listen(make_closure());
-        event
+        signal
     }
 
-    pub fn filter(&mut self,f : impl 'a + Fn(&T) -> bool) -> Event<'a,T>
+    pub fn filter(&mut self,f : impl 'a + Fn(&T) -> bool) -> Signal<'a,T>
         where T : 'a{
-        let event = Event::new();
-        let mut event_closure = event.clone();
+        let signal = Signal::new();
+        let mut signal_closure = signal.clone();
         self.listen(move|x|{
             if f(x) {
-                event_closure.emit(x)
+                signal_closure.emit(x)
             }
         });
-        event
+        signal
     }
 
-    pub fn merge<U>(&mut self,event_rhs : &mut Event<'a,U>) -> Event<'a,Either<T,U>>
+    pub fn merge<U>(&mut self, event_rhs : &mut Signal<'a,U>) -> Signal<'a,Either<T,U>>
         where T : 'a + Clone,
               U : 'a + Clone{
-        let event_comb : Event<Either<T,U>> = Event::new();
+        let event_comb : Signal<Either<T,U>> = Signal::new();
         let mut event_comb_closure1 = event_comb.clone();
         self.listen(move|x|{
             event_comb_closure1.emit(&Either::Left(x.clone()));
@@ -85,45 +85,45 @@ impl<'a,T> Event<'a,T>{
         event_comb
     }
 
-    pub fn drop(&mut self,count : usize) -> Event<'a,T>
+    pub fn drop(&mut self,count : usize) -> Signal<'a,T>
         where T : 'a{
-        let event = Event::new();
-        let mut event_closure = event.clone();
+        let signal = Signal::new();
+        let mut signal_closure = signal.clone();
         let make_closure = move || -> Box<dyn FnMut(&T)> {
             let mut cnt = count;
             Box::new(move |x| {
                 if cnt == 0 {
-                    event_closure.emit(x);
+                    signal_closure.emit(x);
                 }else{
                     cnt -= 1;
                 }
             })
         };
         self.listen(make_closure());
-        event
+        signal
     }
 
-    pub fn take(&mut self,count : usize) -> Event<'a,T>
+    pub fn take(&mut self,count : usize) -> Signal<'a,T>
         where T : 'a{
-        let event = Event::new();
-        let mut event_closure = event.clone();
+        let signal = Signal::new();
+        let mut signal_closure = signal.clone();
         let make_closure = move || -> Box<dyn FnMut(&T)> {
             let mut cnt = count;
             Box::new(move |x| {
                 if cnt > 0 {
                     cnt -= 1;
-                    event_closure.emit(x);
+                    signal_closure.emit(x);
                 }
             })
         };
         self.listen(make_closure());
-        event
+        signal
     }
 
-    pub fn until<U>(&mut self,event_rhs : &mut Event<'a,U>) -> Event<'a,T>
+    pub fn until<U>(&mut self, event_rhs : &mut Signal<'a,U>) -> Signal<'a,T>
         where T : 'a{
-        let event = Event::new();
-        let mut event_closure = event.clone();
+        let signal = Signal::new();
+        let mut signal_closure = signal.clone();
         let is_stopped = Rc::new(RefCell::new(false));
         let is_stopped_for_self = is_stopped.clone();
         event_rhs.listen(move |_|{
@@ -131,16 +131,16 @@ impl<'a,T> Event<'a,T>{
         });
         self.listen(move |x|{
             if !*is_stopped_for_self.borrow().deref() {
-                event_closure.emit(x);
+                signal_closure.emit(x);
             }
         });
-        event
+        signal
     }
 
-    pub fn start<U>(&mut self,event_rhs : &mut Event<'a,U>) -> Event<'a,T>
+    pub fn start<U>(&mut self, event_rhs : &mut Signal<'a,U>) -> Signal<'a,T>
         where T : 'a{
-        let event = Event::new();
-        let mut event_closure = event.clone();
+        let signal = Signal::new();
+        let mut signal_closure = signal.clone();
         let is_stopped = Rc::new(RefCell::new(true));
         let is_stopped_for_self = is_stopped.clone();
         event_rhs.listen(move |_|{
@@ -148,10 +148,10 @@ impl<'a,T> Event<'a,T>{
         });
         self.listen(move |x|{
             if !*is_stopped_for_self.borrow().deref() {
-                event_closure.emit(x);
+                signal_closure.emit(x);
             }
         });
-        event
+        signal
     }
 
     pub fn unlisten(&mut self,id : ID){
@@ -183,13 +183,13 @@ impl<'a,T> Event<'a,T>{
     }
 }
 
-impl<'a,T,U> Event<'a,Either<T,U>>{
-    pub fn split(&mut self) -> (Event<'a,T>,Event<'a,U>)
+impl<'a,T,U> Signal<'a,Either<T,U>>{
+    pub fn split(&mut self) -> (Signal<'a,T>, Signal<'a,U>)
         where T : 'a ,
               U : 'a{
-        let event_left = Event::new();
+        let event_left = Signal::new();
         let mut event_left_closure = event_left.clone();
-        let event_right = Event::new();
+        let event_right = Signal::new();
         let mut event_right_closure = event_right.clone();
         self.listen(move|x| match x {
             Either::Left(left) => {
@@ -205,7 +205,7 @@ impl<'a,T,U> Event<'a,Either<T,U>>{
 
 #[test]
 fn target_sem(){
-    let mut src = Event::<i32>::new();
+    let mut src = Signal::<i32>::new();
     let mut sum = src
         .map(|x| x + 1)
         .fold(0,|x,y| {
@@ -217,7 +217,7 @@ fn target_sem(){
     src.emit(&1);
     src.emit(&4);
 
-    let mut src2 = Event::new();
+    let mut src2 = Signal::new();
     let mut dp = src2.drop(3);
     let mut tk = src2.take(3);
     dp.listen(|x| println!("dropped : {}",x));
@@ -228,8 +228,8 @@ fn target_sem(){
     src2.emit(&4);
     src2.emit(&5);
 
-    let mut src3 = Event::new();
-    let mut src4 = Event::new();
+    let mut src3 = Signal::new();
+    let mut src4 = Signal::new();
     let mut unt = src3.until(&mut src4);
     let mut stt = src3.start(&mut src4);
     unt.listen(|x| println!("until:{}",x));
@@ -240,7 +240,7 @@ fn target_sem(){
     src4.emit(&1);
     src3.emit(&4);
 
-    let mut src5 = Event::new();
+    let mut src5 = Signal::new();
     {
         let mut aa = src5.map(|x| *x);
         let id = aa.listen(|_| println!("aa"));
