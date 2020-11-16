@@ -25,109 +25,80 @@ impl WindowBuilder {
         }
     }
 
-    pub fn title(self,text : &str) -> Self{
-        Self{
-            title : text.to_owned(),
-            ..self
-        }
+    pub fn title(&mut self,text : &str) -> &mut Self{
+        self.title = text.to_owned();
+        self
     }
 
-    pub fn position(self,x : i32,y : i32) -> Self{
-        Self{
-            x,y,
-            ..self
-        }
+    pub fn position(&mut self,x : i32,y : i32) -> &mut Self{
+        self.x = x;
+        self.y = y;
+        self
     }
 
-    pub fn position_default(self) -> Self{
-        Self{
-            x : SDL_WINDOWPOS_UNDEFINED_MASK as i32,
-            y : SDL_WINDOWPOS_UNDEFINED_MASK as i32,
-            ..self
-        }
+    pub fn position_default(&mut self) -> &mut Self{
+        self.x = SDL_WINDOWPOS_UNDEFINED_MASK as i32;
+        self.y = SDL_WINDOWPOS_UNDEFINED_MASK as i32;
+        self
     }
 
-    pub fn position_centred(self) -> Self{
-        Self{
-            x : SDL_WINDOWPOS_CENTERED_MASK as i32,
-            y : SDL_WINDOWPOS_CENTERED_MASK as i32,
-            ..self
-        }
+    pub fn position_centred(&mut self) -> &mut Self{
+        self.x = SDL_WINDOWPOS_CENTERED_MASK as i32;
+        self.y = SDL_WINDOWPOS_CENTERED_MASK as i32;
+        self
     }
 
-    pub fn size(self,w : u32,h : u32) -> Self{
-        Self{
-            w : w as i32,
-            h : h as i32,
-            ..self
-        }
+    pub fn size(&mut self,w : u32,h : u32) -> &mut Self{
+        self.w = w as i32;
+        self.h = h as i32;
+        self
     }
 
-    pub fn fullscreen(self) -> Self{
-        Self{
-            flags : self.flags | (SDL_WindowFlags::SDL_WINDOW_FULLSCREEN as u32),
-            ..self
-        }
+    pub fn fullscreen(&mut self) -> &mut Self{
+        self.flags |= SDL_WindowFlags::SDL_WINDOW_FULLSCREEN as u32;
+        self
     }
 
-    pub fn fullscreen_desktop(self) -> Self{
-        Self{
-            flags : self.flags | (SDL_WindowFlags::SDL_WINDOW_FULLSCREEN_DESKTOP as u32),
-            ..self
-        }
+    pub fn fullscreen_desktop(&mut self) -> &mut Self{
+        self.flags |= SDL_WindowFlags::SDL_WINDOW_FULLSCREEN as u32;
+        self
     }
 
-    pub fn opengl(self) -> Self{
-        Self{
-            flags : self.flags | (SDL_WindowFlags::SDL_WINDOW_OPENGL as u32),
-            ..self
-        }
+    pub fn opengl(&mut self) -> &mut Self{
+        self.flags |= SDL_WindowFlags::SDL_WINDOW_OPENGL as u32;
+        self
     }
-    pub fn vulkan(self) -> Self{
-        Self{
-            flags : self.flags | (SDL_WindowFlags::SDL_WINDOW_VULKAN as u32),
-            ..self
-        }
+    pub fn vulkan(&mut self) -> &mut Self{
+        self.flags |= SDL_WindowFlags::SDL_WINDOW_VULKAN as u32;
+        self
     }
-    pub fn hidden(self) -> Self{
-        Self{
-            flags : self.flags | (SDL_WindowFlags::SDL_WINDOW_HIDDEN as u32),
-            ..self
-        }
+    pub fn hidden(&mut self) -> &mut Self{
+        self.flags |= SDL_WindowFlags::SDL_WINDOW_FULLSCREEN as u32;
+        self
     }
-    pub fn borderless(self) -> Self{
-        Self{
-            flags : self.flags | (SDL_WindowFlags::SDL_WINDOW_BORDERLESS as u32),
-            ..self
-        }
+    pub fn borderless(&mut self) -> &mut Self{
+        self.flags |= SDL_WindowFlags::SDL_WINDOW_BORDERLESS as u32;
+        self
     }
-    pub fn minimized(self) -> Self{
-        Self{
-            flags : self.flags | (SDL_WindowFlags::SDL_WINDOW_MINIMIZED as u32),
-            ..self
-        }
+    pub fn minimized(&mut self) -> &mut Self{
+        self.flags |= SDL_WindowFlags::SDL_WINDOW_MINIMIZED as u32;
+        self
     }
-    pub fn maximized(self) -> Self{
-        Self{
-            flags : self.flags | (SDL_WindowFlags::SDL_WINDOW_MAXIMIZED as u32),
-            ..self
-        }
+    pub fn maximized(&mut self) -> &mut Self{
+        self.flags |= SDL_WindowFlags::SDL_WINDOW_FULLSCREEN as u32;
+        self
     }
-    pub fn input_grabbed(self) -> Self{
-        Self{
-            flags : self.flags | (SDL_WindowFlags::SDL_WINDOW_INPUT_GRABBED as u32),
-            ..self
-        }
+    pub fn input_grabbed(&mut self) -> &mut Self{
+        self.flags |= SDL_WindowFlags::SDL_WINDOW_INPUT_GRABBED as u32;
+        self
     }
-    pub fn allow_high_dpi(self) -> Self{
-        Self{
-            flags : self.flags | (SDL_WindowFlags::SDL_WINDOW_ALLOW_HIGHDPI as u32),
-            ..self
-        }
+    pub fn allow_high_dpi(&mut self) -> &mut Self{
+        self.flags |= SDL_WindowFlags::SDL_WINDOW_ALLOW_HIGHDPI as u32;
+        self
     }
 
-    pub fn build(self,_ : &Elikar) -> Result<Window,String>{
-        let title_str = CString::new(self.title)
+    pub fn build(&self,_ : &Elikar) -> Result<Window,String>{
+        let title_str = CString::new(self.title.clone())
             .map_err(|_| "Invalid Title") ?;
         let window_ptr : *mut SDL_Window = unsafe {
             SDL_CreateWindow(
