@@ -1,7 +1,7 @@
-mod window_builder;
+mod builder;
 mod window;
-mod windows_manager;
+mod manager;
 
 pub use window::Window;
-pub use window_builder::WindowBuilder;
-pub use windows_manager::WindowsManager;
+pub use builder::Builder;
+pub use manager::Manager;

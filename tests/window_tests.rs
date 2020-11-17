@@ -1,6 +1,6 @@
 extern crate elikar;
 
-use elikar::window::{WindowsManager, WindowBuilder};
+use elikar::window::{Manager,Builder};
 
 #[test]
 fn window_test(){
@@ -8,8 +8,8 @@ fn window_test(){
 
     let ek = Elikar::new().unwrap();
 
-    let mut wm = WindowsManager::new(&ek);
-    let wid  = wm.add_windows(WindowBuilder::new()
+    let mut wm = Manager::new(&ek);
+    let wid  = wm.add_windows(Builder::new()
         .title("测试窗口")
         .position_centred()
         .size(1280, 700)

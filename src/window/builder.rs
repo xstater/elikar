@@ -6,16 +6,16 @@ use std::ffi::{CString};
 use crate::common::get_error;
 use crate::Elikar;
 
-pub struct WindowBuilder{
+pub struct Builder{
     title : String,
     x : i32,y : i32,
     w : i32,h : i32,
     flags : u32
 }
 
-impl WindowBuilder {
-    pub fn new() -> WindowBuilder{
-        WindowBuilder{
+impl Builder {
+    pub fn new() -> Builder{
+        Builder{
             title : "elikar".to_owned(),
             x : SDL_WINDOWPOS_UNDEFINED_MASK as i32,
             y : SDL_WINDOWPOS_UNDEFINED_MASK as i32,

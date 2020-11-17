@@ -1,15 +1,15 @@
 use crate::window::Window;
 use crate::Elikar;
 
-pub struct WindowsManager{
+pub struct Manager {
     next_id : usize,
     windows : Vec<(usize,Window)>
 }
 
-impl WindowsManager {
+impl Manager {
     ///you must use this function after Elikar has been built
-    pub fn new(_: &Elikar) -> WindowsManager {
-        WindowsManager {
+    pub fn new(_: &Elikar) -> Manager {
+        Manager {
             next_id: 0,
             windows: Vec::new()
         }
