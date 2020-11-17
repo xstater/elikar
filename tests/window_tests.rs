@@ -47,3 +47,25 @@ fn window_test(){
     std::thread::sleep(std::time::Duration::from_secs(1));
 
 }
+
+#[test]
+fn builder_test(){
+    let elikar = elikar::Elikar::new().unwrap();
+    let mut wm = elikar::window::Manager::new(&elikar);
+    let mut window_cfg = elikar::window::Builder::new();
+    window_cfg
+        .title("asdsad")
+        .position_default()
+        .opengl();
+    let w1 = window_cfg.build(&elikar).unwrap();
+    window_cfg
+        .position_centred()
+        .size(1024,768);
+    let w2 = window_cfg.build(&elikar).unwrap();
+    let wid1 = wm.add_windows(w1);
+    let wid2 = wm.add_windows(w2);
+    wm.window_mut(wid2).unwrap()
+        .hide();
+
+    std::thread::sleep(std::time::Duration::from_secs(1));
+}
