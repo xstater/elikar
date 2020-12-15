@@ -21,45 +21,47 @@ pub enum ButtonDefaultKey{
 
 pub struct ButtonInfo{
     default_key : ButtonDefaultKey,
-    id : i32,
-    text : String
+    id : usize,
+    text : String,
+    function : Box<dyn Fn()>
 }
 
 pub struct MsgboxBuilder{
     box_type : Type,
     title : String,
     message : String,
+    next_button_id : usize,
     buttons : Vec<ButtonInfo>,
 }
 
 impl MsgboxBuilder {
-    pub fn new() -> MsgboxBuilder {
+    pub fn error() -> MsgboxBuilder {
         MsgboxBuilder {
-            box_type : Type::Information,
+            box_type : Type::Error,
             title : String::new(),
             message : String::new(),
+            next_button_id : 0,
             buttons : Vec::new()
         }
     }
 
-    pub fn error(self) -> Self {
-        Self{
-            box_type : Type::Error,
-            ..self
-        }
-    }
-
-    pub fn warning(self) -> Self {
-       Self{
+    pub fn warning() -> MsgboxBuilder {
+        MsgboxBuilder {
             box_type : Type::Warning,
-            ..self
+            title : String::new(),
+            message : String::new(),
+            next_button_id : 0,
+            buttons : Vec::new()
         }
     }
 
-    pub fn information(self) -> Self {
-        Self{
+    pub fn information() -> MsgboxBuilder {
+        MsgboxBuilder {
             box_type : Type::Information,
-            ..self
+            title : String::new(),
+            message : String::new(),
+            next_button_id : 0,
+            buttons : Vec::new()
         }
     }
 
@@ -77,17 +79,19 @@ impl MsgboxBuilder {
         }
     }
 
-    pub fn add_button(self, default_key : ButtonDefaultKey, id : i32, text : &str) -> Self{
+    pub fn add_button(self, default_key : ButtonDefaultKey, text : &str,func : impl 'static + Fn()) -> Self{
         let mut t = self;
         t.buttons.push(ButtonInfo{
             default_key,
-            id,
-            text : text.to_owned()
+            id : t.next_button_id,
+            text : text.to_owned(),
+            function : Box::new(func)
         });
+        t.next_button_id += 1;
         t
     }
 
-    pub fn build(self) -> Result<i32,String> {
+    pub fn build(self) -> Result<(),String> {
         let mut sdl_buttons : Vec<SDL_MessageBoxButtonData> = Vec::new();
         let mut button_text_cstr : Vec<CString> = Vec::new();
         for btn in self.buttons.iter().rev() {
@@ -105,7 +109,7 @@ impl MsgboxBuilder {
             button_text_cstr.push(tmp);
             sdl_buttons.push(SDL_MessageBoxButtonData {
                 flags,
-                buttonid : btn.id,
+                buttonid : btn.id as i32,
                 text : button_text_cstr.last().unwrap().as_ptr() as *const c_char
             })
         }
@@ -139,18 +143,23 @@ impl MsgboxBuilder {
         if errcode == -1 || button_id == -1{
             Err(get_error())
         } else {
-            Ok(button_id)
+            for btn in self.buttons{
+                if btn.id == button_id as usize {
+                    (*btn.function)();
+                    break;
+                }
+            }
+            Ok(())
         }
     }
 
 }
 
 pub fn alert(title : &str,message : &str){
-    MsgboxBuilder::new()
-        .warning()
+    MsgboxBuilder::warning()
         .title(title)
         .message(message)
-        .add_button(ButtonDefaultKey::Return,0,"Ok")
+        .add_button(ButtonDefaultKey::Return,"Ok",||{})
         .build()
         .unwrap();
 }

@@ -4,25 +4,21 @@ extern crate elikar;
 fn msgbox_test(){
     use elikar::msgbox::*;
 
-    let id = elikar::msgbox::MsgboxBuilder::new()
-        .information()
+    elikar::msgbox::MsgboxBuilder::information()
         .title("死妈测试")
         .message("你妈死了 ?")
-        .add_button(ButtonDefaultKey::Return,0,"Yes")
-        .add_button(ButtonDefaultKey::Nope,1,"No")
-        .add_button(ButtonDefaultKey::Escape,2,"Cancel")
+        .add_button(
+            ButtonDefaultKey::Return,
+            "Yes",
+            ||alert("死妈测试","你妈死了"))
+        .add_button(
+            ButtonDefaultKey::Nope,
+            "No",
+            ||alert("死妈测试","你妈没死"))
+        .add_button(
+            ButtonDefaultKey::Escape,
+            "Cancel",
+            ||alert("死妈测试","你妈没死"))
         .build()
         .unwrap();
-
-    match id {
-        0 => {
-            alert("死妈测试","你妈死了")
-        },
-        1 | 2 => {
-            alert("死妈测试","你妈没死")
-        },
-        _ => {
-            println!("cnm")
-        }
-    };
 }
