@@ -1,7 +1,5 @@
 extern crate elikar;
 
-use elikar::clipboard::Clipboard;
-
 #[test]
 fn test(){
     use elikar::Elikar;
@@ -9,7 +7,7 @@ fn test(){
     #[allow(unused)]
     let game = Elikar::new().unwrap();
     #[allow(unused)]
-    let mut clipboard = Clipboard::new(&game);
+    let mut clipboard = game.clipboard();
 
     println!("{}",clipboard.has());
     println!("{}",clipboard.get().unwrap());

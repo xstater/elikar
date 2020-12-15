@@ -1,12 +1,11 @@
 extern crate elikar;
 
 use elikar::Elikar;
-use elikar::sysinfo::SystemInfo;
 
 #[test]
 fn sysinfo_test(){
     let game = Elikar::new().unwrap();
-    let sysinfo = SystemInfo::new(&game);
+    let sysinfo = game.system_info();
     let platinfo = sysinfo.platform_info();
     let cpuinfo = sysinfo.cpu_info();
     let videoinfo = sysinfo.video_info();

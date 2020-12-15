@@ -4,7 +4,6 @@ use sdl2_sys::*;
 use crate::window::window::Window;
 use std::ffi::{CString};
 use crate::common::get_error;
-use crate::Elikar;
 
 pub struct Builder{
     title : String,
@@ -97,7 +96,7 @@ impl Builder {
         self
     }
 
-    pub fn build(&self,_ : &Elikar) -> Result<Window,String>{
+    pub fn build(&self) -> Result<Window,String>{
         let title_str = CString::new(self.title.clone())
             .map_err(|_| "Invalid Title") ?;
         let window_ptr : *mut SDL_Window = unsafe {

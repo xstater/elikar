@@ -7,8 +7,8 @@ pub mod wheel;
 use sdl2_sys::*;
 use std::ptr::null_mut;
 use crate::common::get_error;
-use crate::mouse::button::ButtonInfo;
-use crate::mouse::motion::MotionInfo;
+//use crate::mouse::button::ButtonInfo;
+//use crate::mouse::motion::MotionInfo;
 
 pub struct Mouse{
 }

@@ -2,9 +2,13 @@ extern crate sdl2_sys;
 
 use sdl2_sys::*;
 use crate::common::get_error;
+use crate::sysinfo::SystemInfo;
+use crate::window;
+use crate::clipboard::Clipboard;
 
 pub struct Elikar{
     is_quit : bool,
+    windows_manager : window::Manager,
 }
 
 #[derive(Debug)]
@@ -44,6 +48,7 @@ impl Elikar{
         }
         Ok(Elikar{
             is_quit : false,
+            windows_manager : window::Manager::_new(),
         })
     }
 
@@ -61,10 +66,25 @@ impl Elikar{
         }
     }
 
-    pub fn quit(&mut self){
+    pub fn quit(&mut self) {
         self.is_quit = true;
     }
 
+    pub fn system_info(&self) -> SystemInfo{
+        SystemInfo::_new()
+    }
+
+    pub fn windows_manager_ref(&self) -> &window::Manager{
+        &self.windows_manager
+    }
+
+    pub fn windows_manager_mut(&mut self) -> &mut window::Manager {
+        &mut self.windows_manager
+    }
+
+    pub fn clipboard(&self) -> Clipboard{
+        Clipboard::_new()
+    }
 }
 
 impl Drop for Elikar{

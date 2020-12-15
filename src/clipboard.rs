@@ -4,14 +4,13 @@ use sdl2_sys::*;
 use crate::common::get_error;
 use std::os::raw::{c_char, c_void, c_int};
 use std::ffi::{CStr, CString};
-use crate::Elikar;
 
 pub struct Clipboard{
     //nothing
 }
 
 impl Clipboard {
-    pub fn new(_ : &Elikar) -> Clipboard{
+    pub fn _new() -> Clipboard{
         Clipboard{
 
         }
