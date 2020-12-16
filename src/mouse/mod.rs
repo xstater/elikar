@@ -1,4 +1,5 @@
 extern crate sdl2_sys;
+extern crate xrsignal;
 
 pub mod button;
 pub mod motion;
@@ -7,11 +8,8 @@ pub mod wheel;
 use sdl2_sys::*;
 use std::ptr::null_mut;
 use crate::common::get_error;
-//use crate::mouse::button::ButtonInfo;
-//use crate::mouse::motion::MotionInfo;
-
-pub struct Mouse{
-}
+// use crate::mouse::button::ButtonInfo;
+// use crate::mouse::motion::MotionInfo;
 
 pub struct ButtonState(u32);
 
@@ -39,26 +37,24 @@ impl ButtonState {
     }
 }
 
-impl Mouse{
-    pub fn capture(&mut self) -> Result<(),String>{
-        let errcode = unsafe { SDL_CaptureMouse(SDL_bool::SDL_TRUE) };
-        if errcode == 0 {
-            Ok(())
-        }else{
-            Err(get_error())
-        }
+pub fn capture() -> Result<(),String>{
+    let errcode = unsafe { SDL_CaptureMouse(SDL_bool::SDL_TRUE) };
+    if errcode == 0 {
+        Ok(())
+    }else{
+        Err(get_error())
     }
+}
 
-    pub fn release(&mut self) -> Result<(),String>{
-        let errcode = unsafe { SDL_CaptureMouse(SDL_bool::SDL_FALSE) };
-        if errcode == 0 {
-            Ok(())
-        }else{
-            Err(get_error())
-        }
+pub fn release() -> Result<(),String>{
+    let errcode = unsafe { SDL_CaptureMouse(SDL_bool::SDL_FALSE) };
+    if errcode == 0 {
+        Ok(())
+    }else{
+        Err(get_error())
     }
+}
 
-    pub fn button(&self) -> ButtonState{
-        ButtonState(unsafe{ SDL_GetMouseState(null_mut(),null_mut()) })
-    }
+pub fn button() -> ButtonState{
+    ButtonState(unsafe{ SDL_GetMouseState(null_mut(),null_mut()) })
 }

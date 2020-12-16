@@ -2,13 +2,11 @@ extern crate sdl2_sys;
 
 use sdl2_sys::*;
 use crate::common::get_error;
-use crate::sysinfo::SystemInfo;
-use crate::window;
-use crate::clipboard::Clipboard;
+use crate::{event};
 
 pub struct Elikar{
     is_quit : bool,
-    windows_manager : window::Manager,
+    pub event_handlers : event::EventHandlers
 }
 
 #[derive(Debug)]
@@ -48,7 +46,7 @@ impl Elikar{
         }
         Ok(Elikar{
             is_quit : false,
-            windows_manager : window::Manager::_new(),
+            event_handlers : event::EventHandlers::new(),
         })
     }
 
@@ -60,6 +58,10 @@ impl Elikar{
                     x if x == SDL_EventType::SDL_QUIT as u32 => {
                         self.is_quit = true;
                     },
+                    x if x == SDL_EventType::SDL_MOUSEBUTTONDOWN as u32 => {
+                        self.event_handlers.mouse_button_down.emit(
+                            (unsafe{sdlevent.button.x},unsafe{sdlevent.button.y}));
+                    },
                     _ => {}
                 }
             }
@@ -70,21 +72,6 @@ impl Elikar{
         self.is_quit = true;
     }
 
-    pub fn system_info(&self) -> SystemInfo{
-        SystemInfo::_new()
-    }
-
-    pub fn windows_manager_ref(&self) -> &window::Manager{
-        &self.windows_manager
-    }
-
-    pub fn windows_manager_mut(&mut self) -> &mut window::Manager {
-        &mut self.windows_manager
-    }
-
-    pub fn clipboard(&self) -> Clipboard{
-        Clipboard::_new()
-    }
 }
 
 impl Drop for Elikar{

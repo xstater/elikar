@@ -1,7 +1,6 @@
 extern crate elikar;
 
-#[test]
-fn msgbox_test(){
+fn main(){
     use elikar::msgbox::*;
 
     elikar::msgbox::MsgboxBuilder::information()

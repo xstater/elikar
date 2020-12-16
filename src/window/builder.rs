@@ -4,17 +4,20 @@ use sdl2_sys::*;
 use crate::window::window::Window;
 use std::ffi::{CString};
 use crate::common::get_error;
+use crate::window::Manager;
 
-pub struct Builder{
+pub struct Builder<'a>{
+    windows_manager : &'a mut Manager,
     title : String,
     x : i32,y : i32,
     w : i32,h : i32,
     flags : u32
 }
 
-impl Builder {
-    pub fn new() -> Builder{
+impl<'a> Builder<'a> {
+    pub fn from_windows_manager(wm : &'a mut Manager) -> Builder<'a>{
         Builder{
+            windows_manager : wm,
             title : "elikar".to_owned(),
             x : SDL_WINDOWPOS_UNDEFINED_MASK as i32,
             y : SDL_WINDOWPOS_UNDEFINED_MASK as i32,

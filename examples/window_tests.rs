@@ -1,15 +1,13 @@
 extern crate elikar;
 
-use elikar::window::{Builder};
-
-#[test]
-fn window_test(){
+fn main(){
     use elikar::elikar::Elikar;
+    use elikar::window;
 
-    let mut ek = Elikar::new().unwrap();
+    let _ek = Elikar::new().unwrap();
 
-    let wm = ek.windows_manager_mut();
-    let wid  = wm.add_windows(Builder::new()
+    let mut wm = window::Manager::new();
+    let wid  = wm.add_windows(window::builder()
         .title("测试窗口")
         .position_centred()
         .size(1280, 700)
@@ -50,8 +48,10 @@ fn window_test(){
 
 #[test]
 fn builder_test(){
-    let mut elikar = elikar::Elikar::new().unwrap();
-    let wm = elikar.windows_manager_mut();
+    use elikar::window;
+
+    let _elikar = elikar::Elikar::new().unwrap();
+    let mut wm = window::Manager::new();
     let mut window_cfg = elikar::window::Builder::new();
     window_cfg
         .title("asdsad")
@@ -60,14 +60,12 @@ fn builder_test(){
     #[allow(unused)]
     let w1 = window_cfg.build().unwrap();
     window_cfg
-        .position_centred()
+        .position(10,10)
         .size(1024,768);
     let w2 = window_cfg.build().unwrap();
     #[allow(unused)]
     let wid1 = wm.add_windows(w1);
     let wid2 = wm.add_windows(w2);
-    wm.window_mut(wid2).unwrap()
-        .hide();
 
     std::thread::sleep(std::time::Duration::from_secs(1));
 }

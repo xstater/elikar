@@ -1,4 +1,4 @@
-use crate::window::Window;
+use crate::window::{Window, Builder};
 
 pub struct Manager {
     next_id : usize,
@@ -6,12 +6,15 @@ pub struct Manager {
 }
 
 impl Manager {
-    ///you must use this function after Elikar has been built
-    pub fn _new() -> Manager {
+    pub fn new() -> Manager {
         Manager {
             next_id: 0,
             windows: Vec::new()
         }
+    }
+
+    pub fn builder(&mut self) -> Builder<'_> {
+        Builder::from_windows_manager(self)
     }
 
     pub fn add_windows(&mut self, window: Window) -> usize {
