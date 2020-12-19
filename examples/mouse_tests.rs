@@ -21,12 +21,17 @@ fn main(){
     event.quit.connect(move|_|{
         game_closure.quit();
     });
+    // event.mouse_button_down.connect(|_|{
+    //     if mouse::cursor::is_visible() {
+    //         mouse::cursor::hide()
+    //     }else{
+    //         mouse::cursor::show()
+    //     }
+    // });
     event.mouse_button_down.connect(|_|{
-        if mouse::cursor::is_visible() {
-            mouse::cursor::hide()
-        }else{
-            mouse::cursor::show()
-        }
+        let (x,y) = mouse::global_position();
+        println!("global_position:({},{})",x,y);
+        mouse::warp_global(100,100).unwrap();
     });
 
     // let mut cursor = Cursor::system(SystemCursor::SizeAll).unwrap();
