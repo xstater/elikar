@@ -73,6 +73,23 @@ impl Elikar{
         }
     }
 
+    pub fn run(&mut self, mut event_handlers : Handlers){
+        let mut sdlevent : SDL_Event = SDL_Event{type_ : 0};
+        while !self.is_quit() {
+            while unsafe{ SDL_PollEvent(&mut sdlevent) } == 1 {
+                match unsafe { sdlevent.type_ } {
+                    x if x == SDL_EventType::SDL_QUIT as u32 => {
+                        self.quit();
+                    },
+                    x if x == SDL_EventType::SDL_MOUSEBUTTONDOWN as u32 => {
+                        event_handlers.mouse_button_down.emit(
+                            (unsafe{sdlevent.button.x},unsafe{sdlevent.button.y}));
+                    },
+                    _ => {}
+                }
+            }
+        }
+    }
 }
 
 impl Drop for ElikarBase{
@@ -84,20 +101,3 @@ impl Drop for ElikarBase{
 }
 
 
-pub fn run(mut elikar: Elikar, mut event_handlers : Handlers){
-    let mut sdlevent : SDL_Event = SDL_Event{type_ : 0};
-    while !elikar.is_quit() {
-        while unsafe{ SDL_PollEvent(&mut sdlevent) } == 1 {
-            match unsafe { sdlevent.type_ } {
-                x if x == SDL_EventType::SDL_QUIT as u32 => {
-                    elikar.quit();
-                },
-                x if x == SDL_EventType::SDL_MOUSEBUTTONDOWN as u32 => {
-                    event_handlers.mouse_button_down.emit(
-                        (unsafe{sdlevent.button.x},unsafe{sdlevent.button.y}));
-                },
-                _ => {}
-            }
-        }
-    }
-}

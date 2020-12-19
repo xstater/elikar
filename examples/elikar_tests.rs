@@ -5,7 +5,7 @@ use elikar::window;
 use elikar::system_event::Handlers;
 
 fn main(){
-    let game = Elikar::new().unwrap();
+    let mut game = Elikar::new().unwrap();
 
     let mut wm = window::Manager::new();
     let window = wm.builder()
@@ -29,5 +29,6 @@ fn main(){
         }
     });
 
-    elikar::elikar::run(game,event_handlers);
+    // elikar::elikar::run(game,event_handlers);
+    game.run(event_handlers);
 }
