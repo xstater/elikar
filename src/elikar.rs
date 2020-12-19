@@ -2,11 +2,17 @@ extern crate sdl2_sys;
 
 use sdl2_sys::*;
 use crate::common::get_error;
-use crate::{event};
+use crate::system_event::Handlers;
+use std::cell::RefCell;
+use std::sync::{Mutex, Arc};
 
-pub struct Elikar{
+pub struct ElikarBase {
     is_quit : bool,
-    pub event_handlers : event::EventHandlers
+}
+
+#[derive(Clone)]
+pub struct Elikar {
+    base : Arc<Mutex<RefCell<ElikarBase>>>
 }
 
 #[derive(Debug)]
@@ -45,39 +51,53 @@ impl Elikar{
             return Err(SdlInitError::Events(get_error()));
         }
         Ok(Elikar{
-            is_quit : false,
-            event_handlers : event::EventHandlers::new(),
+            base : Arc::new(Mutex::new(RefCell::new(ElikarBase{
+                is_quit: false,
+            })))
         })
     }
 
-    pub fn run(&mut self){
-        let mut sdlevent : SDL_Event = SDL_Event{type_ : 0};
-        while !self.is_quit {
-            while unsafe{ SDL_PollEvent(&mut sdlevent) } == 1 {
-                match unsafe { sdlevent.type_ } {
-                    x if x == SDL_EventType::SDL_QUIT as u32 => {
-                        self.is_quit = true;
-                    },
-                    x if x == SDL_EventType::SDL_MOUSEBUTTONDOWN as u32 => {
-                        self.event_handlers.mouse_button_down.emit(
-                            (unsafe{sdlevent.button.x},unsafe{sdlevent.button.y}));
-                    },
-                    _ => {}
-                }
-            }
+
+    pub fn quit(&mut self) {
+        if let Ok(guard) = self.base.lock(){
+            let mut base = guard.borrow_mut();
+            base.is_quit = true;
         }
     }
 
-    pub fn quit(&mut self) {
-        self.is_quit = true;
+    pub fn is_quit(&self) -> bool {
+        if let Ok(guard) = self.base.lock() {
+            guard.borrow().is_quit
+        }else{
+            false
+        }
     }
 
 }
 
-impl Drop for Elikar{
+impl Drop for ElikarBase{
     fn drop(&mut self) {
         unsafe {
             SDL_Quit();
+        }
+    }
+}
+
+
+pub fn run(mut elikar: Elikar, mut event_handlers : Handlers){
+    let mut sdlevent : SDL_Event = SDL_Event{type_ : 0};
+    while !elikar.is_quit() {
+        while unsafe{ SDL_PollEvent(&mut sdlevent) } == 1 {
+            match unsafe { sdlevent.type_ } {
+                x if x == SDL_EventType::SDL_QUIT as u32 => {
+                    elikar.quit();
+                },
+                x if x == SDL_EventType::SDL_MOUSEBUTTONDOWN as u32 => {
+                    event_handlers.mouse_button_down.emit(
+                        (unsafe{sdlevent.button.x},unsafe{sdlevent.button.y}));
+                },
+                _ => {}
+            }
         }
     }
 }
