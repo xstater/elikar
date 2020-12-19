@@ -3,7 +3,6 @@ extern crate sdl2_sys;
 use sdl2_sys::*;
 use crate::common::get_error;
 use crate::system_event::Signals;
-use std::cell::RefCell;
 use std::sync::{Arc,RwLock};
 use std::time::{Duration, Instant};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
