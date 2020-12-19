@@ -1,6 +1,6 @@
 pub mod common;
 pub mod elikar;
-pub use elikar::Elikar;
+pub use elikar::*;
 pub mod sysinfo;
 pub mod power;
 pub mod window;
