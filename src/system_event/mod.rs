@@ -3,7 +3,7 @@ extern crate sdl2_sys;
 use sdl2_sys::*;
 use xrsignal::Signal;
 
-pub struct Handlers{
+pub struct Signals {
     pub quit : Signal<(),()>,
     pub mouse_button_down : Signal<(i32,i32),()>,
     pub mouse_button_up : Signal<(i32,i32),()>,
@@ -11,9 +11,9 @@ pub struct Handlers{
 
 }
 
-impl Handlers{
-    pub fn new() -> Handlers{
-        Handlers{
+impl Signals {
+    pub fn new() -> Signals {
+        Signals {
             quit : Signal::new(),
             mouse_button_down : Signal::new(),
             mouse_button_up : Signal::new(),

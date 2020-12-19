@@ -2,7 +2,7 @@ extern crate sdl2_sys;
 
 use sdl2_sys::*;
 use crate::common::get_error;
-use crate::system_event::Handlers;
+use crate::system_event::Signals;
 use std::cell::RefCell;
 use std::sync::{Mutex, Arc};
 
@@ -73,7 +73,7 @@ impl Elikar{
         }
     }
 
-    pub fn run(&mut self, mut event_handlers : Handlers){
+    pub fn run(&mut self, mut event_handlers : Signals){
         let mut sdlevent : SDL_Event = SDL_Event{type_ : 0};
         while !self.is_quit() {
             while unsafe{ SDL_PollEvent(&mut sdlevent) } == 1 {
