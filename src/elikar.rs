@@ -105,15 +105,15 @@ impl Elikar{
         let mut second_time = Instant::now();
         while !self.is_quit() {
             let frame_start_time = Instant::now();
-            if frame_start_time.duration_since(second_time) > Duration::from_secs(1){
+            if second_time.elapsed() > Duration::from_secs(1){
                 self.set_frames_in_second(frames);
                 frames = 0;
-                second_time = frame_start_time;
+                second_time = Instant::now()
             }
             while unsafe{ SDL_PollEvent(&mut sdlevent) } == 1 {
                 event_handlers.dispatch(sdlevent);
             }
-            self.set_frame_duration(Instant::now().duration_since(frame_start_time));
+            self.set_frame_duration(frame_start_time.elapsed());
             frames += 1;
         }
     }
