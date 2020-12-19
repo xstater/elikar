@@ -2,11 +2,12 @@ extern crate sdl2_sys;
 
 use sdl2_sys::*;
 use xrsignal::Signal;
+use crate::mouse;
 
 pub struct Signals {
     pub quit : Signal<(),()>,
-    pub mouse_button_down : Signal<(i32,i32),()>,
-    pub mouse_button_up : Signal<(i32,i32),()>,
+    pub mouse_button_down : Signal<mouse::button::event::Info,()>,
+    pub mouse_button_up : Signal<mouse::button::event::Info,()>,
     pub mouse_motion : Signal<(i32,i32),()>,
 
 }
@@ -27,12 +28,10 @@ impl Signals {
                 self.quit.emit(());
             }
             x if x == SDL_EventType::SDL_MOUSEBUTTONDOWN as u32 => {
-                self.mouse_button_down.emit(
-                    (unsafe{sdlevent.button.x},unsafe{sdlevent.button.y}));
+                self.mouse_button_down.emit(unsafe{sdlevent.button}.into());
             }
             x if x == SDL_EventType::SDL_MOUSEBUTTONUP as u32 => {
-                self.mouse_button_up.emit(
-                    (unsafe{sdlevent.button.x},unsafe{sdlevent.button.y}));
+                self.mouse_button_up.emit(unsafe{sdlevent.button}.into());
             }
             x if x == SDL_EventType::SDL_MOUSEMOTION as u32 => {
                 self.mouse_motion.emit(

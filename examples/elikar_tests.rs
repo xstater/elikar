@@ -24,20 +24,23 @@ fn main(){
         game_closure.quit();
     });
     let game_closure = game.clone();
-    event_handlers.mouse_button_down.connect(move |(x,y)|{
+    event_handlers.mouse_button_down.connect(move |info|{
+        let (x,y) = info.position;
         println!("Down:({},{})",x,y);
         println!("frame_duration:{}us",game_closure.frame_duration().as_micros());
         println!("fps:{}",game_closure.fps());
         println!("fis:{}",game_closure.fis());
     });
-    event_handlers.mouse_button_up.connect(move |(x,y)|{
+    event_handlers.mouse_button_up.connect(move |info|{
+        let (x,y) = info.position;
         println!("Up:({},{})",x,y);
     });
     event_handlers.mouse_motion.connect(move |(x,y)|{
         println!("Motion:({},{})",x,y);
     });
     let mut game_closure = game.clone();
-    event_handlers.mouse_button_down.connect(move |(x,y)|{
+    event_handlers.mouse_button_down.connect(move |info|{
+        let (x,y) = info.position;
         if x < 100 && y < 100 {
             game_closure.quit();
         }
