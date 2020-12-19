@@ -4,18 +4,19 @@ use sdl2_sys::*;
 use crate::common::get_error;
 use crate::system_event::Signals;
 use std::cell::RefCell;
-use std::sync::{Mutex, Arc};
+use std::sync::{Arc,RwLock};
 use std::time::{Duration, Instant};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 pub struct ElikarBase {
-    is_quit : bool,
-    frames_in_second : usize,
-    frame_duration : Duration,
+    is_quit : AtomicBool,
+    frames_in_second : AtomicUsize,
+    frame_duration : RwLock<Duration>,
 }
 
 #[derive(Clone)]
 pub struct Elikar {
-    base : Arc<Mutex<RefCell<ElikarBase>>>
+    base : Arc<ElikarBase>
 }
 
 #[derive(Debug)]
@@ -54,36 +55,25 @@ impl Elikar{
             return Err(SdlInitError::Events(get_error()));
         }
         Ok(Elikar{
-            base : Arc::new(Mutex::new(RefCell::new(ElikarBase{
-                is_quit: false,
-                frames_in_second : 0,
-                frame_duration : Duration::default(),
-            })))
+            base : Arc::new(ElikarBase{
+                is_quit: AtomicBool::new(false),
+                frames_in_second : AtomicUsize::new(0),
+                frame_duration : RwLock::new(Duration::default()),
+            })
         })
     }
 
 
     pub fn quit(&mut self) {
-        if let Ok(guard) = self.base.lock(){
-            let mut base = guard.borrow_mut();
-            base.is_quit = true;
-        }
+        self.base.is_quit.store(true,Ordering::Relaxed);
     }
 
     pub fn is_quit(&self) -> bool {
-        if let Ok(guard) = self.base.lock() {
-            guard.borrow().is_quit
-        }else{
-            false
-        }
+        self.base.is_quit.load(Ordering::Relaxed)
     }
 
     pub fn frame_duration(&self) -> Duration {
-        if let Ok(guard) = self.base.lock() {
-            guard.borrow().frame_duration
-        }else{
-            Duration::default()
-        }
+        *self.base.frame_duration.read().unwrap()
     }
 
     pub fn fps(&self) -> usize{
@@ -92,11 +82,7 @@ impl Elikar{
 
     ///frames in second
     pub fn fis(&self) -> usize{
-        if let Ok(guard) = self.base.lock() {
-            guard.borrow().frames_in_second
-        }else{
-            0
-        }
+        self.base.frames_in_second.load(Ordering::Relaxed)
     }
 
     pub fn run(&mut self, mut event_handlers : Signals){
@@ -119,15 +105,11 @@ impl Elikar{
     }
 
     fn set_frame_duration(&mut self,duration: Duration){
-        if let Ok(guard) = self.base.lock() {
-            guard.borrow_mut().frame_duration = duration;
-        }
+        *self.base.frame_duration.write().unwrap() = duration;
     }
 
     fn set_frames_in_second(&mut self, frames : usize){
-        if let Ok(guard) = self.base.lock() {
-            guard.borrow_mut().frames_in_second = frames;
-        }
+        self.base.frames_in_second.store(frames,Ordering::Relaxed);
     }
 
 }
