@@ -25,11 +25,19 @@ impl Signals {
         match unsafe { sdlevent.type_ } {
             x if x == SDL_EventType::SDL_QUIT as u32 => {
                 self.quit.emit(());
-            },
+            }
             x if x == SDL_EventType::SDL_MOUSEBUTTONDOWN as u32 => {
                 self.mouse_button_down.emit(
                     (unsafe{sdlevent.button.x},unsafe{sdlevent.button.y}));
-            },
+            }
+            x if x == SDL_EventType::SDL_MOUSEBUTTONUP as u32 => {
+                self.mouse_button_up.emit(
+                    (unsafe{sdlevent.button.x},unsafe{sdlevent.button.y}));
+            }
+            x if x == SDL_EventType::SDL_MOUSEMOTION as u32 => {
+                self.mouse_motion.emit(
+                    (unsafe{sdlevent.button.x},unsafe{sdlevent.button.y}));
+            }
             _ => {}
         }
     }
