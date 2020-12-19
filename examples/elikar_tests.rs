@@ -35,7 +35,8 @@ fn main(){
         let (x,y) = info.position;
         println!("Up:({},{})",x,y);
     });
-    event_handlers.mouse_motion.connect(move |(x,y)|{
+    event_handlers.mouse_motion.connect(move |info|{
+        let (x,y) = info.position;
         println!("Motion:({},{})",x,y);
     });
     let mut game_closure = game.clone();

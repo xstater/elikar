@@ -33,9 +33,13 @@ fn main(){
         println!("global_position:({},{})",x,y);
         mouse::warp_global(100,100).unwrap();
     });
+    event.mouse_wheel.connect(|info|{
+        let (x,y) = info.scrolled;
+        println!("wheel:({},{})",x,y);
+    });
 
-    // let mut cursor = Cursor::system(SystemCursor::SizeAll).unwrap();
-    // cursor.set_as_cursor();
+    let mut cursor = Cursor::system(SystemCursor::SizeAll).unwrap();
+    cursor.set_as_cursor();
 
     game.run(event);
 }
