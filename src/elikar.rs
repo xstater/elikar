@@ -77,16 +77,7 @@ impl Elikar{
         let mut sdlevent : SDL_Event = SDL_Event{type_ : 0};
         while !self.is_quit() {
             while unsafe{ SDL_PollEvent(&mut sdlevent) } == 1 {
-                match unsafe { sdlevent.type_ } {
-                    x if x == SDL_EventType::SDL_QUIT as u32 => {
-                        self.quit();
-                    },
-                    x if x == SDL_EventType::SDL_MOUSEBUTTONDOWN as u32 => {
-                        event_handlers.mouse_button_down.emit(
-                            (unsafe{sdlevent.button.x},unsafe{sdlevent.button.y}));
-                    },
-                    _ => {}
-                }
+                event_handlers.dispatch(sdlevent);
             }
         }
     }
