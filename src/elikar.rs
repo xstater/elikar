@@ -76,7 +76,7 @@ impl Elikar{
     }
 
     pub fn fps(&self) -> usize{
-        1_000_000 / self.frame_duration().as_micros() as usize
+        1_000_000_usize.checked_div(self.frame_duration().as_micros() as usize).unwrap_or(0)
     }
 
     ///frames in second
