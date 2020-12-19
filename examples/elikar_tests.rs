@@ -23,11 +23,15 @@ fn main(){
     event_handlers.quit.connect(move |()|{
         game_closure.quit();
     });
-    event_handlers.mouse_button_down.connect(|(x,y)|{
+    let game_closure = game.clone();
+    event_handlers.mouse_button_down.connect(move |(x,y)|{
         println!("({},{})",x,y);
+        println!("frame_duration:{}us",game_closure.frame_duration().as_micros());
+        println!("fps:{}",game_closure.fps());
+        println!("fis:{}",game_closure.fis());
     });
     let mut game_closure = game.clone();
-    let _cnt1 = event_handlers.mouse_button_down.connect(move |(x,y)|{
+    event_handlers.mouse_button_down.connect(move |(x,y)|{
         if x < 100 && y < 100 {
             game_closure.quit();
         }

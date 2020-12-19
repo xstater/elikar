@@ -5,9 +5,12 @@ use crate::common::get_error;
 use crate::system_event::Signals;
 use std::cell::RefCell;
 use std::sync::{Mutex, Arc};
+use std::time::{Duration, Instant};
 
 pub struct ElikarBase {
     is_quit : bool,
+    frames_in_second : usize,
+    frame_duration : Duration,
 }
 
 #[derive(Clone)]
@@ -53,6 +56,8 @@ impl Elikar{
         Ok(Elikar{
             base : Arc::new(Mutex::new(RefCell::new(ElikarBase{
                 is_quit: false,
+                frames_in_second : 0,
+                frame_duration : Duration::default(),
             })))
         })
     }
@@ -73,14 +78,58 @@ impl Elikar{
         }
     }
 
+    pub fn frame_duration(&self) -> Duration {
+        if let Ok(guard) = self.base.lock() {
+            guard.borrow().frame_duration
+        }else{
+            Duration::default()
+        }
+    }
+
+    pub fn fps(&self) -> usize{
+        1_000_000 / self.frame_duration().as_micros() as usize
+    }
+
+    ///frames in second
+    pub fn fis(&self) -> usize{
+        if let Ok(guard) = self.base.lock() {
+            guard.borrow().frames_in_second
+        }else{
+            0
+        }
+    }
+
     pub fn run(&mut self, mut event_handlers : Signals){
         let mut sdlevent : SDL_Event = SDL_Event{type_ : 0};
+        let mut frames : usize = 0;
+        let mut second_time = Instant::now();
         while !self.is_quit() {
+            let frame_start_time = Instant::now();
+            if frame_start_time.duration_since(second_time) > Duration::from_secs(1){
+                self.set_frames_in_second(frames);
+                frames = 0;
+                second_time = frame_start_time;
+            }
             while unsafe{ SDL_PollEvent(&mut sdlevent) } == 1 {
                 event_handlers.dispatch(sdlevent);
             }
+            self.set_frame_duration(Instant::now().duration_since(frame_start_time));
+            frames += 1;
         }
     }
+
+    fn set_frame_duration(&mut self,duration: Duration){
+        if let Ok(guard) = self.base.lock() {
+            guard.borrow_mut().frame_duration = duration;
+        }
+    }
+
+    fn set_frames_in_second(&mut self, frames : usize){
+        if let Ok(guard) = self.base.lock() {
+            guard.borrow_mut().frames_in_second = frames;
+        }
+    }
+
 }
 
 impl Drop for ElikarBase{
