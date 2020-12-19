@@ -7,14 +7,15 @@ fn main(){
     let _ek = Elikar::new().unwrap();
 
     let mut wm = window::Manager::new();
-    let wid  = wm.add_windows(window::builder()
+    let w  = wm.builder()
         .title("测试窗口")
         .position_centred()
         .size(1280, 700)
         .maximized()
         .opengl()
         .build()
-        .unwrap());
+        .unwrap();
+    let wid = wm.add_windows(w);
     {
         let window = wm.window_mut(wid).unwrap();
 
