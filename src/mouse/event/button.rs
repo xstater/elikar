@@ -1,7 +1,21 @@
 extern crate sdl2_sys;
 
 use sdl2_sys::SDL_MouseButtonEvent;
-use crate::mouse::button::{Button, Clicks};
+
+#[derive(Debug,Copy,Clone,PartialOrd,PartialEq)]
+pub enum Button{
+    Left,
+    Middle,
+    Right,
+    X1,
+    X2
+}
+
+#[derive(Debug,Copy,Clone,PartialOrd,PartialEq)]
+pub enum Clicks{
+    Single,
+    Double
+}
 
 #[derive(Debug,Copy,Clone)]
 pub struct Info {

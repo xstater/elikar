@@ -23,8 +23,8 @@ impl Signals {
         }
     }
 
-    pub(in crate) fn dispatch(&mut self,sdlevent : SDL_Event){
-        match unsafe { sdlevent.type_ } {
+    pub(in crate) fn dispatch(&mut self,sdlevesnt : SDL_Event){
+        match unafe { sdlevent.type_ } {
             x if x == SDL_EventType::SDL_QUIT as u32 => {
                 self.quit.emit(());
             }
