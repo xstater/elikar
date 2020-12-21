@@ -22,7 +22,7 @@ fn main(){
         }
     });
     signals.key_down.connect(|info|{
-        println!("info {:?}",info);
+        println!("{:?}",info);
     });
 
     game.run(signals);
