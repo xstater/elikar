@@ -7,7 +7,7 @@ fn main(){
     let mut game = Elikar::new().unwrap();
 
     let wm = window::Manager::new();
-    let window = wm.builder()
+    let _window = wm.builder()
         .title("keyboard test")
         .opengl()
         .build()
