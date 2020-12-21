@@ -15,7 +15,6 @@ fn main(){
         .opengl()
         .build()
         .unwrap();
-    wm.add_windows(window);
 
     let mut game_closure = game.clone();
     event.quit.connect(move|_|{

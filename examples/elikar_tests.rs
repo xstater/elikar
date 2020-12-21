@@ -7,15 +7,14 @@ use elikar::system_event::Signals;
 fn main(){
     let mut game = Elikar::new().unwrap();
 
-    let mut wm = window::Manager::new();
-    let window = wm.builder()
+    let wm = window::Manager::new();
+    let _window = wm.builder()
         .title("asdasd")
         .position_centred()
         .opengl()
         .size(1280,800)
         .build()
         .unwrap();
-    wm.add_windows(window);
 
     let mut event_handlers = Signals::new();
 
