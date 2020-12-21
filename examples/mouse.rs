@@ -8,8 +8,8 @@ fn main(){
 
     let mut event = system_event::Signals::new();
 
-    let mut wm = window::Manager::new();
-    let window = wm.builder()
+    let wm = window::Manager::new();
+    let _window = wm.builder()
         .title("mouse test")
         .position_centred()
         .opengl()
