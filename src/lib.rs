@@ -8,3 +8,4 @@ pub mod msgbox;
 pub mod clipboard;
 pub mod mouse;
 pub mod system_event;
+pub mod keyboard;

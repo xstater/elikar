@@ -2,7 +2,7 @@ extern crate sdl2_sys;
 
 use sdl2_sys::*;
 use xrsignal::Signal;
-use crate::mouse;
+use crate::{mouse, keyboard};
 
 pub struct Signals {
     pub quit : Signal<(),()>,
@@ -10,6 +10,8 @@ pub struct Signals {
     pub mouse_button_up : Signal<mouse::event::button::Info,()>,
     pub mouse_motion : Signal<mouse::event::motion::Info,()>,
     pub mouse_wheel : Signal<mouse::event::wheel::Info,()>,
+    pub key_down : Signal<keyboard::event::Info,()>,
+    pub key_up : Signal<keyboard::event::Info,()>,
 }
 
 impl Signals {
@@ -20,6 +22,8 @@ impl Signals {
             mouse_button_up : Signal::new(),
             mouse_motion : Signal::new(),
             mouse_wheel : Signal::new(),
+            key_down : Signal::new(),
+            key_up : Signal::new(),
         }
     }
 
@@ -39,6 +43,12 @@ impl Signals {
             }
             x if x == SDL_EventType::SDL_MOUSEWHEEL as u32 => {
                 self.mouse_wheel.emit(unsafe{sdl_event.wheel}.into());
+            }
+            x if x == SDL_EventType::SDL_KEYDOWN as u32 => {
+                self.key_down.emit(unsafe{sdl_event.key}.into());
+            }
+            x if x == SDL_EventType::SDL_KEYUP as u32 => {
+                self.key_up.emit(unsafe{sdl_event.key}.into());
             }
             _ => {}
         }
