@@ -21,19 +21,19 @@ impl ButtonState {
         ButtonState(value)
     }
 
-    pub fn is_left(&self) -> bool{
+    pub fn left(&self) -> bool{
         self.0 & LEFT_MASK == LEFT_MASK
     }
-    pub fn is_right(&self) -> bool{
+    pub fn right(&self) -> bool{
         self.0 & RIGHT_MASK == RIGHT_MASK
     }
-    pub fn is_middle(&self) -> bool{
+    pub fn middle(&self) -> bool{
         self.0 & MIDDLE_MASK == MIDDLE_MASK
     }
-    pub fn is_x1(&self) -> bool{
+    pub fn x1(&self) -> bool{
         self.0 & X1_MASK == X1_MASK
     }
-    pub fn is_x2(&self) -> bool{
+    pub fn x2(&self) -> bool{
         self.0 & X2_MASK == X2_MASK
     }
 }
