@@ -32,6 +32,10 @@ impl Window {
         }
     }
 
+    pub(in crate) unsafe fn split(self) -> (Weak<RwLock<ManagerBase>>,*mut SDL_Window){
+        (self.manager,self.raw_window)
+    }
+
     pub fn size(&self) -> Result<(u32,u32)> {
         let ptr = self.manager.upgrade().ok_or(Error::InvalidWindow)?;
         let _guard = ptr.read().map_err(|_| Error::InvalidWindow)?;

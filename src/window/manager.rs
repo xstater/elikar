@@ -4,8 +4,8 @@ use sdl2_sys::*;
 use crate::window::{Builder};
 use std::sync::{RwLock, Arc};
 
-pub(in crate::window) struct ManagerBase {
-    pub(in crate::window) windows : Vec<*mut SDL_Window>
+pub(in crate) struct ManagerBase {
+    pub(in crate) windows : Vec<*mut SDL_Window>
 }
 
 #[derive(Clone)]
