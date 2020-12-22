@@ -19,7 +19,9 @@ fn main() {
         game_closure.quit();
     });
     signals.drop_files.connect(|info|{
-        println!("File:{:?}",info);
+        for path in info.paths {
+            println!("{}",path.to_str().unwrap());
+        }
     });
 
     game.run(signals);
