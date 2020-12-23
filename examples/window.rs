@@ -33,6 +33,11 @@ fn main() {
     {
         println!("title:{}", w.title().unwrap());
     }
+
+    let id = w.id().unwrap();
+    println!("id:{}",id);
+    let w2 = wm.find_by_id(id).unwrap();
+    println!("title:{}",w2.title().unwrap());
     // window.hide();
     // window.show();
     // window.maximize();

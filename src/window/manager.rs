@@ -1,7 +1,7 @@
 extern crate sdl2_sys;
 
 use sdl2_sys::*;
-use crate::window::{Builder};
+use crate::window::{Builder, Window};
 use std::sync::{RwLock, Arc};
 
 pub(in crate) struct ManagerBase {
@@ -29,6 +29,18 @@ impl Manager {
     pub fn count(&self) -> usize{
         let guard = self.base.read().unwrap();
         guard.windows.len()
+    }
+
+    pub fn find_by_id(&self,id : u32) -> Option<Window>{
+        let guard = self.base.read().unwrap();
+        for ptr in &guard.windows {
+            if unsafe{ SDL_GetWindowID(*ptr) } == id {
+                return Some(unsafe {
+                    Window::from_ptr(Arc::downgrade(&self.base.clone()), *ptr)
+                });
+            }
+        }
+        Option::None
     }
 
 }
