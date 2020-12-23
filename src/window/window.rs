@@ -16,6 +16,9 @@ pub struct Window{
     raw_window : *mut SDL_Window
 }
 
+unsafe impl Send for Window{}
+unsafe impl Sync for Window{}
+
 #[derive(Debug,Clone,PartialEq,PartialOrd)]
 pub enum Error{
     InvalidWindow,
@@ -34,6 +37,10 @@ impl Window {
 
     pub(in crate) unsafe fn split(self) -> (Weak<RwLock<ManagerBase>>,*mut SDL_Window){
         (self.manager,self.raw_window)
+    }
+
+    pub unsafe fn raw_window(&self) -> *mut SDL_Window {
+        self.raw_window
     }
 
     pub fn size(&self) -> Result<(u32,u32)> {
@@ -238,6 +245,14 @@ impl Window {
         let _guard = ptr.write().map_err(|_| Error::InvalidWindow)?;
         Ok(unsafe {
             SDL_SetWindowResizable(self.raw_window,SDL_bool::SDL_FALSE)
+        })
+    }
+
+    pub fn gl_swap(&mut self) -> Result<()> {
+        let ptr = self.manager.upgrade().ok_or(Error::InvalidWindow)?;
+        let _guard = ptr.write().map_err(|_| Error::InvalidWindow)?;
+        Ok(unsafe {
+            SDL_GL_SwapWindow(self.raw_window)
         })
     }
 

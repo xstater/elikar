@@ -13,6 +13,9 @@ pub struct Manager{
     base : Arc<RwLock<ManagerBase>>
 }
 
+unsafe impl Send for Manager {}
+unsafe impl Sync for Manager {}
+
 impl Manager {
     pub fn new() -> Manager {
         Manager {
