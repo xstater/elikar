@@ -9,6 +9,7 @@ use std::path::PathBuf;
 pub struct Signals {
     pub quit : Signal<(),()>,
     pub enter_frame : Signal<(),()>,
+    pub leave_frame : Signal<(),()>,
     pub mouse_button_down : Signal<mouse::event::button::Info,()>,
     pub mouse_button_up : Signal<mouse::event::button::Info,()>,
     pub mouse_motion : Signal<mouse::event::motion::Info,()>,
@@ -24,6 +25,7 @@ impl Signals {
         Signals {
             quit : Signal::new(),
             enter_frame : Signal::new(),
+            leave_frame : Signal::new(),
             mouse_button_down : Signal::new(),
             mouse_button_up : Signal::new(),
             mouse_motion : Signal::new(),
@@ -36,7 +38,6 @@ impl Signals {
     }
 
     pub(in crate) fn dispatch(&mut self,sdl_event: SDL_Event){
-        self.enter_frame.emit(());
         match unsafe { sdl_event.type_ } {
             x if x == SDL_EventType::SDL_QUIT as u32 => {
                 self.quit.emit(());

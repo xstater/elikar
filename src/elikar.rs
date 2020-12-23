@@ -90,6 +90,7 @@ impl Elikar{
         let mut second_time = Instant::now();
         while !self.is_quit() {
             let frame_start_time = Instant::now();
+            event_handlers.enter_frame.emit(());
             if second_time.elapsed() > Duration::from_secs(1){
                 self.set_frames_in_second(frames);
                 frames = 0;
@@ -98,6 +99,7 @@ impl Elikar{
             while unsafe{ SDL_PollEvent(&mut sdlevent) } == 1 {
                 event_handlers.dispatch(sdlevent);
             }
+            event_handlers.leave_frame.emit(());
             self.set_frame_duration(frame_start_time.elapsed());
             frames += 1;
         }
