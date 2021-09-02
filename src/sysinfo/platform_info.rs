@@ -1,7 +1,7 @@
 extern crate sdl2_sys;
 
 use std::ffi::CStr;
-use crate::common::unit::{Data, Mebibyte};
+use xrunits::data::{Mebibyte, BuildMebibyte};
 
 #[inline]
 pub fn name()-> &'static str{
@@ -10,8 +10,8 @@ pub fn name()-> &'static str{
     }
 }
 #[inline]
-pub fn system_ram() -> Data{
+pub fn system_ram() -> Mebibyte{
     unsafe {
         sdl2_sys::SDL_GetSystemRAM() as u32
-    }.mb()
+    }.mib()
 }

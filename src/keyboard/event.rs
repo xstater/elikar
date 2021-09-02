@@ -10,7 +10,7 @@ pub enum State{
 }
 
 #[derive(Debug,Clone,Copy)]
-pub struct Info{
+pub struct EventInfo {
     pub timestamp : u32,
     pub window_id : u32,
     pub state : State,
@@ -19,9 +19,9 @@ pub struct Info{
     pub mod_state : Mod
 }
 
-impl From<SDL_KeyboardEvent> for Info{
+impl From<SDL_KeyboardEvent> for EventInfo {
     fn from(event : SDL_KeyboardEvent) -> Self {
-        Info{
+        EventInfo {
             timestamp: event.timestamp,
             window_id: event.windowID,
             state: if event.state == SDL_PRESSED as u8 {

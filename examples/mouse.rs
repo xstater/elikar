@@ -1,44 +1,68 @@
-extern crate elikar;
+use elikar::{Elikar, ElikarStates};
+use xecs::{System, World};
+use xecs::resource::Resource;
+use std::cell::{RefMut, Ref};
+use elikar::window::Window;
+use elikar::events::PollEvents;
 
-use elikar::{Elikar, system_event, window, mouse};
-use elikar::mouse::cursor::{Cursor, SystemCursor};
+struct CreateWindowSystem;
+impl<'a> System<'a> for CreateWindowSystem {
+    type Resource = &'a mut World;
+    type Dependencies = ();
+
+    fn update(&'a mut self, mut world : RefMut<'a,World>) {
+        world.register::<Window>();
+
+        world.create_entity()
+            .attach(elikar::window::Builder::default()
+                .title("elikar test")
+                .build()
+                .unwrap());
+
+
+    }
+}
+
+struct QuitSystem;
+impl<'a> System<'a> for QuitSystem {
+    type Resource = (&'a PollEvents,&'a mut ElikarStates);
+    type Dependencies = PollEvents;
+
+    fn update(&'a mut self, (events,mut states) : (Ref<'a,PollEvents>,RefMut<'a,ElikarStates>)) {
+        if let Some(_) = events.quit {
+            states.quit()
+        }
+    }
+}
+
+struct PrintEventsSystem;
+impl<'a> System<'a> for PrintEventsSystem {
+    type Resource = &'a PollEvents;
+    type Dependencies = PollEvents;
+
+    fn update(&'a mut self,events : Ref<'a,PollEvents>) {
+        if let Some(motion) = &events.mouse_motion {
+            println!("position:{:?}",motion.position)
+        }
+        if let Some(button) = &events.mouse_button_down {
+            println!("button:{:?}",button)
+        }
+        if let Some(wheel) = &events.mouse_wheel {
+            println!("wheel:{:?}",wheel);
+        }
+    }
+}
 
 fn main(){
     let mut game = Elikar::new().unwrap();
+    game.current_stage_mut()
+        .add_once_system(CreateWindowSystem);
+    game.current_stage_mut()
+        .add_system(PollEvents::new());
+    game.current_stage_mut()
+        .add_system(QuitSystem);
+    game.current_stage_mut()
+        .add_system(PrintEventsSystem);
 
-    let mut event = system_event::Signals::new();
-
-    let wm = window::Manager::new();
-    let _window = wm.builder()
-        .title("mouse test")
-        .position_centred()
-        .opengl()
-        .build()
-        .unwrap();
-
-    let mut game_closure = game.clone();
-    event.quit.connect(move|_|{
-        game_closure.quit();
-    });
-    // event.mouse_button_down.connect(|_|{
-    //     if mouse::cursor::is_visible() {
-    //         mouse::cursor::hide()
-    //     }else{
-    //         mouse::cursor::show()
-    //     }
-    // });
-    event.mouse_button_down.connect(|_|{
-        let (x,y) = mouse::global_position();
-        println!("global_position:({},{})",x,y);
-        mouse::warp_global(100,100).unwrap();
-    });
-    event.mouse_wheel.connect(|info|{
-        let (x,y) = info.scrolled;
-        println!("wheel:({},{})",x,y);
-    });
-
-    let mut cursor = Cursor::system(SystemCursor::SizeAll).unwrap();
-    cursor.set_as_cursor();
-
-    game.run(event);
+    game.run();
 }

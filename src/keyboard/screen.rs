@@ -8,14 +8,8 @@ pub fn has_support() -> bool{
 }
 
 pub fn is_shown(window : &Window) -> bool{
-    let window_cloned = window.clone();
-    let (manager,window_ptr ) = unsafe{window_cloned.split()};
-    if let Some(ptr) = manager.upgrade() {
-        if let Ok(_guard) = ptr.read() {
-            return unsafe{
-                SDL_IsScreenKeyboardShown(window_ptr) == SDL_bool::SDL_TRUE
-            };
-        }
+    let window_ptr = unsafe { window.window_ptr() };
+    return unsafe {
+        SDL_IsScreenKeyboardShown(window_ptr) == SDL_bool::SDL_TRUE
     }
-    false
 }

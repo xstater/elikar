@@ -5,7 +5,7 @@ pub mod event;
 
 use sdl2_sys::*;
 use std::ptr::null_mut;
-use crate::common::get_error;
+use crate::common::{ SdlError,Result };
 
 #[derive(Debug,Clone,Copy,Default,PartialOrd,PartialEq)]
 pub struct ButtonState(u32);
@@ -38,21 +38,21 @@ impl ButtonState {
     }
 }
 
-pub fn capture() -> Result<(),String>{
+pub fn capture() -> Result<()>{
     let errcode = unsafe { SDL_CaptureMouse(SDL_bool::SDL_TRUE) };
     if errcode == 0 {
         Ok(())
     }else{
-        Err(get_error())
+        Err(SdlError::get())
     }
 }
 
-pub fn release() -> Result<(),String>{
+pub fn release() -> Result<()>{
     let errcode = unsafe { SDL_CaptureMouse(SDL_bool::SDL_FALSE) };
     if errcode == 0 {
         Ok(())
     }else{
-        Err(get_error())
+        Err(SdlError::get())
     }
 }
 
@@ -70,17 +70,17 @@ pub fn is_relative() -> bool{
     unsafe{ SDL_GetRelativeMouseMode() == SDL_bool::SDL_TRUE}
 }
 
-pub fn enable_relative() -> Result<(),String> {
+pub fn enable_relative() -> Result<()> {
     if unsafe { SDL_SetRelativeMouseMode(SDL_bool::SDL_TRUE) } != 0 {
-        Err(get_error())
+        Err(SdlError::get())
     }else{
         Ok(())
     }
 }
 
-pub fn disable_relative() -> Result<(),String> {
+pub fn disable_relative() -> Result<()> {
     if unsafe { SDL_SetRelativeMouseMode(SDL_bool::SDL_FALSE) } != 0 {
-        Err(get_error())
+        Err(SdlError::get())
     }else{
         Ok(())
     }
@@ -92,9 +92,9 @@ pub fn relative_position() -> (i32,i32){
     (x,y)
 }
 
-pub fn warp_global(x : i32,y : i32) -> Result<(),String> {
+pub fn warp_global(x : i32,y : i32) -> Result<()> {
     if unsafe{ SDL_WarpMouseGlobal(x,y) } != 0 {
-        Err(get_error())
+        Err(SdlError::get())
     }else{
         Ok(())
     }

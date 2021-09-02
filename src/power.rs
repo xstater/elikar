@@ -2,7 +2,7 @@ extern crate sdl2_sys;
 
 use std::os::raw::c_int;
 use sdl2_sys::*;
-use crate::common::unit::{Time, Second};
+use xrunits::time::{Second, BuildSecond};
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub enum PowerState {
@@ -23,7 +23,7 @@ pub fn power_state() -> Option<PowerState>{
     }
 }
 
-pub fn battery_time() -> Option<Time> {
+pub fn battery_time() -> Option<Second> {
     let mut sec : i32 = -1;
     unsafe {
         sdl2_sys::SDL_GetPowerInfo(&mut sec as *mut c_int,0 as *mut c_int);
@@ -31,7 +31,7 @@ pub fn battery_time() -> Option<Time> {
     if sec < 0 {
         Option::None
     } else {
-        Some(sec.s())
+        Some(sec.sec())
     }
 }
 

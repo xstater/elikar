@@ -3,22 +3,76 @@ extern crate elikar_gl;
 extern crate sdl2_sys;
 
 use sdl2_sys::*;
-use elikar::{Elikar, window, system_event};
+use elikar::{Elikar, window, ElikarStates};
 use elikar_gl as gl;
 use std::ffi::CString;
+use xecs::{System, World};
+use elikar::window::Window;
+use std::cell::{RefMut, Ref};
+use elikar::events::PollEvents;
+use xecs::resource::Resource;
+use xecs::system::End;
+
+struct QuitSystem;
+impl<'a> System<'a> for QuitSystem {
+    type Resource = (&'a PollEvents,&'a mut ElikarStates);
+    type Dependencies = PollEvents;
+
+    fn update(&'a mut self, (events,mut states) : (Ref<'a,PollEvents>,RefMut<'a,ElikarStates>)) {
+        if let Some(_) = events.quit {
+            states.quit()
+        }
+    }
+}
+
+struct PrintFpsSystem;
+impl<'a> System<'a> for PrintFpsSystem {
+    type Resource = (&'a PollEvents,&'a ElikarStates);
+    type Dependencies = PollEvents;
+
+    fn update(&'a mut self,(events,states) : (Ref<'a,PollEvents>,Ref<'a,ElikarStates>)) {
+        if let Some(_motion) = &events.mouse_motion {
+            println!("fps:{}",states.fps());
+        }
+    }
+}
+
+struct ClearScreen;
+impl<'a> System<'a> for ClearScreen {
+    type Resource = ();
+    type Dependencies = ();
+
+    fn update(&'a mut self,_ : ()) {
+        unsafe {
+            gl::ClearColor(0.0, 0.0, 0.0, 1.0);
+            gl::Clear(gl::COLOR_BUFFER_BIT);
+        };
+    }
+}
+
+struct SwapWindow;
+impl<'a> System<'a> for SwapWindow {
+    type Resource = &'a mut World;
+    type Dependencies = End;
+
+    fn update(&'a mut self, world : RefMut<'a,World>) {
+        for window in world.query::<&mut Window>() {
+            window.gl_swap();
+        }
+    }
+}
 
 fn main(){
     let mut game = Elikar::new().unwrap();
 
-    let wm = window::Manager::new();
-    let window = wm.builder()
+    let window = window::Builder::default()
         .title("OpenGL test")
         .opengl()
         .build()
         .unwrap();
 
     let gl_context = unsafe {
-        let wptr : *mut SDL_Window = window.raw_window();
+        let wptr : *mut SDL_Window = window.window_ptr();
         let gc = SDL_GL_CreateContext(wptr);
         if gc.is_null() {
             panic!("asd");
@@ -36,29 +90,22 @@ fn main(){
         }
     }
 
-    let mut sigs = system_event::Signals::new();
-    let mut game_closure = game.clone();
-    sigs.quit.connect(move |()|{
-        game_closure.quit();
-    });
-    let game_closure = game.clone();
-    sigs.key_down.connect(move |_|{
-       println!("frame_duration:{}us,fps:{},fis:{}",
-                game_closure.frame_duration().as_micros(),
-                game_closure.fps(),
-                game_closure.fis());
-    });
-    let mut window_closure = window.clone();
-    sigs.enter_frame.connect(|()| {
-        unsafe {
-            gl::ClearColor(0.0, 0.0, 0.0, 1.0);
-            gl::Clear(gl::COLOR_BUFFER_BIT);
-        };
-    });
-    sigs.leave_frame.connect(move |()|{
-        window_closure.gl_swap().unwrap();
-    });
-    game.run(sigs);
+    {
+        let mut world = game.current_stage_mut().world_mut();
+        world.register::<Window>();
+        world.create_entity()
+            .attach(window);
+    }
+
+    game.current_stage_mut()
+        .add_system(QuitSystem)
+        .add_system(PollEvents::new())
+        .add_system(PrintFpsSystem);
+    game.current_stage_mut()
+        .add_system(ClearScreen)
+        .add_system(SwapWindow);
+
+    game.run();
 
     unsafe {SDL_GL_DeleteContext(gl_context)};
 }

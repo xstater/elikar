@@ -1,28 +1,64 @@
-extern crate elikar;
+use elikar::{Elikar, ElikarStates};
+use xecs::{System, World};
+use xecs::resource::Resource;
+use std::cell::{RefMut, Ref};
+use elikar::window::Window;
+use elikar::events::PollEvents;
 
-use elikar::{Elikar, window, system_event};
+struct CreateWindowSystem;
+impl<'a> System<'a> for CreateWindowSystem {
+    type Resource = &'a mut World;
+    type Dependencies = ();
 
-fn main() {
-    let mut game = Elikar::new().unwrap();
+    fn update(&'a mut self, mut world : RefMut<'a,World>) {
+        world.register::<Window>();
 
-    let wm = window::Manager::new();
-    let _window = wm.builder()
-        .title("drop file here")
-        .opengl()
-        .build()
-        .unwrap();
+        world.create_entity()
+            .attach(elikar::window::Builder::default()
+                .title("elikar test")
+                .build()
+                .unwrap());
 
-    let mut signals = system_event::Signals::new();
 
-    let mut game_closure = game.clone();
-    signals.quit.connect(move |()| {
-        game_closure.quit();
-    });
-    signals.drop_files.connect(|info|{
-        for path in info.paths {
-            println!("{}",path.to_str().unwrap());
+    }
+}
+
+struct QuitSystem;
+impl<'a> System<'a> for QuitSystem {
+    type Resource = (&'a PollEvents,&'a mut ElikarStates);
+    type Dependencies = PollEvents;
+
+    fn update(&'a mut self, (events,mut states) : (Ref<'a,PollEvents>,RefMut<'a,ElikarStates>)) {
+        if let Some(_) = events.quit {
+            states.quit()
         }
-    });
+    }
+}
 
-    game.run(signals);
+struct PrintEventsSystem;
+impl<'a> System<'a> for PrintEventsSystem {
+    type Resource = &'a PollEvents;
+    type Dependencies = PollEvents;
+
+    fn update(&'a mut self,events : Ref<'a,PollEvents>) {
+        if let Some(files) = &events.drop_files {
+            for path in &files.paths {
+                println!("{:?}",path);
+            }
+        }
+    }
+}
+
+fn main(){
+    let mut game = Elikar::new().unwrap();
+    game.current_stage_mut()
+        .add_once_system(CreateWindowSystem);
+    game.current_stage_mut()
+        .add_system(PollEvents::new());
+    game.current_stage_mut()
+        .add_system(QuitSystem);
+    game.current_stage_mut()
+        .add_system(PrintEventsSystem);
+
+    game.run();
 }

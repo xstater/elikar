@@ -18,7 +18,7 @@ pub enum Clicks{
 }
 
 #[derive(Debug,Copy,Clone)]
-pub struct Info {
+pub struct EventInfo {
     pub timestamp : u32,
     pub window_id : u32,
     pub button : Button,
@@ -32,9 +32,9 @@ const BUTTON_ID_RIGHT : u8 = 3;
 const BUTTON_ID_X1 : u8 = 4;
 const BUTTON_ID_X2 : u8 = 5;
 
-impl From<SDL_MouseButtonEvent> for Info {
+impl From<SDL_MouseButtonEvent> for EventInfo {
     fn from(x: SDL_MouseButtonEvent) -> Self {
-        Info {
+        EventInfo {
             timestamp : x.timestamp,
             window_id : x.windowID,
             button : match x.button {

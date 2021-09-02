@@ -1,9 +1,7 @@
 extern crate elikar;
 
-use elikar::common::unit::Second;
-
 fn main(){
     println!("Power state:{:?}",elikar::power::power_state());
-    println!("Battery life time: {:?} second",elikar::power::battery_time().unwrap_or(0_i32.s()).as_s());
+    println!("Battery life time: {:?} second",elikar::power::battery_time());
     println!("Battery percentage:{:?} %",elikar::power::battery_percentage());
 }

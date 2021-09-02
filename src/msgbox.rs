@@ -3,7 +3,7 @@ extern crate sdl2_sys;
 use sdl2_sys::*;
 use std::ffi::CString;
 use std::os::raw::{c_char, c_int};
-use crate::common::get_error;
+use crate::common::{ SdlError,Result };
 
 #[derive(Debug)]
 enum Type{
@@ -91,7 +91,7 @@ impl MsgboxBuilder {
         t
     }
 
-    pub fn build(self) -> Result<(),String> {
+    pub fn build(self) -> Result<()> {
         let mut sdl_buttons : Vec<SDL_MessageBoxButtonData> = Vec::new();
         let mut button_text_cstr : Vec<CString> = Vec::new();
         for btn in self.buttons.iter().rev() {
@@ -104,8 +104,7 @@ impl MsgboxBuilder {
                     SDL_MessageBoxButtonFlags::SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT as u32
                 },
             };
-            let tmp = CString::new(btn.text.clone())
-                .map_err(|_| "Invalid button text") ?;
+            let tmp = CString::new(btn.text.clone()).unwrap();
             button_text_cstr.push(tmp);
             sdl_buttons.push(SDL_MessageBoxButtonData {
                 flags,
@@ -113,10 +112,8 @@ impl MsgboxBuilder {
                 text : button_text_cstr.last().unwrap().as_ptr() as *const c_char
             })
         }
-        let title_cstr = CString::new(self.title.clone())
-            .map_err(|_| "Invalid title") ?;
-        let msg_cstr = CString::new(self.message.clone())
-            .map_err(|_| "Invalid message") ?;
+        let title_cstr = CString::new(self.title.clone()).unwrap();
+        let msg_cstr = CString::new(self.message.clone()).unwrap();
         let sdl_msgbox = SDL_MessageBoxData {
             flags : match &self.box_type {
                 Type::Error => {
@@ -141,7 +138,7 @@ impl MsgboxBuilder {
             SDL_ShowMessageBox(&sdl_msgbox as *const _,&mut button_id as *mut _)
         };
         if errcode == -1 || button_id == -1{
-            Err(get_error())
+            Err(SdlError::get())
         } else {
             for btn in self.buttons{
                 if btn.id == button_id as usize {
@@ -163,3 +160,27 @@ pub fn alert(title : &str,message : &str){
         .build()
         .unwrap();
 }
+
+pub trait UnwrapErrorMsgbox {
+    type Item;
+    fn unwrap_error_msgbox(self) -> Self::Item;
+}
+
+impl<T> UnwrapErrorMsgbox for Option<T> {
+    type Item = T;
+
+    fn unwrap_error_msgbox(self) -> Self::Item {
+        match self {
+            Option::None => {
+                MsgboxBuilder::error()
+                    .title("Error")
+                    .message("Unwrap")
+                    .add_button(ButtonDefaultKey::Return,"Ok",||{})
+                    .build().unwrap();
+                panic!("unwrap");
+            }
+            Option::Some(t) => { t }
+        }
+    }
+}
+

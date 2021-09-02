@@ -1,9 +1,9 @@
 extern crate sdl2_sys;
 
-use crate::common::unit::{Data, Byte};
+use xrunits::data::{Byte, BuildByte};
 
 #[inline]
-pub fn cpu_cache_line_size() -> Data{
+pub fn cpu_cache_line_size() -> Byte{
     unsafe {
         sdl2_sys::SDL_GetCPUCacheLineSize() as u32
     }.byte()

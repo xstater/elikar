@@ -6,9 +6,9 @@ use elikar::sysinfo;
 fn main(){
     let _game = Elikar::new().unwrap();
     println!("Platform:{}"                  ,sysinfo::platform_info::name());
-    println!("System Ram:{} MiB"            ,sysinfo::platform_info::system_ram().as_mb());
+    println!("System Ram:{}"            ,sysinfo::platform_info::system_ram());
 
-    println!("CPU Cache Line Size:{} bytes" ,sysinfo::cpu_info::cpu_cache_line_size().as_byte());
+    println!("CPU Cache Line Size:{}" ,sysinfo::cpu_info::cpu_cache_line_size());
     println!("CPU count:{}"                 ,sysinfo::cpu_info::cpu_count());
     println!("Has 3DNow:{}"                 ,sysinfo::cpu_info::has_3d_now());
     println!("Has AVX:{}"                   ,sysinfo::cpu_info::has_avx());

@@ -3,31 +3,20 @@ extern crate sdl2_sys;
 use sdl2_sys::*;
 use crate::window::window::Window;
 use std::ffi::{CString};
-use crate::common::get_error;
-use std::sync::{Weak, RwLock};
-use crate::window::manager::ManagerBase;
+use crate::common::{ SdlError,Result };
 
+#[derive(Debug,Clone)]
 pub struct Builder{
-    windows_manager : Weak<RwLock<ManagerBase>>,
     title : String,
     x : i32,y : i32,
     w : i32,h : i32,
     flags : u32
 }
 
-#[derive(Debug,Clone,PartialEq,PartialOrd)]
-pub enum Error{
-    InvalidManager,
-    SDLError(String)
-}
-
-pub type Result<T> = std::result::Result<T,Error>;
-
-impl Builder {
-    pub(in crate::window) fn from_windows_manager_base(wm : Weak<RwLock<ManagerBase>>) -> Builder{
-        Builder{
-            windows_manager : wm,
-            title : "elikar".to_owned(),
+impl Default for Builder {
+    fn default() -> Self {
+        Builder {
+            title: "elikar".to_string(),
             x : SDL_WINDOWPOS_UNDEFINED_MASK as i32,
             y : SDL_WINDOWPOS_UNDEFINED_MASK as i32,
             w : 1280,
@@ -35,8 +24,9 @@ impl Builder {
             flags : SDL_WindowFlags::SDL_WINDOW_SHOWN as u32
         }
     }
+}
 
-
+impl Builder {
     pub fn title(&mut self,text : &str) -> &mut Self{
         self.title = text.to_owned();
         self
@@ -110,9 +100,7 @@ impl Builder {
     }
 
     pub fn build(&self) -> Result<Window>{
-        let ptr = self.windows_manager.upgrade().ok_or(Error::InvalidManager)?;
-        let mut guard = ptr.write().map_err(|_|Error::InvalidManager)?;
-        let title_str = CString::new(self.title.clone()).unwrap();//safe here
+        let title_str = CString::new(self.title.clone()).unwrap();
         let window_ptr : *mut SDL_Window = unsafe {
             SDL_CreateWindow(
                 title_str.as_ptr(),
@@ -120,11 +108,10 @@ impl Builder {
                 self.w,self.h,
                 self.flags)
         };
-        guard.windows.push(window_ptr);
         if window_ptr.is_null() {
-            Err(Error::SDLError(get_error()))
+            Err(SdlError::get())
         } else {
-            Ok(unsafe {  Window::from_ptr(self.windows_manager.clone(),window_ptr) })
+            Ok(unsafe { Window::from_ptr(window_ptr) })
         }
     }
 

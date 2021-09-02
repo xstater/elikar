@@ -4,7 +4,7 @@ use sdl2_sys::SDL_MouseMotionEvent;
 use crate::mouse::ButtonState;
 
 #[derive(Debug,Clone,Copy)]
-pub struct Info{
+pub struct EventInfo {
     pub timestamp : u32,
     pub window_id : u32,
     pub which : u32,
@@ -13,9 +13,9 @@ pub struct Info{
     pub relative : (i32,i32)
 }
 
-impl From<SDL_MouseMotionEvent> for Info{
+impl From<SDL_MouseMotionEvent> for EventInfo {
     fn from(sdl_motion : SDL_MouseMotionEvent) -> Self {
-        Info{
+        EventInfo {
             timestamp: sdl_motion.timestamp,
             window_id: sdl_motion.windowID,
             which: sdl_motion.which,

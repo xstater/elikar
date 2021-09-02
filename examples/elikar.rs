@@ -1,50 +1,63 @@
-extern crate elikar;
+use elikar::{Elikar, ElikarStates};
+use xecs::{System, World};
+use xecs::resource::Resource;
+use std::cell::{RefMut, Ref};
+use elikar::window::Window;
+use elikar::events::PollEvents;
 
-use elikar::elikar::Elikar;
-use elikar::window;
-use elikar::system_event::Signals;
+struct CreateWindowSystem;
+impl<'a> System<'a> for CreateWindowSystem {
+    type Resource = &'a mut World;
+    type Dependencies = ();
+
+    fn update(&'a mut self, mut world : RefMut<'a,World>) {
+        world.register::<Window>();
+
+        world.create_entity()
+            .attach(elikar::window::Builder::default()
+                .title("elikar test")
+                .build()
+                .unwrap());
+
+
+    }
+}
+
+struct QuitSystem;
+impl<'a> System<'a> for QuitSystem {
+    type Resource = (&'a PollEvents,&'a mut ElikarStates);
+    type Dependencies = PollEvents;
+
+    fn update(&'a mut self, (events,mut states) : (Ref<'a,PollEvents>,RefMut<'a,ElikarStates>)) {
+        if let Some(_) = events.quit {
+            states.quit()
+        }
+    }
+}
+
+struct PrintEventsSystem;
+impl<'a> System<'a> for PrintEventsSystem {
+    type Resource = (&'a PollEvents,&'a ElikarStates);
+    type Dependencies = PollEvents;
+
+    fn update(&'a mut self,(events,states) : (Ref<'a,PollEvents>,Ref<'a,ElikarStates>)) {
+        if let Some(motion) = &events.mouse_motion {
+            // println!("position:{:?}",motion.position);
+            println!("fps:{}",states.fps());
+        }
+    }
+}
 
 fn main(){
     let mut game = Elikar::new().unwrap();
+    game.current_stage_mut()
+        .add_once_system(CreateWindowSystem);
+    game.current_stage_mut()
+        .add_system(PollEvents::new());
+    game.current_stage_mut()
+        .add_system(QuitSystem);
+    game.current_stage_mut()
+        .add_system(PrintEventsSystem);
 
-    let wm = window::Manager::new();
-    let _window = wm.builder()
-        .title("asdasd")
-        .position_centred()
-        .opengl()
-        .size(1280,800)
-        .build()
-        .unwrap();
-
-    let mut event_handlers = Signals::new();
-
-    let mut game_closure = game.clone();
-    event_handlers.quit.connect(move |()|{
-        game_closure.quit();
-    });
-    let game_closure = game.clone();
-    event_handlers.mouse_button_down.connect(move |info|{
-        let (x,y) = info.position;
-        println!("Down:({},{})",x,y);
-        println!("frame_duration:{}us",game_closure.frame_duration().as_micros());
-        println!("fps:{}",game_closure.fps());
-        println!("fis:{}",game_closure.fis());
-    });
-    event_handlers.mouse_button_up.connect(move |info|{
-        let (x,y) = info.position;
-        println!("Up:({},{})",x,y);
-    });
-    event_handlers.mouse_motion.connect(move |info|{
-        let (x,y) = info.position;
-        println!("Motion:({},{})",x,y);
-    });
-    let mut game_closure = game.clone();
-    event_handlers.mouse_button_down.connect(move |info|{
-        let (x,y) = info.position;
-        if x < 100 && y < 100 {
-            game_closure.quit();
-        }
-    });
-
-    game.run(event_handlers);
+    game.run();
 }

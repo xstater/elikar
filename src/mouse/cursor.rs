@@ -1,14 +1,7 @@
 extern crate sdl2_sys;
 
 use sdl2_sys::*;
-use crate::common::get_error;
-
-
-#[derive(Debug,Clone)]
-pub enum CursorError {
-    CreatingDefaultCursor(String),
-    CreatingSystemCursor(String),
-}
+use crate::common::{ SdlError,Result };
 
 #[derive(Debug,Clone,Copy,PartialEq,PartialOrd)]
 pub enum SystemCursor{
@@ -38,16 +31,16 @@ impl Drop for Cursor {
 }
 
 impl Cursor {
-    pub fn default() -> Result<Cursor, CursorError> {
+    pub fn default() -> Result<Cursor> {
         let ptr = unsafe { SDL_GetDefaultCursor() };
         if ptr.is_null() {
-            Err(CursorError::CreatingDefaultCursor(get_error()))
+            Err(SdlError::get())
         }else{
             Ok(Cursor{ ptr })
         }
     }
 
-    pub fn system(cursor : SystemCursor) -> Result<Cursor, CursorError>{
+    pub fn system(cursor : SystemCursor) -> Result<Cursor>{
         let sdlcursor = match cursor{
             SystemCursor::Arrow => SDL_SystemCursor::SDL_SYSTEM_CURSOR_ARROW,
             SystemCursor::IBeam => SDL_SystemCursor::SDL_SYSTEM_CURSOR_IBEAM,
@@ -64,7 +57,7 @@ impl Cursor {
         };
         let ptr = unsafe { SDL_CreateSystemCursor(sdlcursor) };
         if ptr.is_null() {
-            Err(CursorError::CreatingSystemCursor(get_error()))
+            Err(SdlError::get())
         }else{
             Ok(Cursor { ptr })
         }

@@ -6,38 +6,28 @@ fn main() {
 
     let _ek = Elikar::new().unwrap();
 
-    let wm = window::Manager::new();
-    let w = wm.builder()
+    let window = window::Builder::default()
         .title("测试窗口")
         .position_centred()
         .size(1280, 700)
-        .maximized()
+        // .maximized()
         .opengl()
         .build()
         .unwrap();
-    {
-        let window = w.clone();
 
-        // window.set_size(1288,888);
-        println!("size:{:?}", window.size().unwrap());
-        // window.set_position(200,200);
-        println!("position:{:?}", window.position().unwrap());
-        // window.set_brightness(0.5).unwrap();
-        println!("brightness:{}", window.brightness().unwrap());
-        // window.set_opacity(0.5).unwrap();
-        println!("opacity:{:?}", window.opacity().unwrap());
-        // window.set_title("shit").unwrap();
-        println!("title:{}", window.title().unwrap());
-    }
-    println!("count:{}", wm.count());
-    {
-        println!("title:{}", w.title().unwrap());
-    }
+    // window.set_size(1288,888);
+    println!("size:{:?}", window.size());
+    // window.set_position(200,200);
+    println!("position:{:?}", window.position());
+    // window.set_brightness(0.5).unwrap();
+    println!("brightness:{}", window.brightness());
+    // window.set_opacity(0.5).unwrap();
+    println!("opacity:{:?}", window.opacity().unwrap());
+    // window.set_title("shit").unwrap();
+    println!("title:{}", window.title());
 
-    let id = w.id().unwrap();
+    let id = window.id().unwrap();
     println!("id:{}",id);
-    let w2 = wm.find_by_id(id).unwrap();
-    println!("title:{}",w2.title().unwrap());
     // window.hide();
     // window.show();
     // window.maximize();

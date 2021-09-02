@@ -1,263 +1,209 @@
-extern crate sdl2_sys;
-
 use sdl2_sys::*;
-use crate::common::get_error;
-use std::ffi::{CStr, CString};
-use std::os::raw::c_char;
-use std::sync::{Weak, RwLock};
-use crate::window::manager::ManagerBase;
+use crate::common::{Result, SdlError, from_sdl_string};
+use std::ffi::{CString};
+use crate::window::Builder;
 
-///### safety:
-///  Window have a raw pointer of window.
-/// this pointer dangling when manager cannot get Arc pointer
-#[derive(Clone)]
-pub struct Window{
-    manager : Weak<RwLock<ManagerBase>>,
-    raw_window : *mut SDL_Window
+pub struct Window {
+    ptr : *mut SDL_Window
 }
 
-unsafe impl Send for Window{}
-unsafe impl Sync for Window{}
+/// ## Safety:
+/// Only window has this raw pointer.
+unsafe impl Send for Window {}
+/// ## Safety:
+/// Window does not use any interior mutability;
+unsafe impl Sync for Window {}
 
-#[derive(Debug,Clone,PartialEq,PartialOrd)]
-pub enum Error{
-    InvalidWindow,
-    SDLError(String)
+impl Drop for Window {
+    fn drop(&mut self) {
+        unsafe {
+            SDL_DestroyWindow(self.ptr)
+        }
+    }
 }
-
-pub type Result<T> = std::result::Result<T, Error>;
 
 impl Window {
-    pub(in crate::window) unsafe fn from_ptr(manager : Weak<RwLock<ManagerBase>>,ptr : *mut SDL_Window) -> Window{
-        Window{
-            manager,
-            raw_window : ptr
+    pub fn builder() -> Builder {
+        Builder::default()
+    }
+
+    /// ## Safety
+    /// ptr must be a valid pointer
+    pub(in crate) unsafe fn from_ptr(ptr : *mut SDL_Window) -> Window {
+        Window {
+            ptr
         }
     }
 
-    pub(in crate) unsafe fn split(self) -> (Weak<RwLock<ManagerBase>>,*mut SDL_Window){
-        (self.manager,self.raw_window)
+    /// ## Safety
+    /// Ptr must be ensured valid
+    pub unsafe fn window_ptr(&self) -> *mut SDL_Window {
+        self.ptr
     }
 
-    pub unsafe fn raw_window(&self) -> *mut SDL_Window {
-        self.raw_window
-    }
-
-    pub fn size(&self) -> Result<(u32,u32)> {
-        let ptr = self.manager.upgrade().ok_or(Error::InvalidWindow)?;
-        let _guard = ptr.read().map_err(|_| Error::InvalidWindow)?;
+    pub fn size(&self) -> (u32,u32) {
         let (mut w,mut h) = (0,0);
         unsafe {
-            SDL_GetWindowSize(self.raw_window,&mut w as *mut i32,&mut h as *mut i32);
+            SDL_GetWindowSize(self.ptr,&mut w as *mut i32,&mut h as *mut i32);
         }
-        Ok((w as u32,h as u32))
+        (w as u32,h as u32)
     }
 
-    pub fn set_size(&mut self,w : u32,h : u32) -> Result<()> {
-        let ptr = self.manager.upgrade().ok_or(Error::InvalidWindow)?;
-        let _guard = ptr.write().map_err(|_| Error::InvalidWindow)?;
-        Ok(unsafe {
-            SDL_SetWindowSize(self.raw_window,w as i32,h as i32)
-        })
+    pub fn set_size(&mut self,w : u32,h : u32) {
+        unsafe {
+            SDL_SetWindowSize(self.ptr,w as i32,h as i32);
+        }
     }
 
-    pub fn position(&self) -> Result<(u32,u32)>{
-        let ptr = self.manager.upgrade().ok_or(Error::InvalidWindow)?;
-        let _guard = ptr.read().map_err(|_| Error::InvalidWindow)?;
+    pub fn position(&self) -> (u32,u32) {
         let (mut x,mut y) = (0,0);
         unsafe {
-            SDL_GetWindowPosition(self.raw_window,&mut x as *mut i32,&mut y as *mut i32);
+            SDL_GetWindowPosition(self.ptr,&mut x as *mut i32,&mut y as *mut i32);
         }
-        Ok((x as u32,y as u32))
+        (x as u32,y as u32)
     }
 
-    pub fn set_position(&mut self,x : u32,y : u32) -> Result<()>{
-        let ptr = self.manager.upgrade().ok_or(Error::InvalidWindow)?;
-        let _guard = ptr.write().map_err(|_| Error::InvalidWindow)?;
-        Ok(unsafe {
-            SDL_SetWindowPosition(self.raw_window,x as i32,y as i32)
-        })
+    pub fn set_position(&mut self,x : u32,y : u32) {
+        unsafe {
+            SDL_SetWindowPosition(self.ptr,x as i32,y as i32);
+        }
     }
 
-    pub fn brightness(&self) -> Result<f32> {
-        let ptr = self.manager.upgrade().ok_or(Error::InvalidWindow)?;
-        let _guard = ptr.read().map_err(|_| Error::InvalidWindow)?;
-        Ok(unsafe {
-            SDL_GetWindowBrightness(self.raw_window)
-        })
+    pub fn brightness(&self) -> f32 {
+        unsafe {
+            SDL_GetWindowBrightness(self.ptr)
+        }
     }
 
     pub fn set_brightness(&mut self,bright : f32) -> Result<()>{
-        let ptr = self.manager.upgrade().ok_or(Error::InvalidWindow)?;
-        let _guard = ptr.write().map_err(|_| Error::InvalidWindow)?;
         let err = unsafe {
-            SDL_SetWindowBrightness(self.raw_window,bright)
+            SDL_SetWindowBrightness(self.ptr,bright)
         };
         if err == 0 {
             Ok(())
         } else {
-            Err(Error::SDLError(get_error()))
+            Err(SdlError::get())
         }
     }
 
     pub fn id(&self) -> Result<u32>{
-        let ptr = self.manager.upgrade().ok_or(Error::InvalidWindow)?;
-        let _guard = ptr.read().map_err(|_| Error::InvalidWindow)?;
-        let id = unsafe { SDL_GetWindowID(self.raw_window) };
+        let id = unsafe { SDL_GetWindowID(self.ptr) };
         if id != 0 {
             Ok(id)
         }else{
-            Err(Error::SDLError(get_error()))
+            Err(SdlError::get())
         }
     }
 
     pub fn opacity(&self) -> Result<f32> {
-        let ptr = self.manager.upgrade().ok_or(Error::InvalidWindow)?;
-        let _guard = ptr.read().map_err(|_| Error::InvalidWindow)?;
         let mut op = 0.0 as f32;
-        if unsafe { SDL_GetWindowOpacity(self.raw_window,&mut op as *mut f32) } == 0 {
+        if unsafe { SDL_GetWindowOpacity(self.ptr,&mut op as *mut f32) } == 0 {
             Ok(op)
         } else {
-            Err(Error::SDLError(get_error()))
+            Err(SdlError::get())
         }
     }
-    pub fn set_opacity(&mut self,opa : f32) -> Result<()> {
-        let ptr = self.manager.upgrade().ok_or(Error::InvalidWindow)?;
-        let _guard = ptr.write().map_err(|_| Error::InvalidWindow)?;
+    pub fn set_opacity(&mut self,opacity : f32) -> Result<()> {
         let err = unsafe {
-            SDL_SetWindowOpacity(self.raw_window,opa)
+            SDL_SetWindowOpacity(self.ptr,opacity)
         };
         if err == 0 {
             Ok(())
         }else{
-            Err(Error::SDLError(get_error()))
+            Err(SdlError::get())
         }
     }
 
-    pub fn title(&self) -> Result<String> {
-        let ptr = self.manager.upgrade().ok_or(Error::InvalidWindow)?;
-        let _guard = ptr.read().map_err(|_| Error::InvalidWindow)?;
-        Ok(unsafe {
-            let ttl = SDL_GetWindowTitle(self.raw_window);
-            //unwrap here: because the valid of the title string is granted by SDL
-            CStr::from_ptr(ttl as *const _).to_str().unwrap().to_owned()
-        })
+    pub fn title(&self) -> String {
+        unsafe {
+            let title = SDL_GetWindowTitle(self.ptr);
+            from_sdl_string(title)
+        }
     }
 
-    pub fn set_title(&mut self,ttl : &str) -> Result<()>{
-        let ptr = self.manager.upgrade().ok_or(Error::InvalidWindow)?;
-        let _guard = ptr.write().map_err(|_| Error::InvalidWindow)?;
-        //unwrap here:because the ttl is a valid Rust UTF8 String
-        //there is no possibility to failure
-        let ttl_str = CString::new(ttl).unwrap();
-        let ptr = ttl_str.as_ptr() as *const c_char;
-        Ok(unsafe {
-            SDL_SetWindowTitle(self.raw_window,ptr);
-        })
+    pub fn set_title(&mut self,title : &str) {
+        let title = CString::new(title).unwrap();
+        let ptr = title.as_ptr() as *const _;
+        unsafe {
+            SDL_SetWindowTitle(self.ptr,ptr);
+        }
     }
 
-    pub fn hide(&mut self) -> Result<()> {
-        let ptr = self.manager.upgrade().ok_or(Error::InvalidWindow)?;
-        let _guard = ptr.write().map_err(|_| Error::InvalidWindow)?;
-        Ok(unsafe {
-            SDL_HideWindow(self.raw_window)
-        })
+    pub fn hide(&mut self) {
+        unsafe {
+            SDL_HideWindow(self.ptr);
+        }
     }
 
-    pub fn show(&mut self) -> Result<()> {
-        let ptr = self.manager.upgrade().ok_or(Error::InvalidWindow)?;
-        let _guard = ptr.write().map_err(|_| Error::InvalidWindow)?;
-        Ok(unsafe {
-            SDL_ShowWindow(self.raw_window)
-        })
+    pub fn show(&mut self) {
+        unsafe {
+            SDL_ShowWindow(self.ptr);
+        }
     }
 
-    pub fn maximize(&mut self) -> Result<()> {
-        let ptr = self.manager.upgrade().ok_or(Error::InvalidWindow)?;
-        let _guard = ptr.write().map_err(|_| Error::InvalidWindow)?;
-        Ok(unsafe {
-            SDL_MaximizeWindow(self.raw_window)
-        })
+    pub fn maximize(&mut self) {
+        unsafe {
+            SDL_MaximizeWindow(self.ptr);
+        }
     }
 
-    pub fn minimize(&mut self) -> Result<()> {
-        let ptr = self.manager.upgrade().ok_or(Error::InvalidWindow)?;
-        let _guard = ptr.write().map_err(|_| Error::InvalidWindow)?;
-        Ok(unsafe {
-            SDL_MinimizeWindow(self.raw_window)
-        })
+    pub fn minimize(&mut self) {
+        unsafe {
+            SDL_MinimizeWindow(self.ptr);
+        }
     }
 
-    pub fn raise(&mut self) -> Result<()> {
-        let ptr = self.manager.upgrade().ok_or(Error::InvalidWindow)?;
-        let _guard = ptr.write().map_err(|_| Error::InvalidWindow)?;
-        Ok(unsafe {
-            SDL_RaiseWindow(self.raw_window)
-        })
+    pub fn raise(&mut self) {
+        unsafe {
+            SDL_RaiseWindow(self.ptr);
+        }
     }
 
-    pub fn restore(&mut self) -> Result<()> {
-        let ptr = self.manager.upgrade().ok_or(Error::InvalidWindow)?;
-        let _guard = ptr.write().map_err(|_| Error::InvalidWindow)?;
-        Ok(unsafe {
-            SDL_RestoreWindow(self.raw_window)
-        })
+    pub fn restore(&mut self) {
+        unsafe {
+            SDL_RestoreWindow(self.ptr)
+        }
     }
 
     pub fn set_fullscreen(&mut self) -> Result<()> {
-        let ptr = self.manager.upgrade().ok_or(Error::InvalidWindow)?;
-        let _guard = ptr.write().map_err(|_| Error::InvalidWindow)?;
         let err = unsafe {
-            SDL_SetWindowFullscreen(self.raw_window,
+            SDL_SetWindowFullscreen(self.ptr,
                                     SDL_WindowFlags::SDL_WINDOW_FULLSCREEN as u32)
         };
         if err == 0 {
             Ok(())
         } else {
-            Err(Error::SDLError(get_error()))
+            Err(SdlError::get())
         }
     }
 
     pub fn set_fullscreen_desktop(&mut self) -> Result<()> {
-        let ptr = self.manager.upgrade().ok_or(Error::InvalidWindow)?;
-        let _guard = ptr.write().map_err(|_| Error::InvalidWindow)?;
         let err = unsafe {
-            SDL_SetWindowFullscreen(self.raw_window,
+            SDL_SetWindowFullscreen(self.ptr,
                                     SDL_WindowFlags::SDL_WINDOW_FULLSCREEN_DESKTOP as u32)
         };
         if err == 0 {
             Ok(())
         } else {
-            Err(Error::SDLError(get_error()))
+            Err(SdlError::get())
         }
     }
 
-    pub fn set_resizable(&mut self) -> Result<()> {
-        let ptr = self.manager.upgrade().ok_or(Error::InvalidWindow)?;
-        let _guard = ptr.write().map_err(|_| Error::InvalidWindow)?;
-        Ok(unsafe {
-            SDL_SetWindowResizable(self.raw_window,SDL_bool::SDL_TRUE)
-        })
+    pub fn set_resizable(&mut self) {
+        unsafe {
+            SDL_SetWindowResizable(self.ptr,SDL_bool::SDL_TRUE);
+        }
     }
 
-    pub fn set_unresizable(&mut self) -> Result<()> {
-        let ptr = self.manager.upgrade().ok_or(Error::InvalidWindow)?;
-        let _guard = ptr.write().map_err(|_| Error::InvalidWindow)?;
-        Ok(unsafe {
-            SDL_SetWindowResizable(self.raw_window,SDL_bool::SDL_FALSE)
-        })
+    pub fn set_unresizable(&mut self) {
+        unsafe {
+            SDL_SetWindowResizable(self.ptr,SDL_bool::SDL_FALSE);
+        }
     }
 
-    pub fn gl_swap(&mut self) -> Result<()> {
-        let ptr = self.manager.upgrade().ok_or(Error::InvalidWindow)?;
-        let _guard = ptr.write().map_err(|_| Error::InvalidWindow)?;
-        Ok(unsafe {
-            SDL_GL_SwapWindow(self.raw_window)
-        })
-    }
-
-    pub fn set_icon(&mut self) {
-        unimplemented!()
+    pub fn gl_swap(&mut self) {
+        unsafe {
+            SDL_GL_SwapWindow(self.ptr);
+        }
     }
 }
-
