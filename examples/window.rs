@@ -2,11 +2,10 @@ extern crate elikar;
 
 fn main() {
     use elikar::elikar::Elikar;
-    use elikar::window;
 
-    let _ek = Elikar::new().unwrap();
+    let ek = Elikar::new().unwrap();
 
-    let window = window::Builder::default()
+    let window = ek.create_window()
         .title("测试窗口")
         .position_centred()
         .size(1280, 700)

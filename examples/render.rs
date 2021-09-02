@@ -33,7 +33,7 @@ impl<'a> System<'a> for PrintFps {
 fn main() {
     let mut game = Elikar::new().unwrap();
 
-    let mut window = window::Builder::default()
+    let mut window = game.create_window()
         .title("test")
         .opengl()
         .build()

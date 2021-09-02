@@ -5,7 +5,7 @@ use std::cell::{RefMut, Ref};
 use elikar::window::Window;
 use elikar::events::PollEvents;
 
-struct CreateWindowSystem;
+struct CreateWindowSystem(Option<Window>);
 impl<'a> System<'a> for CreateWindowSystem {
     type Resource = &'a mut World;
     type Dependencies = ();
@@ -14,10 +14,7 @@ impl<'a> System<'a> for CreateWindowSystem {
         world.register::<Window>();
 
         world.create_entity()
-            .attach(elikar::window::Builder::default()
-                .title("elikar test")
-                .build()
-                .unwrap());
+            .attach(self.0.take().unwrap());
 
 
     }
@@ -51,13 +48,13 @@ impl<'a> System<'a> for PrintEventsSystem {
 
 fn main(){
     let mut game = Elikar::new().unwrap();
+
+    let window = game.create_window().build().unwrap();
+
     game.current_stage_mut()
-        .add_once_system(CreateWindowSystem);
-    game.current_stage_mut()
-        .add_system(PollEvents::new());
-    game.current_stage_mut()
-        .add_system(QuitSystem);
-    game.current_stage_mut()
+        .add_once_system(CreateWindowSystem(Some(window)))
+        .add_system(PollEvents::new())
+        .add_system(QuitSystem)
         .add_system(PrintEventsSystem);
 
     game.run();

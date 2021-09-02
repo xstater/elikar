@@ -1,27 +1,7 @@
 use elikar::{Elikar, ElikarStates};
-use xecs::{System, World};
-use xecs::resource::Resource;
+use xecs::{System};
 use std::cell::{RefMut, Ref};
-use elikar::window::Window;
 use elikar::events::PollEvents;
-
-struct CreateWindowSystem;
-impl<'a> System<'a> for CreateWindowSystem {
-    type Resource = &'a mut World;
-    type Dependencies = ();
-
-    fn update(&'a mut self, mut world : RefMut<'a,World>) {
-        world.register::<Window>();
-
-        world.create_entity()
-            .attach(elikar::window::Builder::default()
-                .title("elikar test")
-                .build()
-                .unwrap());
-
-
-    }
-}
 
 struct QuitSystem;
 impl<'a> System<'a> for QuitSystem {
@@ -41,7 +21,7 @@ impl<'a> System<'a> for PrintEventsSystem {
     type Dependencies = PollEvents;
 
     fn update(&'a mut self,(events,states) : (Ref<'a,PollEvents>,Ref<'a,ElikarStates>)) {
-        if let Some(motion) = &events.mouse_motion {
+        if let Some(_motion) = &events.mouse_motion {
             // println!("position:{:?}",motion.position);
             println!("fps:{}",states.fps());
         }
@@ -50,13 +30,10 @@ impl<'a> System<'a> for PrintEventsSystem {
 
 fn main(){
     let mut game = Elikar::new().unwrap();
+    let _window = game.create_window().build().unwrap();
     game.current_stage_mut()
-        .add_once_system(CreateWindowSystem);
-    game.current_stage_mut()
-        .add_system(PollEvents::new());
-    game.current_stage_mut()
-        .add_system(QuitSystem);
-    game.current_stage_mut()
+        .add_system(PollEvents::new())
+        .add_system(QuitSystem)
         .add_system(PrintEventsSystem);
 
     game.run();

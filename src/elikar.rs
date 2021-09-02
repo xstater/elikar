@@ -7,6 +7,9 @@ use crate::common::SdlError;
 use xecs::{System, Stage};
 use std::time::{Instant, Duration};
 use std::collections::HashMap;
+use crate::window;
+use crate::clipboard::Clipboard;
+use crate::sysinfo::SystemInfo;
 
 #[derive(Debug)]
 pub struct ElikarStates {
@@ -164,6 +167,18 @@ impl Elikar {
                 map
             }
         })
+    }
+
+    pub fn create_window(&self) -> window::Builder{
+        window::Builder::default()
+    }
+
+    pub fn clipboard(&self) -> Clipboard {
+        Clipboard
+    }
+
+    pub fn system_info(&self) -> SystemInfo {
+        SystemInfo
     }
 
     pub fn current_stage_ref(&self) -> &Stage {

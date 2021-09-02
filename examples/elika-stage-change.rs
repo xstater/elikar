@@ -6,24 +6,6 @@ use elikar::window::Window;
 use elikar::events::PollEvents;
 use elikar::keyboard::Code;
 
-struct CreateWindowSystem;
-impl<'a> System<'a> for CreateWindowSystem {
-    type Resource = &'a mut World;
-    type Dependencies = ();
-
-    fn update(&'a mut self, mut world : RefMut<'a,World>) {
-        world.register::<Window>();
-
-        world.create_entity()
-            .attach(elikar::window::Builder::default()
-                .title("elikar test")
-                .build()
-                .unwrap());
-
-
-    }
-}
-
 struct PrintSystem(String);
 impl<'a> System<'a> for PrintSystem{
     type Resource = ();
@@ -85,8 +67,8 @@ impl<'a> System<'a> for ChangeStage {
 
 fn main(){
     let mut game = Elikar::new().unwrap();
+    let _window = game.create_window().build().unwrap();
     game.current_stage_mut()
-        .add_once_system(CreateWindowSystem)
         .add_once_system(CreateAStage)
         .add_system(PollEvents::new())
         .add_system(QuitSystem)

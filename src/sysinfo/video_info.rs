@@ -56,64 +56,76 @@ impl Display for Screen{
     }
 }
 
-pub fn all_drivers_name() -> Result<Vec<String>>{
-    let num = unsafe { SDL_GetNumVideoDrivers() };
-    if num < 0 {
-        return Err(SdlError::get());
-    }
-    let mut names : Vec<String> = Vec::with_capacity(num as usize);
-    for i in 0..num {
-        let cname : *const c_char = unsafe { SDL_GetVideoDriver(i as c_int) };
-        names.push(unsafe { from_sdl_string(cname) })
-    }
-    Ok(names)
-}
+#[derive(Debug,Copy, Clone)]
+pub struct VideoInfo;
 
-pub fn current_drivers_name() -> String {
-    let cname : *const c_char = unsafe { SDL_GetCurrentVideoDriver() };
-    unsafe { from_sdl_string(cname) }
-}
-
-pub fn screens() -> Result<Vec<Screen>>{
-    let screen_num = unsafe { SDL_GetNumVideoDisplays() };
-    if screen_num < 0 {
-        return Err(SdlError::get());
-    }
-    let mut screens : Vec<Screen> = Vec::with_capacity(screen_num as usize);
-    for i in 0..screen_num{
-        let mut screen : Screen = Screen::default();
-        screen.name = unsafe { from_sdl_string(SDL_GetDisplayName(i)) };
-
-        let mut bound : SDL_Rect = SDL_Rect{
-            x : 0,y : 0,w : 0,h : 0
-        };
-        if unsafe { SDL_GetDisplayBounds(i,&mut bound) } < 0 {
-            return Err(SdlError::get())
+impl VideoInfo {
+    pub fn all_drivers_name(&self) -> Result<Vec<String>> {
+        let num = unsafe { SDL_GetNumVideoDrivers() };
+        if num < 0 {
+            return Err(SdlError::get());
         }
-        screen.bound.0 = bound.x;
-        screen.bound.1 = bound.y;
-        screen.bound.2 = bound.w;
-        screen.bound.3 = bound.h;
-
-        if unsafe { SDL_GetDisplayDPI(i,&mut screen.dpi.ddpi,&mut screen.dpi.hdpi,&mut screen.dpi.vdpi) } < 0 {
-            return Err(SdlError::get())
+        let mut names: Vec<String> = Vec::with_capacity(num as usize);
+        for i in 0..num {
+            let cname: *const c_char = unsafe { SDL_GetVideoDriver(i as c_int) };
+            names.push(unsafe { from_sdl_string(cname) })
         }
+        Ok(names)
+    }
 
-        let mode_num = unsafe { SDL_GetNumDisplayModes(i) };
-        for j in 0..mode_num{
-            let mut sdlmode : SDL_DisplayMode = SDL_DisplayMode{
-                format : 0,w : 0,h : 0,refresh_rate : 0,driverdata : null_mut()
+    pub fn current_drivers_name(&self) -> String {
+        let cname: *const c_char = unsafe { SDL_GetCurrentVideoDriver() };
+        unsafe { from_sdl_string(cname) }
+    }
+
+    pub fn screens(&self) -> Result<Vec<Screen>> {
+        let screen_num = unsafe { SDL_GetNumVideoDisplays() };
+        if screen_num < 0 {
+            return Err(SdlError::get());
+        }
+        let mut screens: Vec<Screen> = Vec::with_capacity(screen_num as usize);
+        for i in 0..screen_num {
+            let mut screen: Screen = Screen::default();
+            screen.name = unsafe { from_sdl_string(SDL_GetDisplayName(i)) };
+
+            let mut bound: SDL_Rect = SDL_Rect {
+                x: 0,
+                y: 0,
+                w: 0,
+                h: 0
             };
-            if unsafe { SDL_GetDisplayMode(i,j,&mut sdlmode) } < 0 {
+            if unsafe { SDL_GetDisplayBounds(i, &mut bound) } < 0 {
                 return Err(SdlError::get())
             }
-            screen.modes.push(DisplayMode{
-                size: (sdlmode.w, sdlmode.h),
-                refresh_rate: sdlmode.refresh_rate as u32
-            })
+            screen.bound.0 = bound.x;
+            screen.bound.1 = bound.y;
+            screen.bound.2 = bound.w;
+            screen.bound.3 = bound.h;
+
+            if unsafe { SDL_GetDisplayDPI(i, &mut screen.dpi.ddpi, &mut screen.dpi.hdpi, &mut screen.dpi.vdpi) } < 0 {
+                return Err(SdlError::get())
+            }
+
+            let mode_num = unsafe { SDL_GetNumDisplayModes(i) };
+            for j in 0..mode_num {
+                let mut sdlmode: SDL_DisplayMode = SDL_DisplayMode {
+                    format: 0,
+                    w: 0,
+                    h: 0,
+                    refresh_rate: 0,
+                    driverdata: null_mut()
+                };
+                if unsafe { SDL_GetDisplayMode(i, j, &mut sdlmode) } < 0 {
+                    return Err(SdlError::get())
+                }
+                screen.modes.push(DisplayMode {
+                    size: (sdlmode.w, sdlmode.h),
+                    refresh_rate: sdlmode.refresh_rate as u32
+                })
+            }
+            screens.push(screen);
         }
-        screens.push(screen);
+        Ok(screens)
     }
-    Ok(screens)
 }
 

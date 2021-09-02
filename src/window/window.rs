@@ -1,7 +1,6 @@
 use sdl2_sys::*;
 use crate::common::{Result, SdlError, from_sdl_string};
 use std::ffi::{CString};
-use crate::window::Builder;
 
 pub struct Window {
     ptr : *mut SDL_Window
@@ -23,10 +22,6 @@ impl Drop for Window {
 }
 
 impl Window {
-    pub fn builder() -> Builder {
-        Builder::default()
-    }
-
     /// ## Safety
     /// ptr must be a valid pointer
     pub(in crate) unsafe fn from_ptr(ptr : *mut SDL_Window) -> Window {

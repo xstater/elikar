@@ -11,4 +11,3 @@ pub mod keyboard;
 pub mod drop_file;
 pub mod events;
 pub mod render;
-mod vulkan_test;
