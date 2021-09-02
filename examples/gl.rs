@@ -65,7 +65,7 @@ impl<'a> System<'a> for SwapWindow {
 fn main(){
     let mut game = Elikar::new().unwrap();
 
-    let window = window::Builder::default()
+    let window = game.create_window()
         .title("OpenGL test")
         .opengl()
         .build()
