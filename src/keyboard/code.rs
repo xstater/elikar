@@ -53,7 +53,7 @@ pub enum Code {
     LeftBracket = 47,
     RightBracket = 48,
     Backslash = 49,
-    Nonushash = 50,
+    Nonuslash = 50,
     Semicolon = 51,
     Apostrophe = 52,
     Grave = 53,
