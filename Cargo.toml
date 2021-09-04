@@ -14,6 +14,7 @@ xecs = "0.2.8"
 xrunits = "0.1.2"
 xblend = "0.1.0"
 ash = "0.33.0"
+rand = "0.8.4"
 
 [profile.dev]
 opt-level = 2
@@ -23,3 +24,6 @@ opt-level = 2
 debug = false
 lto = false
 
+[lib]
+name = "elikar"
+crate-type = ["rlib","dylib"]
