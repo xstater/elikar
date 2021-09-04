@@ -10,6 +10,7 @@ use std::collections::HashMap;
 use crate::window;
 use crate::clipboard::Clipboard;
 use crate::sysinfo::SystemInfo;
+use std::any::TypeId;
 
 #[derive(Debug)]
 pub struct ElikarStates {
@@ -19,7 +20,9 @@ pub struct ElikarStates {
     frame_time : Duration,
     add_stage_buffer : Option<Vec<(String,Stage)>>,
     remove_stage_buffer : Option<Vec<String>>,
-    change_current : Option<String>
+    change_current : Option<String>,
+    deactivated_system_buffer : Option<Vec<TypeId>>,
+    activated_system_buffer : Option<Vec<TypeId>>
 }
 
 impl<'a> System<'a> for ElikarStates {
@@ -156,7 +159,9 @@ impl Elikar {
             frame_time: Duration::from_secs(1),
             add_stage_buffer: Option::None,
             remove_stage_buffer: Option::None,
-            change_current: Option::None
+            change_current: Option::None,
+            deactivated_system_buffer: Option::None,
+            activated_system_buffer: Option::None
         });
         stage.deactivate::<ElikarStates>();
         Ok(Elikar {
@@ -226,7 +231,9 @@ impl Elikar {
             frame_time: Duration::from_secs(2),
             add_stage_buffer: Option::None,
             remove_stage_buffer: Option::None,
-            change_current: Option::None
+            change_current: Option::None,
+            deactivated_system_buffer: Option::None,
+            activated_system_buffer: Option::None
         });
         self.stages.insert(name.to_owned(), stage);
     }
@@ -250,6 +257,28 @@ impl Elikar {
             // run stage
             self.current_stage_mut().run();
             // after run
+            // activate systems
+            let systems = self.current_stage_ref()
+                .system_data_mut::<ElikarStates>()
+                .activated_system_buffer
+                .take();
+            if let Some(systems) = systems {
+                for system in systems {
+                    self.current_stage_mut()
+                        .activate_dyn(system);
+                }
+            }
+            // deactivate systems
+            let systems = self.current_stage_ref()
+                .system_data_mut::<ElikarStates>()
+                .deactivated_system_buffer
+                .take();
+            if let Some(systems) = systems {
+                for system in systems {
+                    self.current_stage_mut()
+                        .deactivate_dyn(system);
+                }
+            }
             // add stage
             let add_buffer = self.current_stage_ref()
                     .system_data_mut::<ElikarStates>()
@@ -328,5 +357,25 @@ impl ElikarStates {
 
     pub fn change_current(&mut self,name : &str) {
         self.change_current = Some(name.to_owned());
+    }
+
+    pub fn activate_system<T : for<'a> System<'a>>(&mut self){
+        if self.activated_system_buffer.is_none() {
+            self.activated_system_buffer = Some(vec![]);
+        }
+        self.activated_system_buffer
+            .as_mut()
+            .unwrap()
+            .push(TypeId::of::<T>());
+    }
+
+    pub fn deactivate_system<T : for<'a> System<'a>>(&mut self) {
+        if self.deactivated_system_buffer.is_none() {
+            self.deactivated_system_buffer = Some(vec![]);
+        }
+        self.deactivated_system_buffer
+            .as_mut()
+            .unwrap()
+            .push(TypeId::of::<T>());
     }
 }
