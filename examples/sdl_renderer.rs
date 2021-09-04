@@ -71,6 +71,7 @@ impl<'a> System<'a> for UpdatePosition {
 }
 
 
+
 fn main() {
     let mut game = Elikar::new().unwrap();
     let window = game.create_window().build().unwrap();
