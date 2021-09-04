@@ -1,5 +1,6 @@
 pub mod point;
 pub mod system;
+pub mod sprite;
 
 use sdl2_sys::*;
 use crate::window::Window;
