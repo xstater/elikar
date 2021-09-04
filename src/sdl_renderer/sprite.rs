@@ -6,6 +6,7 @@ use crate::common::SdlError;
 use crate::common::Result;
 use std::ffi::CString;
 
+// !!!! 这里可能会有生命周期问题 ！！！
 pub struct Sprite {
     texture : *mut SDL_Texture,
     position : (i32,i32),
