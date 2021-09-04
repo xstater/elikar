@@ -8,6 +8,7 @@ use std::cell::{Ref, RefMut};
 use xecs::resource::Resource;
 use elikar::sdl_renderer::point::Point;
 use rand::random;
+use elikar::sdl_renderer::sprite::Sprite;
 
 struct QuitSystem;
 impl<'a> System<'a> for QuitSystem {
@@ -85,7 +86,8 @@ fn main() {
     game.current_stage_mut().world_mut()
         .register::<Point>()
         .register::<Color>()
-        .register::<Velocity>();
+        .register::<Velocity>()
+        .register::<Sprite>();
 
     game.current_stage_mut()
         .add_system(QuitSystem)
