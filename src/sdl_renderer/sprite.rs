@@ -1,7 +1,6 @@
 use sdl2_sys::*;
 use std::path::Path;
 use crate::sdl_renderer::Renderer;
-use std::ptr::{null, null_mut};
 use crate::common::SdlError;
 use crate::common::Result;
 use std::ffi::CString;
@@ -9,6 +8,7 @@ use crate::sdl_renderer::rect::Rect;
 use crate::sdl_renderer::point::Point;
 use sdl2_sys::sys::*;
 
+// !!!! 这里可能会有生命周期问题 ！！！
 pub struct Sprite {
     texture : *mut SDL_Texture,
     position : (i32,i32),
