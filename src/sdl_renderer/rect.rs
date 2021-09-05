@@ -1,3 +1,4 @@
+use sdl2_sys::*;
 
 #[derive(Debug,Copy,Clone,Eq,PartialEq)]
 pub struct Rect {
@@ -31,6 +32,22 @@ impl Rect {
     pub fn move_to(&mut self, x : i32, y : i32) {
         self.x = x;
         self.y = y;
+    }
+
+    pub fn x(&self) -> i32 {
+        self.x
+    }
+
+    pub fn y(&self) -> i32 {
+        self.y
+    }
+
+    pub fn w(&self) -> u32 {
+        self.w
+    }
+
+    pub fn h(&self) -> u32 {
+        self.h
     }
 
 }

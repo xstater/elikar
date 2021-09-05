@@ -2,12 +2,12 @@ use crate::sdl_renderer::{Renderer, Color};
 use xecs::{System, World};
 use xecs::resource::Resource;
 use sdl2_sys::*;
+use sdl2_sys::SDL_RendererFlip::*;
 use xecs::system::End;
 use std::cell::Ref;
 use crate::sdl_renderer::point::Point;
-use crate::sdl_renderer::sprite::{Sprite, ExInfo};
+use crate::sdl_renderer::sprite::Sprite;
 use std::ptr::null;
-use sdl2_sys::sys::SDL_RendererFlip;
 use std::mem::transmute;
 use std::os::raw::c_double;
 use crate::sdl_renderer::rect::Rect;
@@ -52,12 +52,18 @@ impl<'a> System<'a> for Renderer {
                     color.g(),
                     color.b(),
                     color.a());
-                SDL_RenderDrawRect(self.sdl_renderer, rect.into())
+                SDL_RenderDrawRect(self.sdl_renderer,
+                &SDL_Rect{
+                    x : rect.x,
+                    y : rect.y,
+                    w : rect.w as _,
+                    h : rect.h as _
+                });
             }
         }
 
         // draw sprites
-        for (sprite,ex_info) in world.query::<(&Sprite,&ExInfo)>() {
+        for (sprite) in world.query::<&Sprite>() {
             let rect = SDL_Rect{
                 x : sprite.position().0 as _,
                 y : sprite.position().1 as _,
@@ -65,23 +71,21 @@ impl<'a> System<'a> for Renderer {
                 h : sprite.size().1 as _
             };
             unsafe {
-                let flip = match (ex_info.flip().0, ex_info.flip().1) {
+                let flip = match (sprite.flip().0, sprite.flip().1) {
                     (false,false) => SDL_FLIP_NONE,
                     (true,false) => SDL_FLIP_HORIZONTAL,
                     (false,true) => SDL_FLIP_VERTICAL,
-                    (true,true) => transmute::<u32, sys::SDL_RendererFlip>(
-                                transmute::<sys::SDL_RendererFlip, u32>(SDL_FLIP_HORIZONTAL) |
-                                   transmute::<sys::SDL_RendererFlip, u32>(SDL_FLIP_VERTICAL)
-                    )
+                    (true,true) => transmute::<u32, SDL_RendererFlip>
+                        (SDL_FLIP_HORIZONTAL as u32 | SDL_FLIP_VERTICAL as u32)
                 };
                 SDL_RenderCopyEx(
                     self.sdl_renderer,
                     sprite.texture(),
                     null(),
                     &rect,
-                    ex_info.angle() as c_double,
+                    sprite.angle() as c_double,
                     null(),
-                    &flip
+                    flip
                 );
             }
         }

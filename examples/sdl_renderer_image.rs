@@ -7,6 +7,7 @@ use elikar::events::PollEvents;
 use std::cell::{Ref, RefMut};
 use elikar::sdl_renderer::point::Point;
 use xecs::resource::Resource;
+use std::ptr::null;
 
 struct QuitSystem;
 impl<'a> System<'a> for QuitSystem {
@@ -53,7 +54,10 @@ fn main() {
         .build()
         .unwrap();
 
-    let sprite = Sprite::from_bmp(&renderer,"./logo.bmp").unwrap();
+    let mut sprite = Sprite::from_bmp(&renderer, "./logo.bmp").unwrap();
+    sprite.set_angle(1.0);
+    sprite.set_flip(true,false);
+
 
     game.current_stage_mut()
         .world_mut()
