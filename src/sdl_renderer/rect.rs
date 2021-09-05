@@ -45,20 +45,4 @@ impl Rect {
         self.y = y;
     }
 
-    pub fn x(&self) -> i32 {
-        self.x
-    }
-
-    pub fn y(&self) -> i32 {
-        self.y
-    }
-
-    pub fn w(&self) -> u32 {
-        self.w
-    }
-
-    pub fn h(&self) -> u32 {
-        self.h
-    }
-
 }

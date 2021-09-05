@@ -10,6 +10,7 @@ use elikar::sdl_renderer::point::Point;
 use rand::random;
 use elikar::sdl_renderer::sprite::Sprite;
 use elikar::sdl_renderer::rect::Rect;
+use elikar::mouse::event::button::Button::*;
 
 struct QuitSystem;
 impl<'a> System<'a> for QuitSystem {
@@ -48,13 +49,25 @@ impl<'a> System<'a> for CreatePointAtMousePosition {
         if let Some(event) = event.mouse_button_down {
             let x : f32 = random();
             let y : f32 = random();
-            world.create_entity()
-                .attach(Point::new(event.position.0,event.position.1))
-                .attach(rgba!(255,255,255,0))
-                .attach(Velocity{
-                    vx: x * 10.0_f32 - 5.0_f32,
-                    vy: y * 10.0_f32 - 5.0_f32
-                });
+            if event.button == Right {
+                world.create_entity()
+                    .attach(Rect::new(
+                        event.position.0 - 9,
+                        event.position.1 - 9, 19,19))
+                    .attach(rgba!(230,230,255,0))
+                    .attach(Velocity {
+                        vx: x * 10.0_f32 - 5.0_f32,
+                        vy: y * 10.0_f32 - 5.0_f32
+                    });
+            } else {
+                world.create_entity()
+                    .attach(Point::new(event.position.0,event.position.1))
+                    .attach(rgba!(255,255,255,0))
+                    .attach(Velocity {
+                        vx: x * 10.0_f32 - 5.0_f32,
+                        vy: y * 10.0_f32 - 5.0_f32
+                    });
+            }
         }
     }
 }
@@ -68,6 +81,10 @@ impl<'a> System<'a> for UpdatePosition {
         for (point,v) in world.query::<(&mut Point,&Velocity)>() {
             point.x += v.vx as i32;
             point.y += v.vy as i32;
+        }
+        for (rect,v) in world.query::<(&mut Rect,&Velocity)>() {
+            rect.x += v.vx as i32;
+            rect.y += v.vy as i32;
         }
     }
 }
