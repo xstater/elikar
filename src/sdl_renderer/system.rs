@@ -1,6 +1,5 @@
 use crate::sdl_renderer::{Renderer, Color};
 use xecs::{System, World};
-use xecs::resource::Resource;
 use sdl2_sys::*;
 use sdl2_sys::SDL_RendererFlip::*;
 use xecs::system::End;

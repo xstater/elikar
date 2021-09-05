@@ -1,9 +1,4 @@
 use sdl2_sys::*;
-use crate::sdl_renderer::Renderer;
-use xecs::{System, World};
-use xecs::resource::Resource;
-use std::cell::Ref;
-use xecs::system::End;
 
 #[derive(Debug,Copy,Clone,Eq,PartialEq)]
 pub struct Point {
