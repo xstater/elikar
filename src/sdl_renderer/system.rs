@@ -43,6 +43,7 @@ impl<'a> System<'a> for Renderer {
 
         // draw all rects
         for (color,rect) in world.query::<(&Color,&Rect)>() {
+            let sdl_rect : SDL_Rect = rect.into();
             // set color
             unsafe {
                 SDL_SetRenderDrawColor(
@@ -51,18 +52,12 @@ impl<'a> System<'a> for Renderer {
                     color.g(),
                     color.b(),
                     color.a());
-                SDL_RenderDrawRect(self.sdl_renderer,
-                &SDL_Rect{
-                    x : rect.x,
-                    y : rect.y,
-                    w : rect.w as _,
-                    h : rect.h as _
-                });
+                SDL_RenderDrawRect(self.sdl_renderer, &sdl_rect);
             }
         }
 
         // draw sprites
-        for (sprite) in world.query::<&Sprite>() {
+        for sprite in world.query::<&Sprite>() {
             let rect = SDL_Rect{
                 x : sprite.position().0 as _,
                 y : sprite.position().1 as _,

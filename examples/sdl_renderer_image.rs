@@ -6,8 +6,7 @@ use xecs::{System, World};
 use elikar::events::PollEvents;
 use std::cell::{Ref, RefMut};
 use elikar::sdl_renderer::point::Point;
-use xecs::resource::Resource;
-use std::ptr::null;
+use elikar::sdl_renderer::rect::Rect;
 
 struct QuitSystem;
 impl<'a> System<'a> for QuitSystem {
@@ -33,10 +32,10 @@ impl<'a> System<'a> for ShowFPS {
 
 struct FollowMouse;
 impl<'a> System<'a> for FollowMouse {
-    type Resource = (&'a PollEvents,&'a mut World);
+    type Resource = (&'a PollEvents,&'a World);
     type Dependencies = ();
 
-    fn update(&'a mut self, (events,mut world) : (Ref<'a,PollEvents>,RefMut<'a,World>)) {
+    fn update(&'a mut self, (events,world) : (Ref<'a,PollEvents>,Ref<'a,World>)) {
         if let Some(motion) = events.mouse_motion {
             for sprite in world.query::<&mut Sprite>() {
                 sprite.move_to(motion.position);
@@ -54,16 +53,16 @@ fn main() {
         .build()
         .unwrap();
 
-    let mut sprite = Sprite::from_bmp(&renderer, "./logo.bmp").unwrap();
-    sprite.set_angle(1.0);
+    let mut sprite = Sprite::from_bmp(&renderer,"./logo.bmp").unwrap();
+    sprite.set_angle(90.0);
     sprite.set_flip(true,false);
-
 
     game.current_stage_mut()
         .world_mut()
         .register::<Sprite>()
         .register::<Point>()
-        .register::<Color>();
+        .register::<Color>()
+        .register::<Rect>();
 
     game.current_stage_mut()
         .world_mut()

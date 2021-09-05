@@ -19,6 +19,17 @@ impl From<SDL_Rect> for Rect {
     }
 }
 
+impl From<&Rect> for SDL_Rect {
+    fn from(rect : &Rect) -> Self {
+        SDL_Rect {
+            x : rect.x,
+            y : rect.y,
+            w : rect.w as _,
+            h : rect.h as _
+        }
+    }
+}
+
 impl Rect {
     pub fn new(x : i32, y : i32, w : u32, h : u32) -> Self {
         Rect {

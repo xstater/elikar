@@ -9,6 +9,7 @@ use xecs::resource::Resource;
 use elikar::sdl_renderer::point::Point;
 use rand::random;
 use elikar::sdl_renderer::sprite::Sprite;
+use elikar::sdl_renderer::rect::Rect;
 
 struct QuitSystem;
 impl<'a> System<'a> for QuitSystem {
@@ -87,7 +88,8 @@ fn main() {
         .register::<Point>()
         .register::<Color>()
         .register::<Velocity>()
-        .register::<Sprite>();
+        .register::<Sprite>()
+        .register::<Rect>();
 
     game.current_stage_mut()
         .add_system(QuitSystem)
