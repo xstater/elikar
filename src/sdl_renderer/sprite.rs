@@ -1,7 +1,6 @@
 use sdl2_sys::*;
 use std::path::Path;
 use crate::sdl_renderer::Renderer;
-use std::ptr::{null, null_mut};
 use crate::common::SdlError;
 use crate::common::Result;
 use std::ffi::CString;

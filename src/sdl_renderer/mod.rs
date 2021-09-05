@@ -12,6 +12,7 @@ use xblend::{RGBA,rgba};
 pub type Color = RGBA<u8>;
 
 pub struct Renderer{
+    #[allow(unused)]
     window : Arc<Window>,
     sdl_renderer : *mut SDL_Renderer,
     clear_color : Color,
