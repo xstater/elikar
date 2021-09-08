@@ -209,20 +209,20 @@ fn main() {
     }.unwrap();
 
     #[allow(unused)]
-        let physical_devices_info = physical_devices
-        .iter()
-        .map(|physical_device|{
-            let properties = unsafe {
-                instance.get_physical_device_properties(*physical_device)
-            };
-            let name = unsafe {
-                CStr::from_ptr(properties.device_name.as_ptr())
-            }.to_str()
-                .unwrap()
-                .to_owned();
-            (name,GpuType::from(properties.device_type))
-        })
-        .collect::<Vec<_>>();
+    let physical_devices_info = physical_devices
+    .iter()
+    .map(|physical_device|{
+        let properties = unsafe {
+            instance.get_physical_device_properties(*physical_device)
+        };
+        let name = unsafe {
+            CStr::from_ptr(properties.device_name.as_ptr())
+        }.to_str()
+            .unwrap()
+            .to_owned();
+        (name,GpuType::from(properties.device_type))
+    })
+    .collect::<Vec<_>>();
 
     // dbg!(physical_devices_info);
 

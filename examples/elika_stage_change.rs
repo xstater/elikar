@@ -57,7 +57,7 @@ impl<'a> System<'a> for ChangeStage {
     type Dependencies = PollEvents;
 
     fn update(&'a mut self,(events,mut states) : (Ref<'a,PollEvents>,RefMut<'a,ElikarStates>)) {
-        if let Some(info) = events.key_down {
+        for info in &events.key_down {
             if info.code == Code::P {
                 states.change_current("fuck")
             }

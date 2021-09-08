@@ -22,7 +22,7 @@ impl<'a> System<'a> for PauseSystem {
     type Dependencies = PollEvents;
 
     fn update(&'a mut self, (events,mut states) : (Ref<'a,PollEvents>,RefMut<'a,ElikarStates>)) {
-        if let Some(key) = events.key_down {
+        for key in &events.key_down {
             if key.code == Code::P {
                 if self.0 {
                     states.deactivate_system::<PrintEventsSystem>();

@@ -22,7 +22,7 @@ impl<'a> System<'a> for HandleKeyboardEvent {
     type Dependencies = PollEvents;
 
     fn update(&'a mut self,(events,mut states) : (Ref<'a,PollEvents>,RefMut<'a,ElikarStates>)) {
-        if let Some(key) = events.key_down {
+        for key in &events.key_down {
             println!("{:?}",key);
             if key.code == Code::Escape {
                 states.quit()

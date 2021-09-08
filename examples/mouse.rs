@@ -21,13 +21,13 @@ impl<'a> System<'a> for PrintEventsSystem {
     type Dependencies = PollEvents;
 
     fn update(&'a mut self,events : Ref<'a,PollEvents>) {
-        if let Some(motion) = &events.mouse_motion {
+        for motion in &events.mouse_motion {
             println!("position:{:?}",motion.position)
         }
-        if let Some(button) = &events.mouse_button_down {
+        for button in &events.mouse_button_down {
             println!("button:{:?}",button)
         }
-        if let Some(wheel) = &events.mouse_wheel {
+        for wheel in &events.mouse_wheel {
             println!("wheel:{:?}",wheel);
         }
     }

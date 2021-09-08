@@ -31,7 +31,7 @@ impl<'a> System<'a> for PrintFpsSystem {
     type Dependencies = PollEvents;
 
     fn update(&'a mut self,(events,states) : (Ref<'a,PollEvents>,Ref<'a,ElikarStates>)) {
-        if let Some(_motion) = &events.mouse_motion {
+        for _ in &events.mouse_motion {
             println!("fps:{}",states.fps());
         }
     }

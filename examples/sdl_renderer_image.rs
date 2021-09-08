@@ -36,7 +36,7 @@ impl<'a> System<'a> for FollowMouse {
     type Dependencies = ();
 
     fn update(&'a mut self, (events,world) : (Ref<'a,PollEvents>,Ref<'a,World>)) {
-        if let Some(motion) = events.mouse_motion {
+        for motion in &events.mouse_motion {
             for sprite in world.query::<&mut Sprite>() {
                 sprite.move_to(motion.position);
             }

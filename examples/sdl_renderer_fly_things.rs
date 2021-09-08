@@ -46,7 +46,7 @@ impl<'a> System<'a> for CreatePointAtMousePosition {
     type Dependencies = PollEvents;
 
     fn update(&'a mut self, (mut world,event) : (RefMut<'a,World>,Ref<'a,PollEvents>)) {
-        if let Some(event) = event.mouse_button_down {
+        for event in &event.mouse_button_down {
             let x : f32 = random();
             let y : f32 = random();
             if event.button == Right {
