@@ -1,11 +1,15 @@
 use crate::sdl_renderer::{Renderer, Color};
 use xecs::{System, World};
 use sdl2_sys::*;
+use sdl2_sys::SDL_RendererFlip::*;
 use xecs::system::End;
 use std::cell::Ref;
 use crate::sdl_renderer::point::Point;
 use crate::sdl_renderer::sprite::Sprite;
 use std::ptr::null;
+use std::mem::transmute;
+use std::os::raw::c_double;
+use crate::sdl_renderer::rect::Rect;
 
 impl<'a> System<'a> for Renderer {
     type Resource = &'a World;
@@ -37,6 +41,21 @@ impl<'a> System<'a> for Renderer {
             }
         }
 
+        // draw all rects
+        for (color,rect) in world.query::<(&Color,&Rect)>() {
+            let sdl_rect : SDL_Rect = rect.into();
+            // set color
+            unsafe {
+                SDL_SetRenderDrawColor(
+                    self.sdl_renderer,
+                    color.r(),
+                    color.g(),
+                    color.b(),
+                    color.a());
+                SDL_RenderDrawRect(self.sdl_renderer, &sdl_rect);
+            }
+        }
+
         // draw sprites
         for sprite in world.query::<&Sprite>() {
             let rect = SDL_Rect{
@@ -46,11 +65,21 @@ impl<'a> System<'a> for Renderer {
                 h : sprite.size().1 as _
             };
             unsafe {
-                SDL_RenderCopy(
+                let flip = match (sprite.flip().0, sprite.flip().1) {
+                    (false,false) => SDL_FLIP_NONE,
+                    (true,false) => SDL_FLIP_HORIZONTAL,
+                    (false,true) => SDL_FLIP_VERTICAL,
+                    (true,true) => transmute::<u32, SDL_RendererFlip>
+                        (SDL_FLIP_HORIZONTAL as u32 | SDL_FLIP_VERTICAL as u32)
+                };
+                SDL_RenderCopyEx(
                     self.sdl_renderer,
                     sprite.texture(),
                     null(),
-                    &rect
+                    &rect,
+                    sprite.angle() as c_double,
+                    &sprite.center().into(),
+                    flip
                 );
             }
         }

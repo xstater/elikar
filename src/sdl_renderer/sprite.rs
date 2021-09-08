@@ -4,12 +4,19 @@ use crate::sdl_renderer::Renderer;
 use crate::common::SdlError;
 use crate::common::Result;
 use std::ffi::CString;
+use crate::sdl_renderer::rect::Rect;
+use crate::sdl_renderer::point::Point;
 
 // !!!! 这里可能会有生命周期问题 ！！！
 pub struct Sprite {
     texture : *mut SDL_Texture,
     position : (i32,i32),
     size : (u32,u32),
+    dst_rect : Option<Rect>,
+    angle : f64,
+    center : Point,
+    flip_horizontal : bool,
+    flip_vertical : bool
 }
 
 unsafe impl Send for Sprite {}
@@ -24,7 +31,7 @@ impl Drop for Sprite {
 }
 
 impl Sprite {
-    pub fn from_bmp<P : AsRef<Path>>(renderer : &Renderer,path : P) -> Result<Sprite> {
+    pub fn from_bmp<P : AsRef<Path>>(renderer : &Renderer, path : P) -> Result<Sprite> {
         let path  = path.as_ref().to_str().unwrap();
         let path = CString::new(path).unwrap();
         let mode = CString::new("rb").unwrap();
@@ -44,8 +51,13 @@ impl Sprite {
         unsafe { SDL_FreeSurface(surface) };
         Ok(Sprite{
             texture,
-            position : (0,0),
-            size : (w as _,h as _)
+            position : (0, 0),
+            size : (w as _, h as _),
+            dst_rect: Option::None,
+            angle: 0.0,
+            center: Point::new(w/2 as i32, h/2 as i32),
+            flip_horizontal: false,
+            flip_vertical: false
         })
     }
 
@@ -67,5 +79,38 @@ impl Sprite {
 
     pub fn move_to(&mut self,(x,y) : (i32,i32)) {
         self.position = (x,y);
+    }
+
+    pub fn dst(&self) -> Option<Rect> {
+        self.dst_rect
+    }
+
+    pub fn set_dst(&mut self,dst : Option<Rect>) {
+        self.dst_rect = dst;
+    }
+
+    pub fn angle(&self) -> f64 {
+        self.angle
+    }
+
+    pub fn set_angle(&mut self,angle : f64) {
+        self.angle = angle;
+    }
+
+    pub fn center(&self) -> Point {
+        self.center
+    }
+
+    pub fn set_center(&mut self,center : Point) {
+        self.center = center;
+    }
+
+    pub fn flip(&self) -> (bool,bool) {
+        (self.flip_horizontal,self.flip_vertical)
+    }
+    
+    pub fn set_flip(&mut self,flip_h : bool,flip_v : bool) {
+        self.flip_horizontal = flip_h;
+        self.flip_vertical = flip_v;
     }
 }

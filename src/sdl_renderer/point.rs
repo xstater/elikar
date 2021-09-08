@@ -15,12 +15,26 @@ impl From<SDL_Point> for Point {
     }
 }
 
+impl From<Point> for SDL_Point {
+    fn from(point: Point) -> Self {
+        SDL_Point {
+            x : point.x,
+            y : point.y
+        }
+    }
+}
+
 impl Point{
     pub fn new(x : i32,y : i32) -> Self {
         Point {
             x,
             y
         }
+    }
+
+    pub fn move_to(&mut self, x : i32, y : i32) {
+        self.x = x;
+        self.y = y;
     }
 
 }

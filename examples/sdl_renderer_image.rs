@@ -6,6 +6,7 @@ use xecs::{System, World};
 use elikar::events::PollEvents;
 use std::cell::{Ref, RefMut};
 use elikar::sdl_renderer::point::Point;
+use elikar::sdl_renderer::rect::Rect;
 
 struct QuitSystem;
 impl<'a> System<'a> for QuitSystem {
@@ -52,13 +53,16 @@ fn main() {
         .build()
         .unwrap();
 
-    let sprite = Sprite::from_bmp(&renderer,"./logo.bmp").unwrap();
+    let mut sprite = Sprite::from_bmp(&renderer,"./logo.bmp").unwrap();
+    sprite.set_angle(180.0);
+    sprite.set_flip(true,true);
 
     game.current_stage_mut()
         .world_mut()
         .register::<Sprite>()
         .register::<Point>()
-        .register::<Color>();
+        .register::<Color>()
+        .register::<Rect>();
 
     game.current_stage_mut()
         .world_mut()
