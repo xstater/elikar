@@ -54,8 +54,8 @@ fn main() {
         .unwrap();
 
     let mut sprite = Sprite::from_bmp(&renderer,"./logo.bmp").unwrap();
-    sprite.set_angle(90.0);
-    sprite.set_flip(true,false);
+    sprite.set_angle(180.0);
+    sprite.set_flip(true,true);
 
     game.current_stage_mut()
         .world_mut()

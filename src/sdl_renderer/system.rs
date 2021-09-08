@@ -78,7 +78,7 @@ impl<'a> System<'a> for Renderer {
                     null(),
                     &rect,
                     sprite.angle() as c_double,
-                    null(),
+                    &sprite.center().into(),
                     flip
                 );
             }

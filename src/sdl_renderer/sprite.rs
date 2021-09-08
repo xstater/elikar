@@ -14,7 +14,7 @@ pub struct Sprite {
     size : (u32,u32),
     dst_rect : Option<Rect>,
     angle : f64,
-    center : Option<Point>,
+    center : Point,
     flip_horizontal : bool,
     flip_vertical : bool
 }
@@ -52,10 +52,10 @@ impl Sprite {
         Ok(Sprite{
             texture,
             position : (0, 0),
-            size : (w as _,h as _),
+            size : (w as _, h as _),
             dst_rect: Option::None,
             angle: 0.0,
-            center: Option::None,
+            center: Point::new(w/2 as i32, h/2 as i32),
             flip_horizontal: false,
             flip_vertical: false
         })
@@ -97,11 +97,11 @@ impl Sprite {
         self.angle = angle;
     }
 
-    pub fn center(&self) -> Option<Point> {
+    pub fn center(&self) -> Point {
         self.center
     }
 
-    pub fn set_center(&mut self,center : Option<Point>) {
+    pub fn set_center(&mut self,center : Point) {
         self.center = center;
     }
 
