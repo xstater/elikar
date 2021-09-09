@@ -21,13 +21,13 @@ impl<'a> System<'a> for PrintEventsSystem {
     type Dependencies = PollEvents;
 
     fn update(&'a mut self,events : Ref<'a,PollEvents>) {
-        if let Some(motion) = &events.mouse_motion {
+        for motion in &events.mouse_motion {
             println!("position:{:?}",motion.position)
         }
-        if let Some(button) = &events.mouse_button_down {
+        for button in &events.mouse_button_down {
             println!("button:{:?}",button)
         }
-        if let Some(wheel) = &events.mouse_wheel {
+        for wheel in &events.mouse_wheel {
             println!("wheel:{:?}",wheel);
         }
     }
@@ -35,8 +35,10 @@ impl<'a> System<'a> for PrintEventsSystem {
 
 fn main(){
     let mut game = Elikar::new().unwrap();
-    let _window = game.create_window().build().unwrap();
+    let mut manager = game.create_window_manager();
+    manager.create_window().build().unwrap();
     game.current_stage_mut()
+        .add_system(manager)
         .add_system(PollEvents::new())
         .add_system(QuitSystem)
         .add_system(PrintEventsSystem);

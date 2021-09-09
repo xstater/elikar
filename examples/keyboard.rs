@@ -22,7 +22,7 @@ impl<'a> System<'a> for HandleKeyboardEvent {
     type Dependencies = PollEvents;
 
     fn update(&'a mut self,(events,mut states) : (Ref<'a,PollEvents>,RefMut<'a,ElikarStates>)) {
-        if let Some(key) = events.key_down {
+        for key in &events.key_down {
             println!("{:?}",key);
             if key.code == Code::Escape {
                 states.quit()
@@ -33,8 +33,10 @@ impl<'a> System<'a> for HandleKeyboardEvent {
 
 fn main(){
     let mut game = Elikar::new().unwrap();
-    let _window = game.create_window().build().unwrap();
+    let mut manager = game.create_window_manager();
+    manager.create_window().build().unwrap();
     game.current_stage_mut()
+        .add_system(manager)
         .add_system(PollEvents::new())
         .add_system(QuitSystem)
         .add_system(HandleKeyboardEvent);

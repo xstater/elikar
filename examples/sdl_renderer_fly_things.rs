@@ -1,11 +1,9 @@
 use elikar::{Elikar, ElikarStates};
 use elikar::sdl_renderer::{Renderer, Color};
-use std::sync::Arc;
 use xblend::{RGBA,rgba};
 use xecs::{System, World};
 use elikar::events::PollEvents;
 use std::cell::{Ref, RefMut};
-use xecs::resource::Resource;
 use elikar::sdl_renderer::point::Point;
 use rand::random;
 use elikar::sdl_renderer::sprite::Sprite;
@@ -46,7 +44,7 @@ impl<'a> System<'a> for CreatePointAtMousePosition {
     type Dependencies = PollEvents;
 
     fn update(&'a mut self, (mut world,event) : (RefMut<'a,World>,Ref<'a,PollEvents>)) {
-        if let Some(event) = event.mouse_button_down {
+        for event in &event.mouse_button_down {
             let x : f32 = random();
             let y : f32 = random();
             if event.button == Right {
@@ -93,13 +91,16 @@ impl<'a> System<'a> for UpdatePosition {
 
 fn main() {
     let mut game = Elikar::new().unwrap();
-    let window = game.create_window().build().unwrap();
-    let window = Arc::new(window);
-    let renderer = Renderer::builder(window.clone())
-        .accelerated()
-        .vsync()
-        .build()
-        .unwrap();
+    let mut manager = game.create_window_manager();
+    let renderer = {
+        Renderer::builder()
+            .accelerated()
+            .vsync()
+            .build(manager.create_window()
+                .build()
+                .unwrap())
+            .unwrap()
+    };
 
     game.current_stage_mut().world_mut()
         .register::<Point>()
@@ -109,6 +110,7 @@ fn main() {
         .register::<Rect>();
 
     game.current_stage_mut()
+        .add_system(manager)
         .add_system(QuitSystem)
         .add_system(PollEvents::new())
         .add_system(renderer)

@@ -1,5 +1,5 @@
 use ash::{Entry, Instance, Device};
-use ash::vk::{self, ApplicationInfo, make_api_version, InstanceCreateInfo, PhysicalDeviceType, DeviceCreateInfo, DeviceQueueCreateInfo, QueueFlags, DebugUtilsMessengerCreateInfoEXT, DebugUtilsMessageSeverityFlagsEXT, DebugUtilsMessageTypeFlagsEXT, DebugUtilsMessengerCallbackDataEXT, Bool32, FALSE, SurfaceKHR, Handle, SwapchainCreateInfoKHR, Format, ColorSpaceKHR, PresentModeKHR, ImageUsageFlags, SharingMode, CompositeAlphaFlagsKHR, ImageViewCreateInfo, ImageViewType, ComponentMapping, ComponentSwizzle, ImageSubresourceRange, ImageAspectFlags, RenderPassCreateInfo, AttachmentDescription, SampleCountFlags, AttachmentLoadOp, AttachmentStoreOp, ImageLayout, SubpassDescription, AttachmentReference, PipelineBindPoint, SubpassDependency, SUBPASS_EXTERNAL, PipelineStageFlags, AccessFlags, ShaderModuleCreateInfo, FramebufferCreateInfo, ImageCreateInfo, ImageType, PipelineShaderStageCreateInfo, ShaderStageFlags, PipelineVertexInputStateCreateInfo, PipelineInputAssemblyStateCreateInfo, PrimitiveTopology, Viewport, Rect2D, Offset2D, PipelineViewportStateCreateInfo, PipelineRasterizationStateCreateInfo, PolygonMode, CullModeFlags, FrontFace, PipelineMultisampleStateCreateInfo, PipelineColorBlendAttachmentState, ColorComponentFlags, BlendFactor, BlendOp, PipelineColorBlendStateCreateInfo, LogicOp, DynamicState, PipelineDynamicStateCreateInfo, PipelineLayoutCreateInfo, GraphicsPipelineCreateInfo, PipelineCache, CommandPoolCreateInfo, CommandBufferAllocateInfo, CommandBufferLevel, CommandBufferBeginInfo, RenderPassBeginInfo, ClearValue, ClearColorValue, SubpassContents, SemaphoreCreateInfo, SwapchainKHR, Semaphore, Fence, SubmitInfo, CommandBuffer, Queue, PresentInfoKHR, VertexInputBindingDescription, VertexInputRate, VertexInputAttributeDescription, BufferCreateInfo, BufferUsageFlags, MemoryPropertyFlags, MemoryAllocateInfo, MemoryMapFlags};
+use ash::vk::{self, ApplicationInfo, make_api_version, InstanceCreateInfo, PhysicalDeviceType, DeviceCreateInfo, DeviceQueueCreateInfo, QueueFlags, DebugUtilsMessengerCreateInfoEXT, DebugUtilsMessageSeverityFlagsEXT, DebugUtilsMessageTypeFlagsEXT, DebugUtilsMessengerCallbackDataEXT, Bool32, FALSE, SurfaceKHR, Handle, SwapchainCreateInfoKHR, Format, ColorSpaceKHR, PresentModeKHR, ImageUsageFlags, SharingMode, CompositeAlphaFlagsKHR, ImageViewCreateInfo, ImageViewType, ComponentMapping, ComponentSwizzle, ImageSubresourceRange, ImageAspectFlags, RenderPassCreateInfo, AttachmentDescription, SampleCountFlags, AttachmentLoadOp, AttachmentStoreOp, ImageLayout, SubpassDescription, AttachmentReference, PipelineBindPoint, SubpassDependency, SUBPASS_EXTERNAL, PipelineStageFlags, AccessFlags, ShaderModuleCreateInfo, FramebufferCreateInfo,  PipelineShaderStageCreateInfo, ShaderStageFlags, PipelineVertexInputStateCreateInfo, PipelineInputAssemblyStateCreateInfo, PrimitiveTopology, Viewport, Rect2D, Offset2D, PipelineViewportStateCreateInfo, PipelineRasterizationStateCreateInfo, PolygonMode, CullModeFlags, FrontFace, PipelineMultisampleStateCreateInfo, PipelineColorBlendAttachmentState, ColorComponentFlags, BlendFactor, BlendOp, PipelineColorBlendStateCreateInfo, LogicOp, DynamicState, PipelineDynamicStateCreateInfo, PipelineLayoutCreateInfo, GraphicsPipelineCreateInfo, PipelineCache, CommandPoolCreateInfo, CommandBufferAllocateInfo, CommandBufferLevel, CommandBufferBeginInfo, RenderPassBeginInfo, ClearValue, ClearColorValue, SubpassContents, SemaphoreCreateInfo, SwapchainKHR, Semaphore, Fence, SubmitInfo, CommandBuffer, Queue, PresentInfoKHR, VertexInputBindingDescription, VertexInputRate, VertexInputAttributeDescription, BufferCreateInfo, BufferUsageFlags, MemoryPropertyFlags, MemoryAllocateInfo, MemoryMapFlags};
 use std::ffi::{CStr, CString, c_void};
 use std::os::raw::c_char;
 use sdl2_sys::*;
@@ -10,7 +10,6 @@ use ash::extensions::khr::{Surface, Swapchain};
 use std::fs::File;
 use ash::util::{read_spv, Align};
 use xecs::System;
-use xecs::resource::Resource;
 use xecs::system::End;
 use std::cell::{RefMut, Ref};
 use std::sync::Arc;
@@ -133,11 +132,13 @@ unsafe extern "system" fn debug_callback(
 fn main() {
     let mut game = Elikar::new().unwrap();
 
-    let window = game.create_window()
+    let mut manager = game.create_window_manager();
+    let window = manager.create_window()
         .title("elikar vulkan")
         .vulkan()
         .build()
-        .unwrap();
+        .unwrap()
+        .id().unwrap();
 
     let entry = unsafe { Entry::new() }.unwrap();
 
@@ -168,7 +169,7 @@ fn main() {
         .map(|str| str.as_ptr() as *const c_char)
         .collect::<Vec<_>>();
 
-    let mut extensions = sdl_extensions(&window).unwrap();
+    let mut extensions = sdl_extensions(manager.window_ref(window).unwrap()).unwrap();
     extensions.push(CString::new("VK_EXT_debug_utils").unwrap());
 
     dbg!(&extensions);
@@ -209,20 +210,20 @@ fn main() {
     }.unwrap();
 
     #[allow(unused)]
-        let physical_devices_info = physical_devices
-        .iter()
-        .map(|physical_device|{
-            let properties = unsafe {
-                instance.get_physical_device_properties(*physical_device)
-            };
-            let name = unsafe {
-                CStr::from_ptr(properties.device_name.as_ptr())
-            }.to_str()
-                .unwrap()
-                .to_owned();
-            (name,GpuType::from(properties.device_type))
-        })
-        .collect::<Vec<_>>();
+    let physical_devices_info = physical_devices
+    .iter()
+    .map(|physical_device|{
+        let properties = unsafe {
+            instance.get_physical_device_properties(*physical_device)
+        };
+        let name = unsafe {
+            CStr::from_ptr(properties.device_name.as_ptr())
+        }.to_str()
+            .unwrap()
+            .to_owned();
+        (name,GpuType::from(properties.device_type))
+    })
+    .collect::<Vec<_>>();
 
     // dbg!(physical_devices_info);
 
@@ -230,7 +231,7 @@ fn main() {
     let physical_device = *physical_devices.first().unwrap();
 
     // create surface
-    let surface = sdl_surface(&window,&instance).unwrap();
+    let surface = sdl_surface(manager.window_ref(window).unwrap(),&instance).unwrap();
     let surface_manager = Surface::new(&entry,&instance);
 
     #[allow(unused)]
@@ -647,6 +648,7 @@ fn main() {
 
     // dynamic state
     let dynamic_states = [DynamicState::VIEWPORT,DynamicState::SCISSOR];
+    #[allow(unused)]
     let dynamic_state_info = PipelineDynamicStateCreateInfo::builder()
         .dynamic_states(&dynamic_states);
 
@@ -828,6 +830,7 @@ fn main() {
     let swapchain_manager = Arc::new(swapchain_manager);
     let command_buffers = Arc::new(command_buffers);
     game.current_stage_mut()
+        .add_system(manager)
         .add_system(PollEvents::new())
         .add_system(DrawFrame{
             device : device.clone(),
