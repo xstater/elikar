@@ -1,6 +1,5 @@
 use elikar::{Elikar, ElikarStates};
 use elikar::sdl_renderer::{Renderer, Color};
-use std::sync::Arc;
 use elikar::sdl_renderer::sprite::Sprite;
 use xecs::{System, World};
 use elikar::events::PollEvents;
@@ -46,12 +45,15 @@ impl<'a> System<'a> for FollowMouse {
 
 fn main() {
     let mut game = Elikar::new().unwrap();
-    let window =  game.create_window().build().unwrap();
-    let window = Arc::new(window);
-    let renderer = Renderer::builder(window)
-        .accelerated()
-        .build()
-        .unwrap();
+    let mut manager = game.create_window_manager();
+    let renderer = {
+        Renderer::builder()
+            .accelerated()
+            .build(manager.create_window()
+                .build()
+                .unwrap())
+            .unwrap()
+    };
 
     let mut sprite = Sprite::from_bmp(&renderer,"./logo.bmp").unwrap();
     sprite.set_angle(180.0);
@@ -70,6 +72,7 @@ fn main() {
         .attach(sprite);
 
     game.current_stage_mut()
+        .add_system(manager)
         .add_system(PollEvents::new())
         .add_system(QuitSystem)
         .add_system(ShowFPS)

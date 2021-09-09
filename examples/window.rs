@@ -29,12 +29,17 @@ impl<'a> System<'a> for PrintWindowEvent {
 fn main() {
     let mut game = Elikar::new().unwrap();
 
-    let mut window = game.create_window()
+    let mut manager = game.create_window_manager();
+    manager.create_window()
+        .resizable()
+        .always_on_top()
+        .skip_taskbar()
+        .title("window event test")
         .build()
         .unwrap();
-    window.set_resizable();
 
     game.current_stage_mut()
+        .add_system(manager)
         .add_system(QuitSystem)
         .add_system(PollEvents::new())
         .add_system(PrintWindowEvent);

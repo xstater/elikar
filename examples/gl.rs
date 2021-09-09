@@ -6,12 +6,11 @@ use sdl2_sys::*;
 use elikar::{Elikar, window, ElikarStates};
 use elikar_gl as gl;
 use std::ffi::CString;
-use xecs::{System, World};
-use elikar::window::Window;
+use xecs::{System};
 use std::cell::{RefMut, Ref};
 use elikar::events::PollEvents;
-use xecs::resource::Resource;
 use xecs::system::End;
+use std::ptr::null_mut;
 
 struct QuitSystem;
 impl<'a> System<'a> for QuitSystem {
@@ -52,11 +51,11 @@ impl<'a> System<'a> for ClearScreen {
 
 struct SwapWindow;
 impl<'a> System<'a> for SwapWindow {
-    type Resource = &'a mut World;
+    type Resource = &'a mut window::Manager;
     type Dependencies = End;
 
-    fn update(&'a mut self, world : RefMut<'a,World>) {
-        for window in world.query::<&mut Window>() {
+    fn update(&'a mut self,mut window_manager : RefMut<'a,window::Manager>) {
+        for window in window_manager.iter_mut() {
             window.gl_swap();
         }
     }
@@ -65,43 +64,39 @@ impl<'a> System<'a> for SwapWindow {
 fn main(){
     let mut game = Elikar::new().unwrap();
 
-    let window = game.create_window()
-        .title("OpenGL test")
-        .opengl()
-        .build()
-        .unwrap();
-
-    let gl_context = unsafe {
-        let wptr : *mut SDL_Window = window.window_ptr();
-        let gc = SDL_GL_CreateContext(wptr);
-        if gc.is_null() {
-            panic!("asd");
-        }
-        gc
-    };
-
-    gl::load_with(|s| unsafe{
-        SDL_GL_GetProcAddress(CString::new(s).unwrap().as_ptr()as *const _)
-    } as *const _);
-
-    unsafe{
-        if SDL_GL_SetSwapInterval(1) != 0 {
-            panic!("SDL_GL_SetSwapInterval failed : VSYNC unsupported");
-        }
-    }
-
+    let mut window_manager = game.create_window_manager();
+    let mut gl_context = null_mut();
     {
-        let mut world = game.current_stage_mut().world_mut();
-        world.register::<Window>();
-        world.create_entity()
-            .attach(window);
-    }
+        let window = window_manager.create_window()
+            .title("OpenGL test")
+            .opengl()
+            .build()
+            .unwrap();
 
+        unsafe {
+            let wptr: *mut SDL_Window = window.window_ptr();
+            let gc = SDL_GL_CreateContext(wptr);
+            if gc.is_null() {
+                panic!("asd");
+            }
+            gl_context = gc;
+        };
+
+        gl::load_with(|s| unsafe {
+            SDL_GL_GetProcAddress(CString::new(s).unwrap().as_ptr() as *const _)
+        } as *const _);
+
+        unsafe {
+            if SDL_GL_SetSwapInterval(1) != 0 {
+                panic!("SDL_GL_SetSwapInterval failed : VSYNC unsupported");
+            }
+        }
+    }
     game.current_stage_mut()
+        .add_system(window_manager)
         .add_system(QuitSystem)
         .add_system(PollEvents::new())
-        .add_system(PrintFpsSystem);
-    game.current_stage_mut()
+        .add_system(PrintFpsSystem)
         .add_system(ClearScreen)
         .add_system(SwapWindow);
 

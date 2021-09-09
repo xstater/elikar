@@ -1,8 +1,6 @@
 use elikar::{Elikar, ElikarStates};
-use xecs::{System, World, Stage};
-use xecs::resource::Resource;
+use xecs::{System, Stage};
 use std::cell::{RefMut, Ref};
-use elikar::window::Window;
 use elikar::events::PollEvents;
 use elikar::keyboard::Code;
 
@@ -31,7 +29,7 @@ impl<'a> System<'a> for CreateAStage {
     type Resource = &'a mut ElikarStates;
     type Dependencies = ();
 
-    fn update(&'a mut self, mut states : RefMut<'a,ElikarStates>) {
+    fn init(&'a mut self, mut states : RefMut<'a,ElikarStates>) {
         let mut stage = Stage::new();
         stage.add_system(PrintSystem("Fuck stage".to_owned()))
             .add_system(ChangeToDefaultStage);
@@ -67,9 +65,11 @@ impl<'a> System<'a> for ChangeStage {
 
 fn main(){
     let mut game = Elikar::new().unwrap();
-    let _window = game.create_window().build().unwrap();
+    let mut manager = game.create_window_manager();
+    manager.create_window().build().unwrap();
     game.current_stage_mut()
-        .add_once_system(CreateAStage)
+        .add_system(manager)
+        .add_system(CreateAStage)
         .add_system(PollEvents::new())
         .add_system(QuitSystem)
         .add_system(ChangeStage);

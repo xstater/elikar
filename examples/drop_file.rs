@@ -1,24 +1,7 @@
 use elikar::{Elikar, ElikarStates};
-use xecs::{System, World};
-use xecs::resource::Resource;
+use xecs::{System};
 use std::cell::{RefMut, Ref};
-use elikar::window::Window;
 use elikar::events::PollEvents;
-
-struct CreateWindowSystem(Option<Window>);
-impl<'a> System<'a> for CreateWindowSystem {
-    type Resource = &'a mut World;
-    type Dependencies = ();
-
-    fn update(&'a mut self, mut world : RefMut<'a,World>) {
-        world.register::<Window>();
-
-        world.create_entity()
-            .attach(self.0.take().unwrap());
-
-
-    }
-}
 
 struct QuitSystem;
 impl<'a> System<'a> for QuitSystem {
@@ -49,10 +32,11 @@ impl<'a> System<'a> for PrintEventsSystem {
 fn main(){
     let mut game = Elikar::new().unwrap();
 
-    let window = game.create_window().build().unwrap();
+    let mut manager = game.create_window_manager();
+    manager.create_window().build().unwrap();
 
     game.current_stage_mut()
-        .add_once_system(CreateWindowSystem(Some(window)))
+        .add_system(manager)
         .add_system(PollEvents::new())
         .add_system(QuitSystem)
         .add_system(PrintEventsSystem);
