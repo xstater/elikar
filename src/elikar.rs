@@ -174,8 +174,8 @@ impl Elikar {
         })
     }
 
-    pub fn create_window(&self) -> window::Builder{
-        window::Builder::default()
+    pub fn create_window_manager(&self) -> window::Manager {
+        window::Manager::new()
     }
 
     pub fn clipboard(&self) -> Clipboard {
