@@ -7,22 +7,18 @@ use sdl2_sys::*;
 use crate::window::Window;
 use crate::common::{Result, SdlError};
 use std::os::raw::c_int;
-use std::sync::Arc;
 use xblend::{RGBA,rgba};
 
 pub type Color = RGBA<u8>;
 
 pub struct Renderer{
-    #[allow(unused)]
-    window : Arc<Window>,
     sdl_renderer : *mut SDL_Renderer,
     clear_color : Color,
 }
 
 impl Renderer {
-    pub unsafe fn from_ptr(window : Arc<Window>,ptr : *mut SDL_Renderer) -> Renderer {
+    pub unsafe fn from_ptr(ptr : *mut SDL_Renderer) -> Renderer {
         Renderer {
-            window,
             sdl_renderer: ptr,
             clear_color : rgba!(0,0,0,255)
         }
@@ -32,9 +28,8 @@ impl Renderer {
         self.sdl_renderer
     }
 
-    pub fn builder(window : Arc<Window>) -> RendererBuilder {
+    pub fn builder() -> RendererBuilder {
         RendererBuilder{
-            window,
             index: -1,
             flags: 0
         }
@@ -53,9 +48,8 @@ impl Drop for Renderer {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug,Copy,Clone)]
 pub struct RendererBuilder {
-    window : Arc<Window>,
     index : c_int,
     flags : u32
 }
@@ -94,15 +88,14 @@ impl RendererBuilder {
         }
     }
 
-    pub fn build(self) -> Result<Renderer> {
+    pub fn build(self,window : &Window) -> Result<Renderer> {
         let renderer_ptr : *mut SDL_Renderer = unsafe {
-            SDL_CreateRenderer(self.window.window_ptr(), self.index, self.flags)
+            SDL_CreateRenderer(window.window_ptr(), self.index, self.flags)
         };
         if renderer_ptr.is_null() {
             Err(SdlError::get())
         } else {
             Ok(Renderer{
-                window: self.window.clone(),
                 sdl_renderer: renderer_ptr,
                 clear_color: rgba!(0,0,0,255)
             })
