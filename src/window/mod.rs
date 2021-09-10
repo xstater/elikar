@@ -3,6 +3,9 @@ mod window;
 pub mod event;
 mod manager;
 
-pub use window::Window;
+pub use window::{
+    WindowId,
+    Window
+};
 pub use builder::Builder;
 pub use manager::Manager;

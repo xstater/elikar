@@ -138,7 +138,7 @@ fn main() {
         .vulkan()
         .build()
         .unwrap()
-        .id().unwrap();
+        .id();
 
     let entry = unsafe { Entry::new() }.unwrap();
 

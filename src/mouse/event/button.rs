@@ -1,6 +1,7 @@
 extern crate sdl2_sys;
 
 use sdl2_sys::SDL_MouseButtonEvent;
+use crate::window::WindowId;
 
 #[derive(Debug,Copy,Clone,PartialOrd,PartialEq)]
 pub enum Button{
@@ -20,7 +21,7 @@ pub enum Clicks{
 #[derive(Debug,Copy,Clone)]
 pub struct EventInfo {
     pub timestamp : u32,
-    pub window_id : u32,
+    pub window_id : WindowId,
     pub button : Button,
     pub click : Clicks,
     pub position : (i32,i32)
@@ -36,7 +37,7 @@ impl From<SDL_MouseButtonEvent> for EventInfo {
     fn from(x: SDL_MouseButtonEvent) -> Self {
         EventInfo {
             timestamp : x.timestamp,
-            window_id : x.windowID,
+            window_id : WindowId::from_u32(x.windowID),
             button : match x.button {
                 BUTTON_ID_LEFT => Button::Left,
                 BUTTON_ID_MIDDLE => Button::Middle,

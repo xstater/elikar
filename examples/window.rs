@@ -30,13 +30,16 @@ fn main() {
     let mut game = Elikar::new().unwrap();
 
     let mut manager = game.create_window_manager();
-    manager.create_window()
-        .resizable()
-        .always_on_top()
-        .skip_taskbar()
-        .title("window event test")
-        .build()
-        .unwrap();
+    {
+        let window = manager.create_window()
+            .resizable()
+            .always_on_top()
+            .skip_taskbar()
+            .title("window event test")
+            .build()
+            .unwrap();
+        dbg!(window.id());
+    }
 
     game.current_stage_mut()
         .add_system(manager)
