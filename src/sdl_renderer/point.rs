@@ -7,16 +7,25 @@ pub struct Point {
 }
 
 impl From<SDL_Point> for Point {
-    fn from(sdl_point: SDL_Point) -> Self {
-        Point{
+    fn from(sdl_point : SDL_Point) -> Self {
+        Point {
             x : sdl_point.x,
             y : sdl_point.y
         }
     }
 }
 
+impl From<(i32,i32)> for Point {
+    fn from((x,y) : (i32,i32)) -> Self {
+        Point {
+            x : x,
+            y : y
+        }
+    }
+}
+
 impl From<Point> for SDL_Point {
-    fn from(point: Point) -> Self {
+    fn from(point : Point) -> Self {
         SDL_Point {
             x : point.x,
             y : point.y
