@@ -18,8 +18,8 @@ impl From<SDL_Point> for Point {
 impl From<(i32,i32)> for Point {
     fn from((x,y) : (i32,i32)) -> Self {
         Point {
-            x : x,
-            y : y
+            x,
+            y
         }
     }
 }
