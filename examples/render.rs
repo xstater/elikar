@@ -1,18 +1,17 @@
 use elikar::{Elikar, ElikarStates};
 use xecs::System;
-use xecs::resource::Resource;
 use elikar::events::PollEvents;
-use elikar::window;
-use elikar::window::Window;
-use elikar::render::gl::GLContext;
-use elikar::render::renderer2d::{ClearScreen, Renderer2d};
+use elikar::render::vulkan::Vulkan;
+use std::sync::Arc;
+use elikar::render::renderer::Renderer;
+use std::cell::{Ref, RefMut};
 
 struct Quit;
 impl<'a> System<'a> for Quit {
     type Resource = (&'a PollEvents,&'a mut ElikarStates);
     type Dependencies = PollEvents;
 
-    fn update(&'a mut self, (events,mut states) : <Self::Resource as Resource<'a>>::Type) {
+    fn update(&'a mut self, (events,mut states) : (Ref<'a,PollEvents>,RefMut<'a,ElikarStates>)) {
         if let Some(_) = events.quit {
             states.quit();
         }
@@ -23,8 +22,8 @@ impl<'a> System<'a> for PrintFps {
     type Resource = (&'a PollEvents,&'a ElikarStates);
     type Dependencies = PollEvents;
 
-    fn update(&'a mut self, (events,states) : <Self::Resource as Resource<'a>>::Type) {
-        if let Some(_) = events.mouse_motion {
+    fn update(&'a mut self, (events,states) : (Ref<'a,PollEvents>,Ref<'a,ElikarStates>)) {
+        for _ in &events.mouse_motion {
             println!("fps:{}",states.fps());
         }
     }
@@ -33,25 +32,30 @@ impl<'a> System<'a> for PrintFps {
 fn main() {
     let mut game = Elikar::new().unwrap();
 
-    let mut window = game.create_window()
+    let mut manager = game.create_window_manager();
+    let window_id = manager.create_window()
         .title("test")
-        .opengl()
+        .vulkan()
         .build()
-        .unwrap();
-    let _gl = GLContext::from_window(&mut window).unwrap();
+        .unwrap()
+        .id();
 
-    game.current_stage_mut()
-        .world_mut()
-        .register::<Window>()
-        .create_entity()
-        .attach(window);
+    let vk = Vulkan::builder()
+        .enable_debug()
+        .debug_info()
+        .debug_error()
+        .debug_warning()
+        .build(manager.window_ref(window_id).unwrap())
+        .unwrap();
+
+    let vk = Arc::new(vk);
+    let renderer = Renderer::new(vk);
 
     game.current_stage_mut()
         .add_system(Quit)
         .add_system(PollEvents::new())
-        .add_system(ClearScreen::black())
-        .add_system(Renderer2d)
-        .add_system(PrintFps);
+        .add_system(PrintFps)
+        .add_system(renderer);
 
     game.run()
 }

@@ -357,7 +357,6 @@ fn main() {
         image_count
     };
 
-
     // create swapchain
     let swapchain_info = SwapchainCreateInfoKHR::builder()
         .surface(surface)
