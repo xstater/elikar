@@ -1,7 +1,7 @@
 extern crate sdl2_sys;
 
 use sdl2_sys::*;
-use crate::window::window::Window;
+use crate::window::window::{Window, WindowId};
 use std::ffi::{CString};
 use crate::common::{ SdlError,Result };
 use crate::window::manager::Manager;
@@ -12,7 +12,7 @@ pub struct Builder<'a>{
     x : i32,y : i32,
     w : i32,h : i32,
     flags : u32,
-    manager : &'a mut Manager
+    manager : &'a mut Manager,
 }
 
 impl<'a> Debug for Builder<'a> {
@@ -37,7 +37,7 @@ impl<'a> Builder<'a>{
             w : 1280,
             h : 768,
             flags : SDL_WindowFlags::SDL_WINDOW_SHOWN as u32,
-            manager
+            manager,
         }
     }
 
@@ -161,8 +161,12 @@ impl<'a> Builder<'a>{
         if window_ptr.is_null() {
             return Err(SdlError::get())
         } else {
-            let window = unsafe { Window::from_ptr(window_ptr) };
-            let id = window.id()?;
+            let id = unsafe { SDL_GetWindowID(window_ptr) };
+            if id == 0 {
+                return Err(SdlError::get())
+            }
+            let id = WindowId::from_u32(id);
+            let window = unsafe { Window::from_ptr(id,window_ptr) };
             self.manager.add_window(window);
             Ok(self.manager.window_mut(id).unwrap())
         }

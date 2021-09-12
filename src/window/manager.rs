@@ -1,14 +1,15 @@
 use crate::window::{Window, Builder};
 use xecs::System;
+use crate::window::window::WindowId;
 
 pub struct Manager {
-    windows : Vec<Window>
+    windows : Vec<Window>,
 }
 
 impl Manager{
     pub fn new() -> Manager {
         Manager{
-            windows: vec![]
+            windows : vec![],
         }
     }
 
@@ -20,28 +21,32 @@ impl Manager{
         self.windows.push(window);
     }
 
-    pub fn window_ref(&self, window_id : u32) -> Option<&Window> {
+    pub fn window_ref(&self, window_id : WindowId) -> Option<&Window> {
         self.windows.iter()
             .find(|window|{
-                window.id().unwrap() == window_id
+                window.id() == window_id
             })
     }
 
-    pub fn window_mut(&mut self, window_id : u32) -> Option<&mut Window> {
+    pub fn window_mut(&mut self, window_id : WindowId) -> Option<&mut Window> {
         self.windows.iter_mut()
             .find(|window|{
-                window.id().unwrap() == window_id
+                window.id() == window_id
             })
     }
 
-    pub fn remove_window(&mut self,window_id : u32) -> Option<Window> {
+    pub fn remove_window(&mut self,window_id : WindowId) -> Option<Window> {
         let index = self.windows.iter()
             .enumerate()
             .find(|(_,window)|{
-                window.id().unwrap() == window_id
+                window.id() == window_id
             })
             .map(|(index,_)|index)?;
         Some(self.windows.remove(index))
+    }
+
+    pub fn count(&self) -> usize {
+        self.windows.len()
     }
 
     pub fn iter(&self) -> impl Iterator<Item=&Window> {

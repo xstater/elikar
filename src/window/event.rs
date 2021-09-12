@@ -1,9 +1,10 @@
 use sdl2_sys::*;
+use crate::window::WindowId;
 
 #[derive(Debug,Copy, Clone)]
 pub struct EventInfo {
     pub timestamp : u32,
-    pub window_id : u32,
+    pub window_id : WindowId,
     pub event : WindowEvent
 }
 
@@ -50,7 +51,7 @@ impl From<SDL_WindowEvent> for EventInfo {
     fn from(event: SDL_WindowEvent) -> Self {
         EventInfo {
             timestamp: event.timestamp,
-            window_id: event.windowID,
+            window_id: WindowId::from_u32(event.windowID),
             event: match event.event as u32 {
                 x if x == SDL_WindowEventID::SDL_WINDOWEVENT_SHOWN as u32 => {
                     WindowEvent::Shown

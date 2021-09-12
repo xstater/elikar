@@ -2,6 +2,7 @@ extern crate sdl2_sys;
 
 use sdl2_sys::*;
 use crate::keyboard::{Code, Mod};
+use crate::window::WindowId;
 
 #[derive(Debug,Clone,Copy,PartialEq,PartialOrd,Hash)]
 pub enum State{
@@ -12,7 +13,7 @@ pub enum State{
 #[derive(Debug,Clone,Copy)]
 pub struct EventInfo {
     pub timestamp : u32,
-    pub window_id : u32,
+    pub window_id : WindowId,
     pub state : State,
     pub is_repeat : bool,
     pub code : Code,
@@ -23,7 +24,7 @@ impl From<SDL_KeyboardEvent> for EventInfo {
     fn from(event : SDL_KeyboardEvent) -> Self {
         EventInfo {
             timestamp: event.timestamp,
-            window_id: event.windowID,
+            window_id: WindowId::from_u32(event.windowID),
             state: if event.state == SDL_PRESSED as u8 {
                 State::Pressed
             }else {
