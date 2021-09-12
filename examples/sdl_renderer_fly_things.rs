@@ -38,8 +38,8 @@ struct Velocity{
     vy : f32
 }
 
-struct CreatePointAtMousePosition;
-impl<'a> System<'a> for CreatePointAtMousePosition {
+struct CreateThingsAtMousePosition;
+impl<'a> System<'a> for CreateThingsAtMousePosition {
     type Resource = (&'a mut World,&'a PollEvents);
     type Dependencies = PollEvents;
 
@@ -114,7 +114,7 @@ fn main() {
         .add_system(QuitSystem)
         .add_system(PollEvents::new())
         .add_system(renderer)
-        .add_system(CreatePointAtMousePosition)
+        .add_system(CreateThingsAtMousePosition)
         .add_system(ShowFPS)
         .add_system(UpdatePosition)
     ;
