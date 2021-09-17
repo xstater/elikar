@@ -5,6 +5,8 @@ use elikar::render::vulkan::Vulkan;
 use std::sync::Arc;
 use elikar::render::renderer::Renderer;
 use std::cell::{Ref, RefMut};
+use elikar::render::transform::Transform;
+use elikar::render::sprite::Sprite;
 
 struct Quit;
 impl<'a> System<'a> for Quit {
@@ -49,7 +51,16 @@ fn main() {
         .unwrap();
 
     let vk = Arc::new(vk);
-    let renderer = Renderer::new(vk);
+    let renderer = Renderer::new(vk).unwrap();
+
+    game.current_stage_mut().world_mut()
+        .register::<Transform>()
+        .register::<Sprite>();
+
+    game.current_stage_mut().world_mut()
+        .create_entity()
+        .attach(Transform::new())
+        .attach(Sprite::new());
 
     game.current_stage_mut()
         .add_system(Quit)

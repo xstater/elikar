@@ -11,6 +11,7 @@ use crate::window;
 use crate::clipboard::Clipboard;
 use crate::sysinfo::SystemInfo;
 use std::any::TypeId;
+use xecs::resource::Resource;
 
 #[derive(Debug)]
 pub struct ElikarStates {
@@ -22,12 +23,21 @@ pub struct ElikarStates {
     remove_stage_buffer : Option<Vec<String>>,
     change_current : Option<String>,
     deactivated_system_buffer : Option<Vec<TypeId>>,
-    activated_system_buffer : Option<Vec<TypeId>>
+    activated_system_buffer : Option<Vec<TypeId>>,
+    errors : Option<Box<dyn Error>>
 }
 
 impl<'a> System<'a> for ElikarStates {
     type Resource = ();
     type Dependencies = ();
+
+    fn update(&'a mut self, _ : ()) {
+        // handle error here
+        if let Some(error) = &self.errors {
+            // easily panic here
+            panic!("{}",error);
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -161,7 +171,8 @@ impl Elikar {
             remove_stage_buffer: Option::None,
             change_current: Option::None,
             deactivated_system_buffer: Option::None,
-            activated_system_buffer: Option::None
+            activated_system_buffer: Option::None,
+            errors: Option::None
         });
         stage.deactivate::<ElikarStates>();
         Ok(Elikar {
@@ -233,7 +244,8 @@ impl Elikar {
             remove_stage_buffer: Option::None,
             change_current: Option::None,
             deactivated_system_buffer: Option::None,
-            activated_system_buffer: Option::None
+            activated_system_buffer: Option::None,
+            errors: Option::None
         });
         self.stages.insert(name.to_owned(), stage);
     }
@@ -377,5 +389,9 @@ impl ElikarStates {
             .as_mut()
             .unwrap()
             .push(TypeId::of::<T>());
+    }
+
+    pub fn error<E : Error + 'static>(&mut self,error : E) {
+        self.errors = Some(Box::new(error));
     }
 }

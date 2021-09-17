@@ -175,6 +175,10 @@ impl VulkanBuilder{
         let physical_device = find_gpu(&instance,&physical_devices)
             .ok_or(BuildVulkanError::CannotFindSuitableGPU)?;
 
+        let memory_properties = unsafe {
+            instance.get_physical_device_memory_properties(physical_device)
+        };
+
         // create device and queue
         let device_extensions = [CString::new("VK_KHR_swapchain").unwrap()];
         let device_extension_ptrs = device_extensions.iter()
@@ -219,7 +223,8 @@ impl VulkanBuilder{
 
         // create command pool
         let command_pool_info = vk::CommandPoolCreateInfo::builder()
-            .queue_family_index(queue_family_index);
+            .queue_family_index(queue_family_index)
+            .flags(vk::CommandPoolCreateFlags::RESET_COMMAND_BUFFER);
         let command_pool = unsafe {
             device.create_command_pool(&command_pool_info,Option::None)
         }?;
@@ -290,21 +295,50 @@ impl VulkanBuilder{
             swapchain_manager.get_swapchain_images(swapchain)
         }?;
 
+        // create swapchain image views
+        let mut swapchain_image_views = vec![];
+        for image in swapchain_images {
+            let image_view_info = vk::ImageViewCreateInfo::builder()
+                .image(image)
+                .view_type(vk::ImageViewType::TYPE_2D)
+                .format(format.format)
+                .components(vk::ComponentMapping {
+                    r: vk::ComponentSwizzle::IDENTITY,
+                    g: vk::ComponentSwizzle::IDENTITY,
+                    b: vk::ComponentSwizzle::IDENTITY,
+                    a: vk::ComponentSwizzle::IDENTITY
+                })
+                .subresource_range(vk::ImageSubresourceRange{
+                    aspect_mask: vk::ImageAspectFlags::COLOR,
+                    base_mip_level: 0,
+                    level_count: 1,
+                    base_array_layer: 0,
+                    layer_count: 1
+                });
+            let view = unsafe {
+                device.create_image_view(&image_view_info,Option::None)
+            }?;
+            swapchain_image_views.push(view);
+        }
+
         Ok(Vulkan{
             entry,
             instance,
             debug_utils,
             messenger,
             physical_device,
+            memory_properties,
             device,
             graphics_queue,
             transfer_queue,
             command_pool,
             surface_manager,
             surface,
+            surface_format : format,
+            surface_extent : surface_capabilities.current_extent,
             swapchain_manager,
             swapchain,
-            swapchain_images,
+            swapchain_image_views,
             window_id : window.id()
         })
     }
