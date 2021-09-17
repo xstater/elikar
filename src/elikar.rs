@@ -35,6 +35,7 @@ impl<'a> System<'a> for ElikarStates {
         // handle error here
         if let Some(error) = &self.errors {
             // easily panic here
+            // todo: use custom handler or any other better solution
             panic!("{}",error);
         }
     }

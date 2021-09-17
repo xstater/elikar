@@ -32,6 +32,7 @@ impl Vulkan {
     }
 
     pub fn rebuild_swapchain(&mut self) {
+        todo!()
     }
 
     pub fn window_id(&self) -> WindowId {
