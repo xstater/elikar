@@ -9,26 +9,33 @@ use rand::random;
 use elikar::sdl_renderer::sprite::Sprite;
 use elikar::sdl_renderer::rect::Rect;
 use elikar::mouse::event::button::Button::*;
+use std::convert::Infallible;
 
 struct QuitSystem;
 impl<'a> System<'a> for QuitSystem {
+    type InitResource = ();
     type Resource = (&'a PollEvents,&'a mut ElikarStates);
     type Dependencies = PollEvents;
+    type Error = Infallible;
 
-    fn update(&'a mut self, (events,mut states) : (Ref<'a,PollEvents>,RefMut<'a,ElikarStates>)) {
+    fn update(&'a mut self, (events,mut states) : (Ref<'a,PollEvents>,RefMut<'a,ElikarStates>)) -> Result<(),Infallible>{
         if let Some(_) = events.quit {
             states.quit()
         }
+        Ok(())
     }
 }
 
 struct ShowFPS;
 impl<'a> System<'a> for ShowFPS {
+    type InitResource = ();
     type Resource = &'a ElikarStates;
     type Dependencies = ();
+    type Error = Infallible;
 
-    fn update(&'a mut self, states : Ref<'a,ElikarStates>) {
+    fn update(&'a mut self, states : Ref<'a,ElikarStates>) -> Result<(),Infallible>{
         println!("fps:{}",states.actual_fps());
+        Ok(())
     }
 }
 
@@ -40,10 +47,12 @@ struct Velocity{
 
 struct CreateThingsAtMousePosition;
 impl<'a> System<'a> for CreateThingsAtMousePosition {
+    type InitResource = ();
     type Resource = (&'a mut World,&'a PollEvents);
     type Dependencies = PollEvents;
+    type Error = Infallible;
 
-    fn update(&'a mut self, (mut world,event) : (RefMut<'a,World>,Ref<'a,PollEvents>)) {
+    fn update(&'a mut self, (mut world,event) : (RefMut<'a,World>,Ref<'a,PollEvents>)) -> Result<(),Infallible> {
         for event in &event.mouse_button_down {
             let x : f32 = random();
             let y : f32 = random();
@@ -67,15 +76,18 @@ impl<'a> System<'a> for CreateThingsAtMousePosition {
                     });
             }
         }
+        Ok(())
     }
 }
 
 struct UpdatePosition;
 impl<'a> System<'a> for UpdatePosition {
+    type InitResource = ();
     type Resource = &'a mut World;
     type Dependencies = ();
+    type Error = Infallible;
 
-    fn update(&'a mut self, world : RefMut<'a,World>) {
+    fn update(&'a mut self, world : RefMut<'a,World>) -> Result<(),Infallible>{
         for (point,v) in world.query::<(&mut Point,&Velocity)>() {
             point.x += v.vx as i32;
             point.y += v.vy as i32;
@@ -84,6 +96,7 @@ impl<'a> System<'a> for UpdatePosition {
             rect.x += v.vx as i32;
             rect.y += v.vy as i32;
         }
+        Ok(())
     }
 }
 

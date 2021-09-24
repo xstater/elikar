@@ -2,28 +2,35 @@ use elikar::{Elikar, ElikarStates};
 use xecs::System;
 use elikar::events::PollEvents;
 use std::cell::{Ref, RefMut};
+use std::convert::Infallible;
 
 struct QuitSystem;
 impl<'a> System<'a> for QuitSystem {
+    type InitResource = ();
     type Resource = (&'a PollEvents,&'a mut ElikarStates);
     type Dependencies = PollEvents;
+    type Error = Infallible;
 
-    fn update(&'a mut self, (events,mut states) : (Ref<'a,PollEvents>,RefMut<'a,ElikarStates>)) {
+    fn update(&'a mut self, (events,mut states) : (Ref<'a,PollEvents>,RefMut<'a,ElikarStates>)) -> Result<(),Self::Error>{
         if let Some(_) = events.quit {
             states.quit()
         }
+        Ok(())
     }
 }
 
 struct PrintWindowEvent;
 impl<'a> System<'a> for PrintWindowEvent {
+    type InitResource = ();
     type Resource = &'a PollEvents;
     type Dependencies = PollEvents;
+    type Error = Infallible;
 
-    fn update(&'a mut self,events : Ref<'a,PollEvents>) {
+    fn update(&'a mut self,events : Ref<'a,PollEvents>) -> Result<(),Self::Error>{
         for event in &events.window {
             println!("Window Event:{:?}", event)
         }
+        Ok(())
     }
 }
 fn main() {

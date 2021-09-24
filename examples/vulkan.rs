@@ -19,6 +19,7 @@ use elikar::common::SdlError;
 use elikar::common::Result as ElikarResult;
 use elikar::{Elikar, ElikarStates};
 use elikar::events::PollEvents;
+use std::convert::Infallible;
 
 macro_rules! offset_of {
     ($base:path, $field:ident) => {{
@@ -776,13 +777,15 @@ fn main() {
         command_buffers : Arc<Vec<CommandBuffer>>
     }
     impl<'a> System<'a> for DrawFrame {
+        type InitResource = ();
         type Resource = (&'a mut ElikarStates,&'a PollEvents);
         type Dependencies = End;
+        type Error = Infallible;
 
-        fn update(&'a mut self, (mut state,events) : (RefMut<'a,ElikarStates>,Ref<'a,PollEvents>)) {
+        fn update(&'a mut self, (mut state,events) : (RefMut<'a,ElikarStates>,Ref<'a,PollEvents>)) -> Result<(),Self::Error> {
             if events.quit.is_some() {
                 state.quit();
-                return;
+                return Ok(())
             }
             let (image_index,_) = unsafe {
                 self.swapchain_manager.acquire_next_image(
@@ -823,6 +826,7 @@ fn main() {
             }
 
             println!("fps:{}Hz",state.fps());
+            Ok(())
         }
     }
     let device = Arc::new(device);

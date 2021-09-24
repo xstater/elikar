@@ -2,30 +2,37 @@ use elikar::{Elikar, ElikarStates};
 use xecs::{System};
 use std::cell::{RefMut, Ref};
 use elikar::events::PollEvents;
+use std::convert::Infallible;
 
 struct QuitSystem;
 impl<'a> System<'a> for QuitSystem {
+    type InitResource = ();
     type Resource = (&'a PollEvents,&'a mut ElikarStates);
     type Dependencies = PollEvents;
+    type Error = Infallible;
 
-    fn update(&'a mut self, (events,mut states) : (Ref<'a,PollEvents>,RefMut<'a,ElikarStates>)) {
+    fn update(&'a mut self, (events,mut states) : (Ref<'a,PollEvents>,RefMut<'a,ElikarStates>)) -> Result<(),Infallible> {
         if let Some(_) = events.quit {
             states.quit()
         }
+        Ok(())
     }
 }
 
 struct PrintEventsSystem;
 impl<'a> System<'a> for PrintEventsSystem {
+    type InitResource = ();
     type Resource = &'a PollEvents;
     type Dependencies = PollEvents;
+    type Error = Infallible;
 
-    fn update(&'a mut self,events : Ref<'a,PollEvents>) {
+    fn update(&'a mut self,events : Ref<'a,PollEvents>) -> Result<(),Infallible>{
         if let Some(files) = &events.drop_files {
             for path in &files.paths {
                 println!("{:?}",path);
             }
         }
+        Ok(())
     }
 }
 

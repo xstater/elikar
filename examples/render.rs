@@ -37,6 +37,7 @@ fn main() {
     let mut manager = game.create_window_manager();
     let window_id = manager.create_window()
         .title("test")
+        .resizable()
         .vulkan()
         .build()
         .unwrap()

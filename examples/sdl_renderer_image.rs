@@ -6,40 +6,50 @@ use elikar::events::PollEvents;
 use std::cell::{Ref, RefMut};
 use elikar::sdl_renderer::point::Point;
 use elikar::sdl_renderer::rect::Rect;
+use std::convert::Infallible;
 
 struct QuitSystem;
 impl<'a> System<'a> for QuitSystem {
+    type InitResource = ();
     type Resource = (&'a PollEvents,&'a mut ElikarStates);
     type Dependencies = PollEvents;
+    type Error = Infallible;
 
-    fn update(&'a mut self, (events,mut states) : (Ref<'a,PollEvents>,RefMut<'a,ElikarStates>)) {
+    fn update(&'a mut self, (events,mut states) : (Ref<'a,PollEvents>,RefMut<'a,ElikarStates>)) -> Result<(),Infallible> {
         if let Some(_) = events.quit {
             states.quit()
         }
+        Ok(())
     }
 }
 
 struct ShowFPS;
 impl<'a> System<'a> for ShowFPS {
+    type InitResource = ();
     type Resource = &'a ElikarStates;
     type Dependencies = ();
+    type Error = Infallible;
 
-    fn update(&'a mut self, states : Ref<'a,ElikarStates>) {
+    fn update(&'a mut self, states : Ref<'a,ElikarStates>) -> Result<(),Infallible> {
         println!("fps:{}",states.actual_fps());
+        Ok(())
     }
 }
 
 struct FollowMouse;
 impl<'a> System<'a> for FollowMouse {
+    type InitResource = ();
     type Resource = (&'a PollEvents,&'a World);
     type Dependencies = ();
+    type Error = Infallible;
 
-    fn update(&'a mut self, (events,world) : (Ref<'a,PollEvents>,Ref<'a,World>)) {
+    fn update(&'a mut self, (events,world) : (Ref<'a,PollEvents>,Ref<'a,World>)) -> Result<(),Infallible>{
         for motion in &events.mouse_motion {
             for sprite in world.query::<&mut Sprite>() {
                 sprite.move_to(motion.position);
             }
         }
+        Ok(())
     }
 }
 
