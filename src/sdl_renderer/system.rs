@@ -10,12 +10,15 @@ use std::ptr::null;
 use std::mem::transmute;
 use std::os::raw::c_double;
 use crate::sdl_renderer::rect::Rect;
+use std::convert::Infallible;
 
 impl<'a> System<'a> for Renderer {
+    type InitResource = ();
     type Resource = &'a World;
     type Dependencies = End;
+    type Error = Infallible;
 
-    fn update(&'a mut self, world : Ref<'a,World>) {
+    fn update(&'a mut self, world : Ref<'a,World>) -> Result<(),Self::Error> {
         // clear
         unsafe {
             SDL_SetRenderDrawColor(
@@ -88,5 +91,7 @@ impl<'a> System<'a> for Renderer {
         unsafe {
             SDL_RenderPresent(self.sdl_renderer);
         }
+
+        Ok(())
     }
 }

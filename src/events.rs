@@ -3,6 +3,7 @@ use xecs::System;
 use crate::{mouse, keyboard, drop_file,window};
 use std::ffi::CStr;
 use std::path::PathBuf;
+use crate::common::SdlError;
 
 #[derive(Default)]
 pub struct PollEvents {
@@ -36,10 +37,12 @@ impl PollEvents {
 }
 
 impl<'a> System<'a> for PollEvents {
+    type InitResource = ();
     type Resource = ();
     type Dependencies = ();
+    type Error = SdlError;
 
-    fn update(&'a mut self, _ : ()) {
+    fn update(&'a mut self, _ : ()) -> Result<(),SdlError> {
         self.clear();
 
         let mut sdl_event = SDL_Event {type_:0};
@@ -84,5 +87,6 @@ impl<'a> System<'a> for PollEvents {
                 _ => {}
             }
         }
+        Ok(())
     }
 }

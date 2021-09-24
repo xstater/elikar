@@ -1,6 +1,7 @@
 use crate::window::{Window, Builder};
 use xecs::System;
 use crate::window::window::WindowId;
+use std::convert::Infallible;
 
 pub struct Manager {
     windows : Vec<Window>,
@@ -59,6 +60,8 @@ impl Manager{
 }
 
 impl<'a> System<'a> for Manager {
+    type InitResource = ();
     type Resource = ();
     type Dependencies = ();
+    type Error = Infallible;
 }
