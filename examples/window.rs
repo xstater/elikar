@@ -1,4 +1,4 @@
-use elikar::{Elikar, ElikarStates};
+use elikar::{Elikar, ElikarStates, window};
 use xecs::System;
 use elikar::events::PollEvents;
 use std::cell::{Ref, RefMut};
@@ -36,8 +36,9 @@ impl<'a> System<'a> for PrintWindowEvent {
 fn main() {
     let mut game = Elikar::new().unwrap();
 
-    let mut manager = game.create_window_manager();
     {
+        let mut manager = game.current_stage_mut()
+            .system_data_mut::<window::Manager>();
         let window = manager.create_window()
             .resizable()
             .always_on_top()
@@ -49,9 +50,7 @@ fn main() {
     }
 
     game.current_stage_mut()
-        .add_system(manager)
         .add_system(QuitSystem)
-        .add_system(PollEvents::new())
         .add_system(PrintWindowEvent);
 
     game.run();

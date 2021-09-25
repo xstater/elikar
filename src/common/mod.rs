@@ -1,6 +1,8 @@
 mod sdl_error;
+mod sparse_set;
 
 pub use sdl_error::{SdlError,Result};
+pub use sparse_set::SparseSet;
 use std::os::raw::c_char;
 use std::ffi::CStr;
 

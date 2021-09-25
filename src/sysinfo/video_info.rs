@@ -56,10 +56,14 @@ impl Display for Screen{
     }
 }
 
-#[derive(Debug,Copy, Clone)]
-pub struct VideoInfo;
+#[derive(Debug)]
+pub struct VideoInfo{}
 
 impl VideoInfo {
+    pub(in crate::sysinfo) fn new() -> VideoInfo {
+        VideoInfo{}
+    }
+
     pub fn all_drivers_name(&self) -> Result<Vec<String>> {
         let num = unsafe { SDL_GetNumVideoDrivers() };
         if num < 0 {

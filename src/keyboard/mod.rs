@@ -9,6 +9,39 @@ pub mod event;
 pub use code::Code;
 use std::os::raw::c_char;
 use std::ffi::{CStr};
+use crate::keyboard::screen::ScreenKeyboard;
+use xecs::System;
+use std::convert::Infallible;
+
+pub struct Keyboard{
+    screen : ScreenKeyboard
+}
+
+impl Keyboard {
+    pub(in crate) fn new() -> Keyboard {
+        Keyboard {
+            screen: ScreenKeyboard
+        }
+    }
+
+    pub fn name(&self,code : Code) -> String{
+        let str_ptr : *const c_char = unsafe { SDL_GetScancodeName(code.into()) };
+        unsafe{CStr::from_ptr(str_ptr)}
+            .to_str()
+            .unwrap()//unwrap here: UTF8 validation was granted by SDL
+            .to_owned()
+    }
+
+    pub fn mod_state(&self) -> Mod{
+        Mod::new(unsafe{
+            SDL_GetModState() as u32
+        })
+    }
+
+    pub fn screen_keyboard(&self) -> &ScreenKeyboard{
+        &self.screen
+    }
+}
 
 #[derive(Debug,Clone,Copy,PartialEq,PartialOrd,Hash)]
 pub struct Mod(u32);
@@ -67,17 +100,9 @@ impl Mod{
     }
 }
 
-pub fn name(code : Code) -> String{
-    let str_ptr : *const c_char = unsafe { SDL_GetScancodeName(code.into()) };
-    unsafe{CStr::from_ptr(str_ptr)}
-        .to_str()
-        .unwrap()//unwrap here: UTF8 validation was granted by SDL
-        .to_owned()
+impl<'a> System<'a> for Keyboard {
+    type InitResource = ();
+    type Resource = ();
+    type Dependencies = ();
+    type Error = Infallible;
 }
-
-pub fn mod_state() -> Mod{
-    Mod::new(unsafe{
-        SDL_GetModState() as u32
-    })
-}
-

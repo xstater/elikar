@@ -19,7 +19,7 @@ pub struct PollEvents {
 }
 
 impl PollEvents {
-    pub fn new() -> PollEvents {
+    pub(in crate) fn new() -> PollEvents {
         PollEvents::default()
     }
 

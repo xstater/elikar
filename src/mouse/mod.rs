@@ -6,6 +6,9 @@ pub mod event;
 use sdl2_sys::*;
 use std::ptr::null_mut;
 use crate::common::{ SdlError,Result };
+use crate::mouse::cursor::Cursor;
+use xecs::System;
+use std::convert::Infallible;
 
 #[derive(Debug,Clone,Copy,Default,PartialOrd,PartialEq)]
 pub struct ButtonState(u32);
@@ -38,64 +41,109 @@ impl ButtonState {
     }
 }
 
-pub fn capture() -> Result<()>{
-    let errcode = unsafe { SDL_CaptureMouse(SDL_bool::SDL_TRUE) };
-    if errcode == 0 {
-        Ok(())
-    }else{
-        Err(SdlError::get())
+pub struct Mouse{
+
+}
+
+impl Mouse {
+    pub(in crate) fn new() -> Mouse {
+        Mouse{}
+    }
+
+    pub fn capture(&mut self) -> Result<()> {
+        let errcode = unsafe { SDL_CaptureMouse(SDL_bool::SDL_TRUE) };
+        if errcode == 0 {
+            Ok(())
+        } else {
+            Err(SdlError::get())
+        }
+    }
+
+    pub fn release(&mut self) -> Result<()> {
+        let errcode = unsafe { SDL_CaptureMouse(SDL_bool::SDL_FALSE) };
+        if errcode == 0 {
+            Ok(())
+        } else {
+            Err(SdlError::get())
+        }
+    }
+
+    pub fn button(&self) -> ButtonState {
+        ButtonState::new(unsafe { SDL_GetMouseState(null_mut(), null_mut()) })
+    }
+
+    pub fn global_position(&self) -> (i32, i32) {
+        let (mut x, mut y) = (0, 0);
+        unsafe { SDL_GetGlobalMouseState(&mut x as *mut _, &mut y as *mut _) };
+        (x, y)
+    }
+
+    pub fn is_relative(&self) -> bool {
+        unsafe { SDL_GetRelativeMouseMode() == SDL_bool::SDL_TRUE }
+    }
+
+    pub fn enable_relative(&mut self) -> Result<()> {
+        if unsafe { SDL_SetRelativeMouseMode(SDL_bool::SDL_TRUE) } != 0 {
+            Err(SdlError::get())
+        } else {
+            Ok(())
+        }
+    }
+
+    pub fn disable_relative(&mut self) -> Result<()> {
+        if unsafe { SDL_SetRelativeMouseMode(SDL_bool::SDL_FALSE) } != 0 {
+            Err(SdlError::get())
+        } else {
+            Ok(())
+        }
+    }
+
+    pub fn relative_position(&self) -> (i32, i32) {
+        let (mut x, mut y) = (0, 0);
+        unsafe { SDL_GetRelativeMouseState(&mut x as *mut _, &mut y as *mut _) };
+        (x, y)
+    }
+
+    pub fn warp_global(&mut self,x: i32, y: i32) -> Result<()> {
+        if unsafe { SDL_WarpMouseGlobal(x, y) } != 0 {
+            Err(SdlError::get())
+        } else {
+            Ok(())
+        }
+    }
+
+    pub fn show(&mut self){
+        unsafe{
+            SDL_ShowCursor(SDL_ENABLE as i32);
+        }
+    }
+
+    pub fn hide(&mut self){
+        unsafe{
+            SDL_ShowCursor(SDL_DISABLE as i32);
+        }
+    }
+
+    pub fn is_visible(&self) -> bool{
+        unsafe {
+            SDL_ShowCursor(SDL_QUERY) == SDL_ENABLE as i32
+        }
+    }
+
+    pub fn set_cursor(&mut self,cursor : Cursor){
+        unsafe{
+            SDL_SetCursor(cursor.ptr);
+        }
+    }
+
+    pub fn is_no_mouse(&self) -> bool{
+        unsafe{SDL_GetCursor()}.is_null()
     }
 }
 
-pub fn release() -> Result<()>{
-    let errcode = unsafe { SDL_CaptureMouse(SDL_bool::SDL_FALSE) };
-    if errcode == 0 {
-        Ok(())
-    }else{
-        Err(SdlError::get())
-    }
-}
-
-pub fn button() -> ButtonState{
-    ButtonState::new(unsafe{ SDL_GetMouseState(null_mut(),null_mut()) })
-}
-
-pub fn global_position() -> (i32,i32) {
-    let (mut x,mut y) = (0,0);
-    unsafe{ SDL_GetGlobalMouseState(&mut x as *mut _,&mut y as *mut _) };
-    (x,y)
-}
-
-pub fn is_relative() -> bool{
-    unsafe{ SDL_GetRelativeMouseMode() == SDL_bool::SDL_TRUE}
-}
-
-pub fn enable_relative() -> Result<()> {
-    if unsafe { SDL_SetRelativeMouseMode(SDL_bool::SDL_TRUE) } != 0 {
-        Err(SdlError::get())
-    }else{
-        Ok(())
-    }
-}
-
-pub fn disable_relative() -> Result<()> {
-    if unsafe { SDL_SetRelativeMouseMode(SDL_bool::SDL_FALSE) } != 0 {
-        Err(SdlError::get())
-    }else{
-        Ok(())
-    }
-}
-
-pub fn relative_position() -> (i32,i32){
-    let (mut x,mut y) = (0,0);
-    unsafe{ SDL_GetRelativeMouseState(&mut x as *mut _,&mut y as *mut _) };
-    (x,y)
-}
-
-pub fn warp_global(x : i32,y : i32) -> Result<()> {
-    if unsafe{ SDL_WarpMouseGlobal(x,y) } != 0 {
-        Err(SdlError::get())
-    }else{
-        Ok(())
-    }
+impl<'a> System<'a> for Mouse {
+    type InitResource = ();
+    type Resource = ();
+    type Dependencies = ();
+    type Error = Infallible;
 }

@@ -1,4 +1,4 @@
-use elikar::{Elikar, ElikarStates};
+use elikar::{Elikar, ElikarStates, window};
 use xecs::{System};
 use std::cell::{RefMut, Ref};
 use elikar::events::PollEvents;
@@ -39,12 +39,13 @@ impl<'a> System<'a> for PrintEventsSystem {
 fn main(){
     let mut game = Elikar::new().unwrap();
 
-    let mut manager = game.create_window_manager();
-    manager.create_window().build().unwrap();
+    {
+        let mut manager = game.current_stage_ref()
+            .system_data_mut::<window::Manager>();
+        manager.create_window().build().unwrap();
+    }
 
     game.current_stage_mut()
-        .add_system(manager)
-        .add_system(PollEvents::new())
         .add_system(QuitSystem)
         .add_system(PrintEventsSystem);
 

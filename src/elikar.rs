@@ -12,6 +12,9 @@ use crate::clipboard::Clipboard;
 use crate::sysinfo::SystemInfo;
 use std::any::TypeId;
 use std::convert::Infallible;
+use crate::keyboard::Keyboard;
+use crate::mouse::Mouse;
+use crate::events::PollEvents;
 
 #[derive(Debug)]
 pub struct ElikarStates {
@@ -165,8 +168,18 @@ impl Elikar {
             change_current: Option::None,
             deactivated_system_buffer: Option::None,
             activated_system_buffer: Option::None,
-        });
-        stage.deactivate::<ElikarStates>();
+        }).add_system(Mouse::new())
+            .add_system(Keyboard::new())
+            .add_system(Clipboard::new())
+            .add_system(SystemInfo::new())
+            .add_system(window::Manager::new())
+            .add_system(PollEvents::new());
+        stage.deactivate::<ElikarStates>()
+            .deactivate::<Mouse>()
+            .deactivate::<Keyboard>()
+            .deactivate::<Clipboard>()
+            .deactivate::<window::Manager>()
+            .deactivate::<SystemInfo>();
         Ok(Elikar {
             current_stage: "default".to_owned(),
             stages: {
@@ -175,18 +188,6 @@ impl Elikar {
                 map
             }
         })
-    }
-
-    pub fn create_window_manager(&self) -> window::Manager {
-        window::Manager::new()
-    }
-
-    pub fn clipboard(&self) -> Clipboard {
-        Clipboard
-    }
-
-    pub fn system_info(&self) -> SystemInfo {
-        SystemInfo
     }
 
     pub fn current_stage_ref(&self) -> &Stage {
@@ -237,11 +238,22 @@ impl Elikar {
             change_current: Option::None,
             deactivated_system_buffer: Option::None,
             activated_system_buffer: Option::None,
-        });
-        self.stages.insert(name.to_owned(), stage);
-    }
+        }).add_system(Mouse::new())
+            .add_system(Keyboard::new())
+            .add_system(Clipboard::new())
+            .add_system(SystemInfo::new())
+            .add_system(window::Manager::new())
+            .add_system(PollEvents::new());
+        stage.deactivate::<ElikarStates>()
+            .deactivate::<Mouse>()
+            .deactivate::<Keyboard>()
+            .deactivate::<Clipboard>()
+            .deactivate::<SystemInfo>()
+            .deactivate::<window::Manager>();
+    self.stages.insert(name.to_owned(), stage);
+}
 
-    pub fn run(&mut self) {
+pub fn run(&mut self) {
         let mut frames_count = 0;
         'main_loop: loop {
             let now = Instant::now();

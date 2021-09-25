@@ -1,4 +1,4 @@
-use elikar::{Elikar, ElikarStates};
+use elikar::{Elikar, ElikarStates, window};
 use elikar::sdl_renderer::{Renderer, Color};
 use xblend::{RGBA,rgba};
 use xecs::{System, World};
@@ -104,12 +104,13 @@ impl<'a> System<'a> for UpdatePosition {
 
 fn main() {
     let mut game = Elikar::new().unwrap();
-    let mut manager = game.create_window_manager();
     let renderer = {
         Renderer::builder()
             .accelerated()
             .vsync()
-            .build(manager.create_window()
+            .build(game.current_stage_ref()
+                .system_data_mut::<window::Manager>()
+                .create_window()
                 .build()
                 .unwrap())
             .unwrap()
@@ -123,9 +124,7 @@ fn main() {
         .register::<Rect>();
 
     game.current_stage_mut()
-        .add_system(manager)
         .add_system(QuitSystem)
-        .add_system(PollEvents::new())
         .add_system(renderer)
         .add_system(CreateThingsAtMousePosition)
         .add_system(ShowFPS)

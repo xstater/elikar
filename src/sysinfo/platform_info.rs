@@ -3,10 +3,14 @@ extern crate sdl2_sys;
 use std::ffi::CStr;
 use xrunits::data::{Mebibyte, BuildMebibyte};
 
-#[derive(Debug,Copy, Clone)]
-pub struct PlatformInfo;
+#[derive(Debug)]
+pub struct PlatformInfo{}
 
 impl PlatformInfo {
+    pub(in crate::sysinfo) fn new() -> PlatformInfo {
+        PlatformInfo {}
+    }
+
     #[inline]
     pub fn name(&self) -> &'static str {
         unsafe {

@@ -17,7 +17,7 @@ use std::mem::align_of;
 use elikar::window::Window;
 use elikar::common::SdlError;
 use elikar::common::Result as ElikarResult;
-use elikar::{Elikar, ElikarStates};
+use elikar::{Elikar, ElikarStates, window};
 use elikar::events::PollEvents;
 use std::convert::Infallible;
 
@@ -133,13 +133,16 @@ unsafe extern "system" fn debug_callback(
 fn main() {
     let mut game = Elikar::new().unwrap();
 
-    let mut manager = game.create_window_manager();
-    let window = manager.create_window()
-        .title("elikar vulkan")
-        .vulkan()
-        .build()
-        .unwrap()
-        .id();
+    let window = {
+        let mut manager = game.current_stage_ref()
+            .system_data_mut::<window::Manager>();
+        manager.create_window()
+            .title("elikar vulkan")
+            .vulkan()
+            .build()
+            .unwrap()
+            .id()
+    };
 
     let entry = unsafe { Entry::new() }.unwrap();
 
@@ -170,7 +173,11 @@ fn main() {
         .map(|str| str.as_ptr() as *const c_char)
         .collect::<Vec<_>>();
 
-    let mut extensions = sdl_extensions(manager.window_ref(window).unwrap()).unwrap();
+    let mut extensions = {
+        let manager = game.current_stage_ref()
+            .system_data_ref::<window::Manager>();
+        sdl_extensions(manager.window_ref(window).unwrap()).unwrap()
+    };
     extensions.push(CString::new("VK_EXT_debug_utils").unwrap());
 
     dbg!(&extensions);
@@ -232,7 +239,11 @@ fn main() {
     let physical_device = *physical_devices.first().unwrap();
 
     // create surface
-    let surface = sdl_surface(manager.window_ref(window).unwrap(),&instance).unwrap();
+    let surface = {
+        let manager = game.current_stage_ref()
+            .system_data_ref::<window::Manager>();
+        sdl_surface(manager.window_ref(window).unwrap(),&instance).unwrap()
+    };
     let surface_manager = Surface::new(&entry,&instance);
 
     #[allow(unused)]
@@ -833,8 +844,6 @@ fn main() {
     let swapchain_manager = Arc::new(swapchain_manager);
     let command_buffers = Arc::new(command_buffers);
     game.current_stage_mut()
-        .add_system(manager)
-        .add_system(PollEvents::new())
         .add_system(DrawFrame{
             device : device.clone(),
             queue,

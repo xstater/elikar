@@ -2,10 +2,13 @@ extern crate sdl2_sys;
 
 use xrunits::data::{Byte, BuildByte};
 
-#[derive(Debug,Copy, Clone)]
-pub struct CPUInfo;
+#[derive(Debug)]
+pub struct CPUInfo{}
 
 impl CPUInfo {
+    pub(in crate::sysinfo) fn new() -> CPUInfo {
+        CPUInfo{}
+    }
     #[inline]
     pub fn cpu_cache_line_size(&self) -> Byte {
         unsafe {

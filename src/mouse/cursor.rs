@@ -21,7 +21,7 @@ pub enum SystemCursor{
 
 #[derive(Debug)]
 pub struct Cursor {
-    ptr : *mut SDL_Cursor
+    pub(in crate::mouse) ptr : *mut SDL_Cursor
 }
 
 impl Drop for Cursor {
@@ -63,31 +63,4 @@ impl Cursor {
         }
     }
 
-    pub fn set_as_cursor(&mut self){
-        unsafe{
-            SDL_SetCursor(self.ptr);
-        }
-    }
-}
-
-pub fn show(){
-    unsafe{
-        SDL_ShowCursor(SDL_ENABLE as i32);
-    }
-}
-
-pub fn hide(){
-    unsafe{
-        SDL_ShowCursor(SDL_DISABLE as i32);
-    }
-}
-
-pub fn is_visible() -> bool{
-    unsafe {
-        SDL_ShowCursor(SDL_QUERY) == SDL_ENABLE as i32
-    }
-}
-
-pub fn is_no_mouse() -> bool{
-    unsafe{SDL_GetCursor()}.is_null()
 }

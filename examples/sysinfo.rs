@@ -1,10 +1,12 @@
 extern crate elikar;
 
 use elikar::Elikar;
+use elikar::sysinfo::SystemInfo;
 
 fn main(){
     let game = Elikar::new().unwrap();
-    let system_info = game.system_info();
+    let stage = game.current_stage_ref();
+    let system_info = stage.system_data_ref::<SystemInfo>();
     let platform = system_info.platform();
     let cpu = system_info.cpu();
     let video = system_info.video();

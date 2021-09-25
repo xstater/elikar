@@ -4,11 +4,17 @@ use sdl2_sys::*;
 use std::os::raw::{c_char, c_void, c_int};
 use crate::common::{SdlError, Result, from_sdl_string};
 use std::ffi::CString;
+use xecs::System;
+use std::convert::Infallible;
 
-#[derive(Debug,Copy,Clone)]
-pub struct Clipboard;
+#[derive(Debug)]
+pub struct Clipboard{}
 
 impl Clipboard {
+    pub(in crate) fn new() -> Clipboard {
+        Clipboard {}
+    }
+
     pub fn has(&self) -> bool {
         unsafe { SDL_HasClipboardText() == SDL_bool::SDL_TRUE }
     }
@@ -34,4 +40,11 @@ impl Clipboard {
         unsafe { SDL_free(str_ptr as *mut c_void) };
         Ok(text)
     }
+}
+
+impl<'a> System<'a> for Clipboard {
+    type InitResource = ();
+    type Resource = ();
+    type Dependencies = ();
+    type Error = Infallible;
 }

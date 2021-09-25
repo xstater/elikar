@@ -1,23 +1,42 @@
 use crate::sysinfo::cpu_info::CPUInfo;
 use crate::sysinfo::platform_info::PlatformInfo;
 use crate::sysinfo::video_info::VideoInfo;
+use xecs::System;
+use std::convert::Infallible;
 
 pub mod video_info;
 pub mod cpu_info;
 pub mod platform_info;
 
-#[derive(Debug,Copy, Clone)]
-pub struct SystemInfo;
+#[derive(Debug)]
+pub struct SystemInfo{
+    cpu : CPUInfo,
+    platform : PlatformInfo,
+    video : VideoInfo
+}
 
 impl SystemInfo {
-    pub fn cpu(&self) -> CPUInfo{
-        CPUInfo
+    pub(in crate) fn new() -> SystemInfo {
+        SystemInfo {
+            cpu: CPUInfo::new(),
+            platform: PlatformInfo::new(),
+            video: VideoInfo::new()
+        }
     }
+    pub fn cpu(&self) -> &CPUInfo{
+        &self.cpu
+    }
+    pub fn platform(&self) -> &PlatformInfo{
+        &self.platform
+    }
+    pub fn video(&self) -> &VideoInfo {
+        &self.video
+    }
+}
 
-    pub fn platform(&self) -> PlatformInfo{
-        PlatformInfo
-    }
-    pub fn video(&self) -> VideoInfo {
-        VideoInfo
-    }
+impl<'a> System<'a> for SystemInfo {
+    type InitResource = ();
+    type Resource = ();
+    type Dependencies = ();
+    type Error = Infallible;
 }
