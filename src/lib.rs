@@ -12,3 +12,4 @@ pub mod drop_file;
 pub mod events;
 pub mod render;
 pub mod sdl_renderer;
+pub mod imgui;

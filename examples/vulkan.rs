@@ -533,8 +533,8 @@ fn main() {
     }.unwrap();
 
     // read spir-v
-    let mut vs_file = File::open("./shaders/vulkan_test/vulkan_test.vert.spv").unwrap();
-    let mut fs_file = File::open("./shaders/vulkan_test/vulkan_test.frag.spv").unwrap();
+    let mut vs_file = File::open("./shaders/vulkan_test/vert.spv").unwrap();
+    let mut fs_file = File::open("./shaders/vulkan_test/frag.spv").unwrap();
     let vs_spirv = read_spv(&mut vs_file).unwrap();
     let fs_spirv = read_spv(&mut fs_file).unwrap();
 

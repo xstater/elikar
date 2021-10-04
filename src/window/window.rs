@@ -202,6 +202,14 @@ impl Window {
         }
     }
 
+    pub fn vk_drawable_size(&self) -> (u32,u32) {
+        let (mut w,mut h) = (0,0);
+        unsafe {
+            SDL_Vulkan_GetDrawableSize(self.ptr,&mut w,&mut h);
+        }
+        (w as _,h as _)
+    }
+
     pub fn gl_swap(&mut self) {
         unsafe {
             SDL_GL_SwapWindow(self.ptr);

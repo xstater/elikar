@@ -11,6 +11,8 @@ use std::ptr::{null_mut, null};
 use sdl2_sys::*;
 use ash::vk::{Bool32, Handle};
 use ash::extensions::khr;
+use std::sync::Arc;
+use crate::render::vulkan::core::{Core, ImageView, Semaphore};
 
 #[derive(Debug)]
 pub struct VulkanBuilder{
@@ -179,6 +181,10 @@ impl VulkanBuilder{
             instance.get_physical_device_memory_properties(physical_device)
         };
 
+        let properties = unsafe {
+            instance.get_physical_device_properties(physical_device)
+        };
+
         // create device and queue
         let device_extensions = [CString::new("VK_KHR_swapchain").unwrap()];
         let device_extension_ptrs = device_extensions.iter()
@@ -296,7 +302,7 @@ impl VulkanBuilder{
         }?;
 
         // create swapchain image views
-        let mut swapchain_image_views = vec![];
+        let mut swapchain_image_views = Vec::new();
         for image in swapchain_images {
             let image_view_info = vk::ImageViewCreateInfo::builder()
                 .image(image)
@@ -321,24 +327,64 @@ impl VulkanBuilder{
             swapchain_image_views.push(view);
         }
 
-        Ok(Vulkan{
+        let descriptor_pool_info = vk::DescriptorPoolCreateInfo::builder()
+            .flags(vk::DescriptorPoolCreateFlags::FREE_DESCRIPTOR_SET)
+            .max_sets(24)
+            .pool_sizes(&[vk::DescriptorPoolSize{
+                ty: vk::DescriptorType::COMBINED_IMAGE_SAMPLER,
+                descriptor_count: 8
+            },vk::DescriptorPoolSize{
+                ty : vk::DescriptorType::SAMPLER,
+                descriptor_count: 8,
+            },vk::DescriptorPoolSize{
+                ty: vk::DescriptorType::UNIFORM_BUFFER,
+                descriptor_count: 8,
+            }]);
+
+        let descriptor_pool = unsafe {
+            device.create_descriptor_pool(&descriptor_pool_info,Option::None)
+        }?;
+
+        let core = Arc::new(Core{
             entry,
             instance,
             debug_utils,
             messenger,
             physical_device,
+            properties,
             memory_properties,
             device,
+            queue_family_index,
             graphics_queue,
             transfer_queue,
             command_pool,
+            descriptor_pool,
             surface_manager,
+            swapchain_manager,
+        });
+
+        let swapchain_image_views = swapchain_image_views.into_iter()
+            .map(|image_view| {
+                ImageView {
+                    core : core.clone(),
+                    image_view
+                }
+            })
+            .collect::<Vec<_>>();
+
+        let image_available_semaphore = Semaphore::new(core.clone())?;
+        let render_finish_semaphore = Semaphore::new(core.clone())?;
+
+        Ok(Vulkan{
+            core : core.clone(),
             surface,
             surface_format : format,
             surface_extent : surface_capabilities.current_extent,
-            swapchain_manager,
             swapchain,
             swapchain_image_views,
+            render_command_buffers: vec![],
+            image_available_semaphore,
+            render_finish_semaphore,
             window_id : window.id()
         })
     }
