@@ -22,8 +22,8 @@ pub struct ImGuiRenderer<Dependency>{
     descriptor_sets : Option<core::DescriptorSets>,
     pipeline : Option<core::Pipeline>,
     sampler : Option<core::Sampler>,
-    vertex_buffer : Option<core::Buffer>,
-    index_buffer : Option<core::Buffer>,
+    vertex_buffers : Vec<core::Buffer>,
+    index_buffers : Vec<core::Buffer>,
     font_image : Option<core::Image>,
     font_image_view: Option<core::ImageView>,
     projection_matrix : glm::TMat4<f32>,
@@ -41,8 +41,8 @@ impl<Dependency> ImGuiRenderer<Dependency> {
             descriptor_sets: Option::None,
             pipeline: Option::None,
             sampler: Option::None,
-            vertex_buffer: Option::None,
-            index_buffer: Option::None,
+            vertex_buffers: vec![],
+            index_buffers: vec![],
             font_image : Option::None,
             font_image_view: Option::None,
             projection_matrix: Default::default(),
@@ -213,9 +213,9 @@ impl<'a,Dependency : Dependencies> System<'a> for ImGuiRenderer<Dependency> {
             .with_surface_area(&vulkan.surface_extent())
             .pipeline_layout(self.pipeline_layout.as_ref().unwrap())
             .color_blend_attachment(vk::PipelineColorBlendAttachmentState{
-                blend_enable: vk::FALSE,
-                src_color_blend_factor: vk::BlendFactor::ONE,
-                dst_color_blend_factor: vk::BlendFactor::ZERO,
+                blend_enable: vk::TRUE,
+                src_color_blend_factor: vk::BlendFactor::SRC_ALPHA,
+                dst_color_blend_factor: vk::BlendFactor::ONE_MINUS_SRC_ALPHA,
                 color_blend_op: vk::BlendOp::ADD,
                 src_alpha_blend_factor: vk::BlendFactor::ONE,
                 dst_alpha_blend_factor: vk::BlendFactor::ZERO,
@@ -247,6 +247,57 @@ impl<'a,Dependency : Dependencies> System<'a> for ImGuiRenderer<Dependency> {
 
     fn update(&'a mut self,(mut imgui,acq_img,mut vulkan) : (RefMut<'a,ImGui>,Ref<'a,AcquireNextImage>,RefMut<'a,Vulkan>)) -> Result<(), Self::Error> {
         let draw_data = imgui.render();
+
+        self.projection_matrix = glm::ortho(
+            0.0, draw_data.raw().FramebufferScale.x * draw_data.raw().DisplaySize.x,
+            0.0, draw_data.raw().FramebufferScale.y * draw_data.raw().DisplaySize.y,
+            -1.0, 1.0);
+        // vulkan render
+        let image_index = acq_img.image_index();
+
+        let command_buffer = self.command_buffers.as_ref().unwrap().raw()[image_index as usize];
+        let render_pass = *self.render_pass.as_ref().unwrap().raw();
+        let framebuffer = *self.framebuffers[image_index as usize].raw();
+        let pipeline = *self.pipeline.as_ref().unwrap().raw();
+        let pipeline_layout = *self.pipeline_layout.as_ref().unwrap().raw();
+
+        unsafe {
+            let core = vulkan.core();
+            let device = core.device();
+            device.reset_command_buffer(command_buffer, vk::CommandBufferResetFlags::all())?;
+
+            let begin_info = vk::CommandBufferBeginInfo::default();
+            device.begin_command_buffer(command_buffer, &begin_info)?;
+
+            let clear_color = [vk::ClearValue {
+                color: vk::ClearColorValue {
+                    float32: [1.0, 1.0, 1.0, 0.0]
+                }
+            }];
+            let begin_render_pass_info = vk::RenderPassBeginInfo::builder()
+                .render_pass(render_pass)
+                .framebuffer(framebuffer)
+                .render_area(vk::Rect2D {
+                    offset: vk::Offset2D { x: 0, y: 0 },
+                    extent: vulkan.surface_extent()
+                }).clear_values(&clear_color);
+            device.cmd_begin_render_pass(command_buffer, &begin_render_pass_info, vk::SubpassContents::INLINE);
+            device.cmd_bind_pipeline(command_buffer, vk::PipelineBindPoint::GRAPHICS, pipeline);
+            device.cmd_push_constants(command_buffer, pipeline_layout,
+                                      vk::ShaderStageFlags::VERTEX,
+                                      0,
+                                      to_u8_slice(self.projection_matrix.as_slice()));
+            device.cmd_bind_descriptor_sets(
+                command_buffer,
+                vk::PipelineBindPoint::GRAPHICS,
+                pipeline_layout,
+                0,
+                self.descriptor_sets.as_ref().unwrap().raw(),
+                &[]);
+        }
+
+        self.vertex_buffers.clear();
+        self.index_buffers.clear();
 
         for draw_list in draw_data.draw_list() {
             let vertex_buffer_data = draw_list.vertex_buffer();
@@ -292,63 +343,20 @@ impl<'a,Dependency : Dependencies> System<'a> for ImGuiRenderer<Dependency> {
             index_buffer.bind_memory(memory)?;
             index_buffer.copy_from_buffer(&mut stage_buffer)?;
 
-            self.vertex_buffer.replace(vertex_buffer);
-            self.index_buffer.replace(index_buffer);
-
-            self.projection_matrix = glm::ortho(
-                0.0, draw_data.raw().FramebufferScale.x * draw_data.raw().DisplaySize.x,
-                0.0, draw_data.raw().FramebufferScale.y * draw_data.raw().DisplaySize.y,
-                -1.0, 1.0);
-            // vulkan render
-            let image_index = acq_img.image_index();
-
-            let command_buffer = self.command_buffers.as_ref().unwrap().raw()[image_index as usize];
-            let render_pass = *self.render_pass.as_ref().unwrap().raw();
-            let framebuffer = *self.framebuffers[image_index as usize].raw();
-            let pipeline = *self.pipeline.as_ref().unwrap().raw();
-            let pipeline_layout = *self.pipeline_layout.as_ref().unwrap().raw();
+            self.vertex_buffers.push(vertex_buffer);
+            self.index_buffers.push(index_buffer);
 
             unsafe {
                 let core = vulkan.core();
                 let device = core.device();
-                device.reset_command_buffer(command_buffer, vk::CommandBufferResetFlags::all())?;
-
-                let begin_info = vk::CommandBufferBeginInfo::default();
-                device.begin_command_buffer(command_buffer, &begin_info)?;
-
-                let clear_color = [vk::ClearValue {
-                    color: vk::ClearColorValue {
-                        float32: [0.0, 0.0, 0.0, 1.0]
-                    }
-                }];
-                let begin_render_pass_info = vk::RenderPassBeginInfo::builder()
-                    .render_pass(render_pass)
-                    .framebuffer(framebuffer)
-                    .render_area(vk::Rect2D {
-                        offset: vk::Offset2D { x: 0, y: 0 },
-                        extent: vulkan.surface_extent()
-                    }).clear_values(&clear_color);
-                device.cmd_begin_render_pass(command_buffer, &begin_render_pass_info, vk::SubpassContents::INLINE);
-                device.cmd_bind_pipeline(command_buffer, vk::PipelineBindPoint::GRAPHICS, pipeline);
-                device.cmd_push_constants(command_buffer, pipeline_layout,
-                                          vk::ShaderStageFlags::VERTEX,
-                                          0,
-                                          to_u8_slice(self.projection_matrix.as_slice()));
-                device.cmd_bind_descriptor_sets(
-                    command_buffer,
-                    vk::PipelineBindPoint::GRAPHICS,
-                    pipeline_layout,
-                    0,
-                    self.descriptor_sets.as_ref().unwrap().raw(),
-                    &[]);
                 device.cmd_bind_vertex_buffers(
                     command_buffer,
                     0,
-                    &[*self.vertex_buffer.as_ref().unwrap().raw()],
+                    &[*self.vertex_buffers.last().unwrap().raw()],
                     &[0]);
                 device.cmd_bind_index_buffer(
                     command_buffer,
-                    *self.index_buffer.as_ref().unwrap().raw(),
+                    *self.index_buffers.last().unwrap().raw(),
                     0,
                     vk::IndexType::UINT16);
 
@@ -361,15 +369,16 @@ impl<'a,Dependency : Dependencies> System<'a> for ImGuiRenderer<Dependency> {
                         draw_cmd.VtxOffset as _,
                         0);
                 }
-
-                device.cmd_end_render_pass(command_buffer);
-
-                device.end_command_buffer(command_buffer)?;
             }
-
-
-            vulkan.queue_render_command(command_buffer);
         }
+        unsafe {
+            let core = vulkan.core();
+            let device = core.device();
+            device.cmd_end_render_pass(command_buffer);
+            device.end_command_buffer(command_buffer)?;
+        }
+        vulkan.queue_render_command(command_buffer);
+
         imgui.end_frame();
         Ok(())
     }
@@ -445,72 +454,3 @@ impl std::error::Error for Error {
         }
     }
 }
-// fn shit() {
-//     for draw_list in draw_data.draw_lists() {
-//         for command in draw_list.commands() {
-//             match command {
-//                 DrawCmd::Elements {
-//                     count,
-//                     cmd_params:
-//                     DrawCmdParams {
-//                         clip_rect,
-//                         texture_id,
-//                         vtx_offset,
-//                         idx_offset,
-//                     },
-//                 } => {
-//                     unsafe {
-//                         let clip_x = (clip_rect[0] - clip_offset[0]) * clip_scale[0];
-//                         let clip_y = (clip_rect[1] - clip_offset[1]) * clip_scale[1];
-//                         let clip_w = (clip_rect[2] - clip_offset[0]) * clip_scale[0] - clip_x;
-//                         let clip_h = (clip_rect[3] - clip_offset[1]) * clip_scale[1] - clip_y;
-//
-//                         let scissors = [vk::Rect2D {
-//                             offset: vk::Offset2D {
-//                                 x: clip_x as _,
-//                                 y: clip_y as _,
-//                             },
-//                             extent: vk::Extent2D {
-//                                 width: clip_w as _,
-//                                 height: clip_h as _,
-//                             },
-//                         }];
-//                         vk_context
-//                             .device()
-//                             .cmd_set_scissor(command_buffer, 0, &scissors);
-//                     }
-//
-//                     if Some(texture_id) != current_texture_id {
-//                         let descriptor_set = self.lookup_descriptor_set(texture_id)?;
-//                         unsafe {
-//                             vk_context.device().cmd_bind_descriptor_sets(
-//                                 command_buffer,
-//                                 vk::PipelineBindPoint::GRAPHICS,
-//                                 self.pipeline_layout,
-//                                 0,
-//                                 &[descriptor_set],
-//                                 &[],
-//                             )
-//                         };
-//                         current_texture_id = Some(texture_id);
-//                     }
-//
-//                     unsafe {
-//                         vk_context.device().cmd_draw_indexed(
-//                             command_buffer,
-//                             count as _,
-//                             1,
-//                             index_offset + idx_offset as u32,
-//                             vertex_offset + vtx_offset as i32,
-//                             0,
-//                         )
-//                     };
-//                 }
-//                 _ => (), // Ignored for now
-//             }
-//         }
-//
-//         index_offset += draw_list.idx_buffer().len() as u32;
-//         vertex_offset += draw_list.vtx_buffer().len() as i32;
-//     }
-// }

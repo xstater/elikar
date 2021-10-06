@@ -45,10 +45,14 @@ impl<'a> System<'a> for DrawGui{
     type Error = Infallible;
 
     fn update(&'a mut self, mut imgui : RefMut<'a,ImGui>) -> Result<(), Self::Error> {
-        let mut ui = imgui.ui();
-        ui.text("asd");
-        ui.separator();
-        ui.button("aaa");
+        let mut _ui = imgui.ui();
+        // ui.text("asd");
+        // ui.separator();
+        // ui.button("aaa");
+        let mut flag = false;
+        unsafe {
+            imgui_sys::igShowDemoWindow(&mut flag);
+        }
         Ok(())
     }
 }
@@ -94,7 +98,6 @@ fn main() {
         .unwrap();
 
     game.current_stage_mut()
-        .add_system(PrintFps)
         .add_system(Quit)
         .add_system(vulkan)
         .add_system(AcquireNextImage::new())

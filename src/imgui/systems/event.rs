@@ -1,9 +1,10 @@
 use xecs::System;
 use crate::imgui::ImGui;
-use crate::keyboard::Code;
-use std::cell::RefMut;
+use crate::keyboard::{Code, Mod};
+use std::cell::{Ref, RefMut};
 use std::convert::Infallible;
 use crate::events::PollEvents;
+use crate::mouse::event::button::Button;
 
 pub struct ImGuiEventSystem {
 }
@@ -17,7 +18,7 @@ impl ImGuiEventSystem {
 
 impl<'a> System<'a> for ImGuiEventSystem {
     type InitResource = &'a mut ImGui;
-    type Resource = &'a mut ImGui;
+    type Resource = (&'a PollEvents,&'a mut ImGui);
     type Dependencies = (PollEvents,ImGui);
     type Error = Infallible;
 
@@ -46,8 +47,46 @@ impl<'a> System<'a> for ImGuiEventSystem {
         Ok(())
     }
 
-    fn update(&'a mut self,_imgui : RefMut<'a,ImGui>) -> Result<(), Self::Error> {
+    fn update(&'a mut self,(events,mut imgui) : (Ref<'a,PollEvents>,RefMut<'a,ImGui>)) -> Result<(), Self::Error> {
+        let io = imgui.io_mut();
+        for wheel in &events.mouse_wheel {
+            io.MouseWheel = wheel.scrolled.1 as _;
+        }
+        for button in &events.mouse_button_down {
+            io.MouseDown[get_mouse_button_index(button.button)] = true;
+        }
+        for button in &events.mouse_button_up {
+            io.MouseDown[get_mouse_button_index(button.button)] = false;
+        }
+        for motion in &events.mouse_motion {
+            io.MousePos = imgui_sys::ImVec2::new(motion.position.0 as _,motion.position.1 as _);
+        }
+
+        for key in &events.key_down {
+            set_key_mod(io,key.mod_state);
+            io.KeysDown[key.code as usize] = true;
+        }
+        for key in &events.key_up {
+            set_key_mod(io,key.mod_state);
+            io.KeysDown[key.code as usize] = false;
+        }
         Ok(())
     }
 }
 
+fn get_mouse_button_index(button : Button) -> usize{
+    match button {
+        Button::Left => 0,
+        Button::Middle => 2,
+        Button::Right => 1,
+        Button::X1 => 3,
+        Button::X2 => 4
+    }
+}
+
+fn set_key_mod(io : &mut imgui_sys::ImGuiIO,key_mod : Mod){
+    io.KeyCtrl = key_mod.ctrl();
+    io.KeyAlt = key_mod.alt();
+    io.KeyShift = key_mod.shift();
+    io.KeySuper = key_mod.gui();
+}

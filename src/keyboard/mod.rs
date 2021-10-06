@@ -63,12 +63,20 @@ impl Mod{
         self.0 & SDL_Keymod::KMOD_RSHIFT as u32 == SDL_Keymod::KMOD_RSHIFT as u32
     }
 
+    pub fn shift(&self) -> bool {
+        self.left_shift() || self.right_shift()
+    }
+
     pub fn left_ctrl(&self) -> bool{
         self.0 & SDL_Keymod::KMOD_LCTRL as u32 == SDL_Keymod::KMOD_LCTRL as u32
     }
 
     pub fn right_ctrl(&self) -> bool{
         self.0 & SDL_Keymod::KMOD_RCTRL as u32 == SDL_Keymod::KMOD_RCTRL as u32
+    }
+
+    pub fn ctrl(&self) -> bool {
+        self.left_ctrl() || self.right_ctrl()
     }
 
     pub fn left_alt(&self) -> bool{
@@ -79,12 +87,20 @@ impl Mod{
         self.0 & SDL_Keymod::KMOD_RALT as u32 == SDL_Keymod::KMOD_RALT as u32
     }
 
+    pub fn alt(&self) -> bool {
+        self.left_alt() || self.right_alt()
+    }
+
     pub fn left_gui(&self) -> bool{
         self.0 & SDL_Keymod::KMOD_LGUI as u32 == SDL_Keymod::KMOD_LGUI as u32
     }
 
     pub fn right_gui(&self) -> bool{
         self.0 & SDL_Keymod::KMOD_RGUI as u32 == SDL_Keymod::KMOD_RGUI as u32
+    }
+
+    pub fn gui(&self) -> bool {
+        self.left_gui() || self.right_gui()
     }
 
     pub fn num(&self) -> bool{

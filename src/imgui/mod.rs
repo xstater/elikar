@@ -7,8 +7,9 @@ pub use ui::Ui;
 
 use xecs::System;
 use std::convert::Infallible;
-use std::ptr::null_mut;
-use imgui_sys::{igCreateContext, igDestroyContext, igGetIO, ImGuiContext, ImGuiIO, ImVec2};
+use std::ffi::CString;
+use std::ptr::{null, null_mut};
+use imgui_sys::{igCreateContext, igDestroyContext, igGetIO, ImFontAtlas_GetGlyphRangesDefault, ImGuiContext, ImGuiIO, ImVec2};
 use crate::imgui::draw_data::DrawData;
 use crate::window;
 use crate::window::WindowId;
