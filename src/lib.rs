@@ -13,3 +13,4 @@ pub mod events;
 pub mod render;
 pub mod sdl_renderer;
 pub mod imgui;
+pub mod text_input;
