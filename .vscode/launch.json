@@ -1,0 +1,545 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'elikar'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "elikar",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'clipboard'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=clipboard",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "clipboard",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'clipboard'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=clipboard",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "clipboard",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'drop_file'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=drop_file",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "drop_file",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'drop_file'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=drop_file",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "drop_file",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'elikar'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=elikar",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "elikar",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'elikar'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=elikar",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "elikar",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'elikar_stage_change'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=elikar_stage_change",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "elikar_stage_change",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'elikar_stage_change'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=elikar_stage_change",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "elikar_stage_change",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'imgui_render'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=imgui_render",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "imgui_render",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'imgui_render'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=imgui_render",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "imgui_render",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'keyboard'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=keyboard",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "keyboard",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'keyboard'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=keyboard",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "keyboard",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'mouse'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=mouse",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "mouse",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'mouse'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=mouse",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "mouse",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'msgbox'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=msgbox",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "msgbox",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'msgbox'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=msgbox",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "msgbox",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'power'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=power",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "power",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'power'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=power",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "power",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'sdl_renderer_fly_things'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=sdl_renderer_fly_things",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "sdl_renderer_fly_things",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'sdl_renderer_fly_things'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=sdl_renderer_fly_things",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "sdl_renderer_fly_things",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'sdl_renderer_image'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=sdl_renderer_image",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "sdl_renderer_image",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'sdl_renderer_image'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=sdl_renderer_image",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "sdl_renderer_image",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'sysinfo'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=sysinfo",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "sysinfo",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'sysinfo'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=sysinfo",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "sysinfo",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'vulkan'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=vulkan",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "vulkan",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'vulkan'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=vulkan",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "vulkan",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'window'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=window",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "window",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'window'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=window",
+                    "--package=elikar"
+                ],
+                "filter": {
+                    "name": "window",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
