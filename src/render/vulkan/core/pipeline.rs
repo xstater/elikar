@@ -39,6 +39,7 @@ impl Pipeline {
             color_blend_state: Default::default(),
             pipeline_layout: vk::PipelineLayout::null(),
             render_pass: vk::RenderPass::null(),
+            dynamic_states: vec![],
             subpass: 0,
         }
     }
@@ -73,6 +74,7 @@ pub struct PipelineBuilder {
     color_blend_state : ColorBlendState,
     pipeline_layout : vk::PipelineLayout,
     render_pass : vk::RenderPass,
+    dynamic_states : Vec<vk::DynamicState>,
     subpass : u32,
 }
 
@@ -163,6 +165,11 @@ impl PipelineBuilder {
         self
     }
 
+    pub fn dynamic_state(mut self,state : vk::DynamicState) -> Self {
+        self.dynamic_states.push(state);
+        self
+    }
+
     pub fn pipeline_layout(mut self,layout : &PipelineLayout) -> Self {
         self.pipeline_layout = layout.pipeline_layout;
         self
@@ -216,6 +223,9 @@ impl PipelineBuilder {
             .blend_constants(self.color_blend_state.blend_constant)
             .attachments(&self.color_blend_attachments);
 
+        let dynamic_state = vk::PipelineDynamicStateCreateInfo::builder()
+            .dynamic_states(&self.dynamic_states);
+
         let pipeline_info = vk::GraphicsPipelineCreateInfo::builder()
             .render_pass(self.render_pass)
             .layout(self.pipeline_layout)
@@ -227,7 +237,7 @@ impl PipelineBuilder {
             .color_blend_state(&color_blend_state)
             .rasterization_state(&self.rasterization)
             .multisample_state(&self.multisample)
-            // .dynamic_state()
+            .dynamic_state(&dynamic_state)
             .subpass(self.subpass);
 
         let pipelines = unsafe {
