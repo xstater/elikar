@@ -72,6 +72,12 @@ impl Mouse {
         ButtonState::new(unsafe { SDL_GetMouseState(null_mut(), null_mut()) })
     }
 
+    pub fn position(&self) -> (i32,i32) {
+        let (mut x,mut y) = (0,0);
+        unsafe { SDL_GetMouseState(&mut x,&mut y) };
+        (x,y)
+    }
+
     pub fn global_position(&self) -> (i32, i32) {
         let (mut x, mut y) = (0, 0);
         unsafe { SDL_GetGlobalMouseState(&mut x as *mut _, &mut y as *mut _) };
