@@ -16,7 +16,7 @@ xblend = "0.1.0"
 ash = "0.33.0"
 rand = "0.8.4"
 nalgebra-glm = "0.15.0"
-imgui-sys = "0.8.0"
+imgui = "0.8.0"
 
 [profile.dev]
 opt-level = 2
