@@ -1,92 +1,108 @@
-use xecs::System;
+use crate::events::PollEvents;
 use crate::imgui::ImGui;
 use crate::keyboard::{Code, Mod};
+use crate::mouse::event::button::Button;
+use imgui::{Io, Key};
 use std::cell::{Ref, RefMut};
 use std::convert::Infallible;
-use crate::events::PollEvents;
-use crate::mouse::event::button::Button;
+use xecs::System;
 
 pub struct ImGuiEventSystem {
+    pub(in crate::imgui) mouse_pressed: [bool; 5],
 }
 
 impl ImGuiEventSystem {
     pub fn new() -> Self {
-        ImGuiEventSystem{
+        ImGuiEventSystem {
+            mouse_pressed: [false; 5],
         }
     }
 }
 
 impl<'a> System<'a> for ImGuiEventSystem {
     type InitResource = &'a mut ImGui;
-    type Resource = (&'a PollEvents,&'a mut ImGui);
-    type Dependencies = (PollEvents,ImGui);
+    type Resource = (&'a PollEvents, &'a mut ImGui);
+    type Dependencies = PollEvents;
     type Error = Infallible;
 
-    fn init(&'a mut self, mut imgui: RefMut<'a,ImGui>) -> Result<(), Self::Error> {
+    fn init(&'a mut self, mut imgui: RefMut<'a, ImGui>) -> Result<(), Self::Error> {
         let mut io = imgui.io_mut();
-        io.KeyMap[imgui_sys::ImGuiKey_Tab as usize] = Code::Tab as _;
-        io.KeyMap[imgui_sys::ImGuiKey_LeftArrow as usize] = Code::Left as _;
-        io.KeyMap[imgui_sys::ImGuiKey_RightArrow as usize] = Code::Right as _;
-        io.KeyMap[imgui_sys::ImGuiKey_UpArrow as usize] = Code::Up as _;
-        io.KeyMap[imgui_sys::ImGuiKey_DownArrow as usize] = Code::Down as _;
-        io.KeyMap[imgui_sys::ImGuiKey_PageUp as usize] = Code::Pageup as _;
-        io.KeyMap[imgui_sys::ImGuiKey_PageDown as usize] = Code::Pagedown as _;
-        io.KeyMap[imgui_sys::ImGuiKey_Home as usize] = Code::Home as _;
-        io.KeyMap[imgui_sys::ImGuiKey_End as usize] = Code::End as _;
-        io.KeyMap[imgui_sys::ImGuiKey_Delete as usize] = Code::Delete as _;
-        io.KeyMap[imgui_sys::ImGuiKey_Backspace as usize] = Code::Backspace as _;
-        io.KeyMap[imgui_sys::ImGuiKey_Enter as usize] = Code::Return as _;
-        io.KeyMap[imgui_sys::ImGuiKey_Escape as usize] = Code::Escape as _;
-        io.KeyMap[imgui_sys::ImGuiKey_Space as usize] = Code::Space as _;
-        io.KeyMap[imgui_sys::ImGuiKey_A as usize] = Code::A as _;
-        io.KeyMap[imgui_sys::ImGuiKey_C as usize] = Code::C as _;
-        io.KeyMap[imgui_sys::ImGuiKey_V as usize] = Code::V as _;
-        io.KeyMap[imgui_sys::ImGuiKey_X as usize] = Code::X as _;
-        io.KeyMap[imgui_sys::ImGuiKey_Y as usize] = Code::Y as _;
-        io.KeyMap[imgui_sys::ImGuiKey_Z as usize] = Code::Z as _;
+        io.key_map[Key::Tab as usize] = Code::Tab as _;
+        io.key_map[Key::LeftArrow as usize] = Code::Left as _;
+        io.key_map[Key::RightArrow as usize] = Code::Right as _;
+        io.key_map[Key::UpArrow as usize] = Code::Up as _;
+        io.key_map[Key::DownArrow as usize] = Code::Down as _;
+        io.key_map[Key::PageUp as usize] = Code::Pageup as _;
+        io.key_map[Key::PageDown as usize] = Code::Pagedown as _;
+        io.key_map[Key::Home as usize] = Code::Home as _;
+        io.key_map[Key::End as usize] = Code::End as _;
+        io.key_map[Key::Delete as usize] = Code::Delete as _;
+        io.key_map[Key::Backspace as usize] = Code::Backspace as _;
+        io.key_map[Key::Enter as usize] = Code::Return as _;
+        io.key_map[Key::Escape as usize] = Code::Escape as _;
+        io.key_map[Key::Space as usize] = Code::Space as _;
+        io.key_map[Key::A as usize] = Code::A as _;
+        io.key_map[Key::C as usize] = Code::C as _;
+        io.key_map[Key::V as usize] = Code::V as _;
+        io.key_map[Key::X as usize] = Code::X as _;
+        io.key_map[Key::Y as usize] = Code::Y as _;
+        io.key_map[Key::Z as usize] = Code::Z as _;
         Ok(())
     }
 
-    fn update(&'a mut self,(events,mut imgui) : (Ref<'a,PollEvents>,RefMut<'a,ImGui>)) -> Result<(), Self::Error> {
+    fn update(
+        &'a mut self,
+        (events, mut imgui): (Ref<'a, PollEvents>, RefMut<'a, ImGui>),
+    ) -> Result<(), Self::Error> {
         let io = imgui.io_mut();
+
         for wheel in &events.mouse_wheel {
-            io.MouseWheel = wheel.scrolled.1 as _;
+            let (x, y) = wheel.scrolled;
+            if x > 0 {
+                io.mouse_wheel_h += 1.0;
+            }
+            if x < 0 {
+                io.mouse_wheel_h -= 1.0;
+            }
+            if y > 0 {
+                io.mouse_wheel += 1.0;
+            }
+            if y < 0 {
+                io.mouse_wheel -= 1.0;
+            }
         }
         for button in &events.mouse_button_down {
-            io.MouseDown[get_mouse_button_index(button.button)] = true;
-        }
-        for button in &events.mouse_button_up {
-            io.MouseDown[get_mouse_button_index(button.button)] = false;
-        }
-        for motion in &events.mouse_motion {
-            io.MousePos = imgui_sys::ImVec2::new(motion.position.0 as _,motion.position.1 as _);
+            match button.button {
+                Button::Left => self.mouse_pressed[0] = true,
+                Button::Middle => self.mouse_pressed[1] = true,
+                Button::Right => self.mouse_pressed[2] = true,
+                Button::X1 => self.mouse_pressed[3] = true,
+                Button::X2 => self.mouse_pressed[4] = true,
+            }
         }
 
         for key in &events.key_down {
-            set_key_mod(io,key.mod_state);
-            io.KeysDown[key.code as usize] = true;
+            set_key_mod(io, key.mod_state);
+            io.keys_down[key.code as usize] = true;
         }
         for key in &events.key_up {
-            set_key_mod(io,key.mod_state);
-            io.KeysDown[key.code as usize] = false;
+            set_key_mod(io, key.mod_state);
+            io.keys_down[key.code as usize] = false;
         }
+
+        for input in &events.text_input {
+            for ch in input.text.chars() {
+                io.add_input_character(ch);
+            }
+        }
+
         Ok(())
     }
 }
 
-fn get_mouse_button_index(button : Button) -> usize{
-    match button {
-        Button::Left => 0,
-        Button::Middle => 2,
-        Button::Right => 1,
-        Button::X1 => 3,
-        Button::X2 => 4
-    }
-}
-
-fn set_key_mod(io : &mut imgui_sys::ImGuiIO,key_mod : Mod){
-    io.KeyCtrl = key_mod.ctrl();
-    io.KeyAlt = key_mod.alt();
-    io.KeyShift = key_mod.shift();
-    io.KeySuper = key_mod.gui();
+fn set_key_mod(io: &mut Io, key_mod: Mod) {
+    io.key_ctrl = key_mod.ctrl();
+    io.key_alt = key_mod.alt();
+    io.key_shift = key_mod.shift();
+    io.key_super = key_mod.gui();
 }

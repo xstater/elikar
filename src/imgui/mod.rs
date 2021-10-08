@@ -1,35 +1,26 @@
 pub mod systems;
-mod ui;
-mod draw_data;
 
-use std::cell::Ref;
-pub use ui::Ui;
-
-use xecs::System;
-use std::convert::Infallible;
-use std::ffi::CString;
-use std::ptr::{null, null_mut};
-use imgui_sys::{igCreateContext, igDestroyContext, igGetIO, ImFontAtlas_GetGlyphRangesDefault, ImGuiContext, ImGuiIO, ImVec2};
-use crate::imgui::draw_data::DrawData;
-use crate::window;
+use crate::imgui::systems::ImGuiEventSystem;
+use crate::mouse::Mouse;
 use crate::window::WindowId;
+use crate::{window, ElikarStates};
+use imgui::{Context, DrawData, Io, Ui};
+use std::cell::{Ref, RefMut};
+use std::convert::Infallible;
+use xecs::System;
 
 pub struct ImGui {
     window_id: WindowId,
-    context: *mut ImGuiContext,
-    io : *mut ImGuiIO,
+    context: imgui::Context,
+    draw_data : Option<*const DrawData>
 }
 
 impl ImGui {
-    pub fn from_window_id(window_id : WindowId) -> ImGui {
-        let context = unsafe {
-            igCreateContext(null_mut())
-        };
-        ImGui{
+    pub fn from_window_id(window_id: WindowId) -> ImGui {
+        ImGui {
             window_id,
-            context,
-            // Safety: because context was create before
-            io: unsafe { igGetIO() },
+            context: Context::create(),
+            draw_data: Option::None,
         }
     }
 
@@ -37,74 +28,77 @@ impl ImGui {
         self.window_id
     }
 
-    #[allow(dead_code)]
-    pub(in crate::imgui) fn io(&self) -> &ImGuiIO {
-        unsafe { &*self.io }
+    pub(in crate::imgui) fn io_mut(&mut self) -> &mut Io {
+        self.context.io_mut()
     }
 
-    pub(in crate::imgui) fn io_mut(&mut self) -> &mut ImGuiIO {
-        unsafe { &mut *self.io }
-    }
-
-    pub fn ui(&mut self) -> Ui<'_>{
-        Ui{
-            imgui: self,
-            texts: vec![]
-        }
-    }
-
-    pub(in crate::imgui) fn begin_frame(&mut self){
+    pub(in crate::imgui) fn draw_data(&self) -> &DrawData {
+        let ptr = self.draw_data.unwrap();
         unsafe {
-            imgui_sys::igNewFrame()
+            &*ptr
         }
     }
 
-    pub(in crate::imgui) fn render(&mut self) -> DrawData {
-        unsafe { imgui_sys::igRender() };
-        DrawData{
-            draw_data: unsafe { imgui_sys::igGetDrawData() }
-        }
-    }
-
-    pub(in crate::imgui) fn end_frame(&mut self) {
-        unsafe {
-            imgui_sys::igEndFrame()
-        }
-    }
-
-    pub fn font_atlas(&mut self) -> &mut imgui_sys::ImFontAtlas {
-        unsafe { &mut *self.io_mut().Fonts }
-    }
-}
-
-impl Drop for ImGui {
-    fn drop(&mut self) {
-        unsafe { igDestroyContext(self.context) }
+    pub fn draw_frame<F>(&mut self,f : F) 
+        where F : Fn(&Ui<'_>){
+        let ui = self.context.frame();
+        f(&ui);
+        let draw_data = ui.render();
+        self.draw_data.replace(draw_data);
     }
 }
 
 impl<'a> System<'a> for ImGui {
-    type InitResource = &'a window::Manager;
-    type Resource = ();
-    type Dependencies = ();
+    type InitResource = ();
+    type Resource = (
+        &'a window::Manager,
+        &'a ElikarStates,
+        &'a Mouse,
+        &'a mut ImGuiEventSystem,
+    );
+    type Dependencies = ImGuiEventSystem;
     type Error = Infallible;
 
-    fn init(&'a mut self, manager : Ref<'a,window::Manager>) -> Result<(), Self::Error> {
-        let window = manager.window_ref(self.window_id).unwrap();
-        let (win_w,win_h) = window.size();
-        let (draw_w,draw_h) = window.vk_drawable_size();
+    fn init(&'a mut self, _: ()) -> Result<(), Self::Error> {
+        let io = self.io_mut();
 
-        self.io_mut().DisplaySize = ImVec2::new(win_w as _,win_h as _);
-        self.io_mut().DisplayFramebufferScale = ImVec2::new(
-            (draw_w as f32) / (win_w as f32),
-            (draw_h as f32) / (win_h as f32));
+        io.backend_flags |= imgui::BackendFlags::HAS_SET_MOUSE_POS;
+        io.backend_flags |= imgui::BackendFlags::HAS_MOUSE_CURSORS;
 
         Ok(())
     }
 
-    fn update(&'a mut self,_ : ()) -> Result<(), Self::Error> {
-        self.begin_frame();
+    fn update(
+        &'a mut self,
+        (window_manager, states, mouse, mut event): (
+            Ref<'a, window::Manager>,
+            Ref<'a, ElikarStates>,
+            Ref<'a, Mouse>,
+            RefMut<'a, ImGuiEventSystem>,
+        ),
+    ) -> Result<(), Self::Error> {
+        let window_id = self.window_id;
+        let io = self.io_mut();
+        let window = window_manager.window_ref(window_id).unwrap();
+
+        let (w, h) = window.size();
+        let (draw_w, draw_h) = window.vk_drawable_size();
+
+        io.display_size = [w as _, h as _];
+        io.display_framebuffer_scale =
+            [draw_w as f32 / w as f32, draw_h as f32 / h as f32];
+
+        io.delta_time = states.now_frame_time().as_secs_f32();
+
+        let (x, y) = mouse.position();
+        io.mouse_pos = [x as _, y as _];
+
+        let button = mouse.button();
+        io.mouse_down[0] = event.mouse_pressed[0] || button.left();
+        io.mouse_down[1] = event.mouse_pressed[1] || button.right();
+        io.mouse_down[2] = event.mouse_pressed[2] || button.middle();
+        event.mouse_pressed = [false; 5];
+
         Ok(())
     }
-
 }
