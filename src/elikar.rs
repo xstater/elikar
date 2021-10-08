@@ -15,6 +15,7 @@ use std::convert::Infallible;
 use crate::keyboard::Keyboard;
 use crate::mouse::Mouse;
 use crate::events::PollEvents;
+use crate::text_input::TextInput;
 
 #[derive(Debug)]
 pub struct ElikarStates {
@@ -173,11 +174,13 @@ impl Elikar {
             .add_system(Clipboard::new())
             .add_system(SystemInfo::new())
             .add_system(window::Manager::new())
+            .add_system(TextInput::new())
             .add_system(PollEvents::new());
         stage.deactivate::<ElikarStates>()
             .deactivate::<Mouse>()
             .deactivate::<Keyboard>()
             .deactivate::<Clipboard>()
+            .deactivate::<TextInput>()
             .deactivate::<window::Manager>()
             .deactivate::<SystemInfo>();
         Ok(Elikar {
@@ -242,6 +245,7 @@ impl Elikar {
             .add_system(Keyboard::new())
             .add_system(Clipboard::new())
             .add_system(SystemInfo::new())
+            .add_system(TextInput::new())
             .add_system(window::Manager::new())
             .add_system(PollEvents::new());
         stage.deactivate::<ElikarStates>()
@@ -249,6 +253,7 @@ impl Elikar {
             .deactivate::<Keyboard>()
             .deactivate::<Clipboard>()
             .deactivate::<SystemInfo>()
+            .deactivate::<TextInput>()
             .deactivate::<window::Manager>();
     self.stages.insert(name.to_owned(), stage);
 }
@@ -348,6 +353,16 @@ impl ElikarStates {
 
     pub fn fps(&self) -> f64 {
         1.0 / self.frame_time.as_secs_f64()
+    }
+
+    // get the time of last frame
+    pub fn last_frame_time(&self) -> Duration {
+        self.frame_time
+    }
+
+    // get the time of from frame start to now
+    pub fn now_frame_time(&self) -> Duration {
+        self.start_time.elapsed()
     }
 
     pub fn add_stage(&mut self,name : &str,stage : Stage) {

@@ -1,6 +1,6 @@
 use sdl2_sys::*;
 use xecs::System;
-use crate::{mouse, keyboard, drop_file,window};
+use crate::{mouse, keyboard, drop_file, window, text_input};
 use std::ffi::CStr;
 use std::path::PathBuf;
 use crate::common::SdlError;
@@ -15,7 +15,9 @@ pub struct PollEvents {
     pub key_down : Vec<keyboard::event::EventInfo>,
     pub key_up : Vec<keyboard::event::EventInfo>,
     pub drop_files : Option<drop_file::event::EventInfo>,
-    pub window : Vec<window::event::EventInfo>
+    pub window : Vec<window::event::EventInfo>,
+    pub text_editing : Vec<text_input::event::TextEditing>,
+    pub text_input : Vec<text_input::event::TextInput>
 }
 
 impl PollEvents {
@@ -32,7 +34,9 @@ impl PollEvents {
         self.key_down.clear();
         self.key_up.clear();
         self.drop_files = Option::None;
-        self.window.clear()
+        self.window.clear();
+        self.text_editing.clear();
+        self.text_input.clear();
     }
 }
 
@@ -78,11 +82,17 @@ impl<'a> System<'a> for PollEvents {
                     // self.drop_text.emit_clone(unsafe{sdl_event.drop}.into());
                 }
                 x if x == SDL_EventType::SDL_DROPBEGIN as u32 => {
-                    self.drop_files = Some(unsafe{sdl_event.drop}.into())
+                    self.drop_files = Some(unsafe{sdl_event.drop}.into());
                 }
                 x if x == SDL_EventType::SDL_DROPCOMPLETE as u32 => {}
                 x if x == SDL_EventType::SDL_WINDOWEVENT as u32 => {
-                    self.window.push(unsafe { sdl_event.window }.into())
+                    self.window.push(unsafe { sdl_event.window }.into());
+                }
+                x if x == SDL_EventType::SDL_TEXTEDITING as u32 => {
+                    self.text_editing.push(unsafe{sdl_event.edit}.into());
+                }
+                x if x == SDL_EventType::SDL_TEXTINPUT as u32 => {
+                    self.text_input.push(unsafe{sdl_event.text}.into());
                 }
                 _ => {}
             }
