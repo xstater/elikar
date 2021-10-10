@@ -1,19 +1,19 @@
 extern crate sdl2_sys;
 
-use std::os::raw::c_int;
 use sdl2_sys::*;
-use xrunits::time::{Second, BuildSecond};
+use std::os::raw::c_int;
+use xrunits::time::{BuildSecond, Second};
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub enum PowerState {
     OnBattery,
     NoBattery,
     Charging,
-    Charged
+    Charged,
 }
 
-pub fn power_state() -> Option<PowerState>{
-    let state = unsafe { sdl2_sys::SDL_GetPowerInfo(0 as *mut c_int,0 as *mut c_int) };
+pub fn power_state() -> Option<PowerState> {
+    let state = unsafe { sdl2_sys::SDL_GetPowerInfo(0 as *mut c_int, 0 as *mut c_int) };
     match state {
         SDL_PowerState::SDL_POWERSTATE_UNKNOWN => Option::None,
         SDL_PowerState::SDL_POWERSTATE_ON_BATTERY => Some(PowerState::OnBattery),
@@ -24,9 +24,9 @@ pub fn power_state() -> Option<PowerState>{
 }
 
 pub fn battery_time() -> Option<Second> {
-    let mut sec : i32 = -1;
+    let mut sec: i32 = -1;
     unsafe {
-        sdl2_sys::SDL_GetPowerInfo(&mut sec as *mut c_int,0 as *mut c_int);
+        sdl2_sys::SDL_GetPowerInfo(&mut sec as *mut c_int, 0 as *mut c_int);
     }
     if sec < 0 {
         Option::None
@@ -36,9 +36,9 @@ pub fn battery_time() -> Option<Second> {
 }
 
 pub fn battery_percentage() -> Option<u32> {
-    let mut psc : i32 = -1;
+    let mut psc: i32 = -1;
     unsafe {
-        sdl2_sys::SDL_GetPowerInfo(0 as *mut c_int,&mut psc as *mut c_int);
+        sdl2_sys::SDL_GetPowerInfo(0 as *mut c_int, &mut psc as *mut c_int);
     }
     if 0 <= psc && psc <= 100 {
         Some(psc as u32)

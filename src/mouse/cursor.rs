@@ -1,10 +1,10 @@
 extern crate sdl2_sys;
 
+use crate::common::{Result, SdlError};
 use sdl2_sys::*;
-use crate::common::{ SdlError,Result };
 
-#[derive(Debug,Clone,Copy,PartialEq,PartialOrd)]
-pub enum SystemCursor{
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum SystemCursor {
     Arrow,
     IBeam,
     Wait,
@@ -16,17 +16,19 @@ pub enum SystemCursor{
     SizeNS,
     SizeAll,
     No,
-    Hand
+    Hand,
 }
 
 #[derive(Debug)]
 pub struct Cursor {
-    pub(in crate::mouse) ptr : *mut SDL_Cursor
+    pub(in crate::mouse) ptr: *mut SDL_Cursor,
 }
 
 impl Drop for Cursor {
     fn drop(&mut self) {
-        unsafe { SDL_FreeCursor(self.ptr); }
+        unsafe {
+            SDL_FreeCursor(self.ptr);
+        }
     }
 }
 
@@ -35,13 +37,13 @@ impl Cursor {
         let ptr = unsafe { SDL_GetDefaultCursor() };
         if ptr.is_null() {
             Err(SdlError::get())
-        }else{
-            Ok(Cursor{ ptr })
+        } else {
+            Ok(Cursor { ptr })
         }
     }
 
-    pub fn system(cursor : SystemCursor) -> Result<Cursor>{
-        let sdlcursor = match cursor{
+    pub fn system(cursor: SystemCursor) -> Result<Cursor> {
+        let sdlcursor = match cursor {
             SystemCursor::Arrow => SDL_SystemCursor::SDL_SYSTEM_CURSOR_ARROW,
             SystemCursor::IBeam => SDL_SystemCursor::SDL_SYSTEM_CURSOR_IBEAM,
             SystemCursor::Wait => SDL_SystemCursor::SDL_SYSTEM_CURSOR_WAIT,
@@ -53,14 +55,13 @@ impl Cursor {
             SystemCursor::SizeNS => SDL_SystemCursor::SDL_SYSTEM_CURSOR_SIZENS,
             SystemCursor::SizeAll => SDL_SystemCursor::SDL_SYSTEM_CURSOR_SIZEALL,
             SystemCursor::No => SDL_SystemCursor::SDL_SYSTEM_CURSOR_NO,
-            SystemCursor::Hand => SDL_SystemCursor::SDL_SYSTEM_CURSOR_HAND
+            SystemCursor::Hand => SDL_SystemCursor::SDL_SYSTEM_CURSOR_HAND,
         };
         let ptr = unsafe { SDL_CreateSystemCursor(sdlcursor) };
         if ptr.is_null() {
             Err(SdlError::get())
-        }else{
+        } else {
             Ok(Cursor { ptr })
         }
     }
-
 }

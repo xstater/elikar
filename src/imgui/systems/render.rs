@@ -63,7 +63,7 @@ impl<'a, Dependency: Dependencies> System<'a> for ImGuiRenderer<Dependency> {
 
     fn init(
         &'a mut self,
-        (mut imgui, mut vulkan): (RefMut<'a, ImGui>, RefMut<'a, Vulkan>),
+        (mut imgui, vulkan): (RefMut<'a, ImGui>, RefMut<'a, Vulkan>),
     ) -> Result<(), Self::Error> {
         let mut font = imgui.context.fonts();
         let texture = font.build_rgba32_texture();
@@ -80,19 +80,19 @@ impl<'a, Dependency: Dependencies> System<'a> for ImGuiRenderer<Dependency> {
             .sharing_mode(vk::SharingMode::EXCLUSIVE)
             .usage(vk::ImageUsageFlags::SAMPLED | vk::ImageUsageFlags::TRANSFER_DST)
             .tiling(vk::ImageTiling::OPTIMAL);
-        let mut font_image = vulkan.create_image(font_image_builder)?;
+        let mut font_image = vulkan.core().create_image(font_image_builder)?;
 
         let mem_req = font_image.memory_requirements();
-        let memory = vulkan.allocate_memory(mem_req, vk::MemoryPropertyFlags::DEVICE_LOCAL)?;
+        let memory = vulkan.core().allocate_memory(mem_req, vk::MemoryPropertyFlags::DEVICE_LOCAL)?;
 
         font_image.bind_memory(memory)?;
 
         let buffer_builder = Buffer::builder()
             .size(texture.data.len())
             .usage(vk::BufferUsageFlags::TRANSFER_SRC);
-        let mut stage_buffer = vulkan.create_buffer(buffer_builder)?;
+        let mut stage_buffer = vulkan.core().create_buffer(buffer_builder)?;
         let mem_req = stage_buffer.memory_requirements();
-        let memory = vulkan.allocate_memory(
+        let memory = vulkan.core().allocate_memory(
             mem_req,
             vk::MemoryPropertyFlags::HOST_COHERENT | vk::MemoryPropertyFlags::HOST_VISIBLE,
         )?;
@@ -141,7 +141,7 @@ impl<'a, Dependency: Dependencies> System<'a> for ImGuiRenderer<Dependency> {
                     .pipeline_bind_point(vk::PipelineBindPoint::GRAPHICS)
                     .build(),
             );
-        self.render_pass = Some(vulkan.create_render_pass(render_pass_builder)?);
+        self.render_pass = Some(vulkan.core().create_render_pass(render_pass_builder)?);
 
         let descriptor_set_layout_builder = core::DescriptorSetLayout::builder().binding(
             0,
@@ -150,7 +150,7 @@ impl<'a, Dependency: Dependencies> System<'a> for ImGuiRenderer<Dependency> {
             vk::ShaderStageFlags::FRAGMENT,
         );
         let descriptor_set_layout =
-            vulkan.create_descriptor_set_layout(descriptor_set_layout_builder)?;
+            vulkan.core().create_descriptor_set_layout(descriptor_set_layout_builder)?;
         self.descriptor_set_layout = Some(descriptor_set_layout);
 
         let pipeline_layout_builder = core::PipelineLayout::builder()
@@ -160,10 +160,10 @@ impl<'a, Dependency: Dependencies> System<'a> for ImGuiRenderer<Dependency> {
                 0,
             )
             .descriptor_set_layout(self.descriptor_set_layout.as_ref().unwrap());
-        self.pipeline_layout = Some(vulkan.create_pipeline_layout(pipeline_layout_builder)?);
+        self.pipeline_layout = Some(vulkan.core().create_pipeline_layout(pipeline_layout_builder)?);
 
         let mut descriptor_sets =
-            vulkan.allocate_descriptor_sets(&[self.descriptor_set_layout.as_ref().unwrap()])?;
+            vulkan.core().allocate_descriptor_sets(&[self.descriptor_set_layout.as_ref().unwrap()])?;
 
         let sampler_info = vk::SamplerCreateInfo {
             mag_filter: vk::Filter::LINEAR,
@@ -181,7 +181,7 @@ impl<'a, Dependency: Dependencies> System<'a> for ImGuiRenderer<Dependency> {
             unnormalized_coordinates: vk::FALSE,
             ..Default::default()
         };
-        let sampler = vulkan.create_sampler(sampler_info)?;
+        let sampler = vulkan.core().create_sampler(sampler_info)?;
 
         descriptor_sets.update_combined_image_sampler(
             0,
@@ -233,10 +233,10 @@ impl<'a, Dependency: Dependencies> System<'a> for ImGuiRenderer<Dependency> {
             .color_blend(false, vk::LogicOp::COPY, [0.0, 0.0, 0.0, 0.0])
             .render_pass(self.render_pass.as_ref().unwrap())
             .subpass(0);
-        self.pipeline = Some(vulkan.create_pipeline(pipeline_builder)?);
+        self.pipeline = Some(vulkan.core().create_pipeline(pipeline_builder)?);
 
         let views_len = vulkan.swapchain_image_views().len();
-        self.command_buffers = Some(vulkan.allocate_command_buffers(views_len)?);
+        self.command_buffers = Some(vulkan.core().allocate_command_buffers(views_len)?);
 
         for index in 0..views_len {
             let view = unsafe { vulkan.swapchain_image_views().get_unchecked(index) };
@@ -246,7 +246,7 @@ impl<'a, Dependency: Dependencies> System<'a> for ImGuiRenderer<Dependency> {
                     vulkan.surface_extent().width,
                     vulkan.surface_extent().height,
                 );
-            let framebuffer = vulkan.create_framebuffer(framebuffer_builder)?;
+            let framebuffer = vulkan.core().create_framebuffer(framebuffer_builder)?;
             self.framebuffers.push(framebuffer);
         }
 
@@ -343,12 +343,12 @@ impl<'a, Dependency: Dependencies> System<'a> for ImGuiRenderer<Dependency> {
 
             // vertex buffer
             let size = vertex_buffer_data.len() * std::mem::size_of::<imgui::DrawVert>();
-            let mut stage_buffer = vulkan.create_buffer(
+            let mut stage_buffer = vulkan.core().create_buffer(
                 core::Buffer::builder()
                     .size(size)
                     .usage(vk::BufferUsageFlags::TRANSFER_SRC),
             )?;
-            let memory = vulkan.allocate_memory(
+            let memory = vulkan.core().allocate_memory(
                 stage_buffer.memory_requirements(),
                 vk::MemoryPropertyFlags::HOST_VISIBLE | vk::MemoryPropertyFlags::HOST_COHERENT,
             )?;
@@ -358,14 +358,14 @@ impl<'a, Dependency: Dependencies> System<'a> for ImGuiRenderer<Dependency> {
                 .unwrap()
                 .copy_from_slice(vertex_buffer_data)?;
 
-            let mut vertex_buffer = vulkan.create_buffer(
+            let mut vertex_buffer = vulkan.core().create_buffer(
                 core::Buffer::builder()
                     .size(stage_buffer.size() as _)
                     .usage(
                         vk::BufferUsageFlags::TRANSFER_DST | vk::BufferUsageFlags::VERTEX_BUFFER,
                     ),
             )?;
-            let memory = vulkan.allocate_memory(
+            let memory = vulkan.core().allocate_memory(
                 vertex_buffer.memory_requirements(),
                 vk::MemoryPropertyFlags::DEVICE_LOCAL,
             )?;
@@ -374,12 +374,12 @@ impl<'a, Dependency: Dependencies> System<'a> for ImGuiRenderer<Dependency> {
 
             // index buffer
             let size = index_buffer_data.len() * std::mem::size_of::<imgui::DrawIdx>();
-            let mut stage_buffer = vulkan.create_buffer(
+            let mut stage_buffer = vulkan.core().create_buffer(
                 core::Buffer::builder()
                     .size(size)
                     .usage(vk::BufferUsageFlags::TRANSFER_SRC),
             )?;
-            let memory = vulkan.allocate_memory(
+            let memory = vulkan.core().allocate_memory(
                 stage_buffer.memory_requirements(),
                 vk::MemoryPropertyFlags::HOST_VISIBLE | vk::MemoryPropertyFlags::HOST_COHERENT,
             )?;
@@ -389,12 +389,12 @@ impl<'a, Dependency: Dependencies> System<'a> for ImGuiRenderer<Dependency> {
                 .unwrap()
                 .copy_from_slice(index_buffer_data)?;
 
-            let mut index_buffer = vulkan.create_buffer(
+            let mut index_buffer = vulkan.core().create_buffer(
                 core::Buffer::builder()
                     .size(stage_buffer.size() as _)
                     .usage(vk::BufferUsageFlags::TRANSFER_DST | vk::BufferUsageFlags::INDEX_BUFFER),
             )?;
-            let memory = vulkan.allocate_memory(
+            let memory = vulkan.core().allocate_memory(
                 index_buffer.memory_requirements(),
                 vk::MemoryPropertyFlags::DEVICE_LOCAL,
             )?;

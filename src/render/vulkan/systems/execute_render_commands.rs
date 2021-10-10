@@ -1,9 +1,9 @@
-use std::cell::{Ref, RefMut};
-use xecs::{End, System};
-use crate::render::vulkan::Vulkan;
-use ash::vk;
 use crate::render::vulkan::core::AshRaw;
 use crate::render::vulkan::systems::acquire_next_image::AcquireNextImage;
+use crate::render::vulkan::Vulkan;
+use ash::vk;
+use std::cell::{Ref, RefMut};
+use xecs::{End, System};
 
 pub struct ExecuteRenderCommands;
 
@@ -13,17 +13,20 @@ impl ExecuteRenderCommands {
     }
 }
 
-impl<'a> System<'a> for ExecuteRenderCommands{
+impl<'a> System<'a> for ExecuteRenderCommands {
     type InitResource = ();
-    type Resource = (&'a AcquireNextImage,&'a mut Vulkan);
+    type Resource = (&'a AcquireNextImage, &'a mut Vulkan);
     type Dependencies = End;
     type Error = vk::Result;
 
-    fn init(&'a mut self,_ : ()) -> Result<(),Self::Error> {
+    fn init(&'a mut self, _: ()) -> Result<(), Self::Error> {
         Ok(())
     }
 
-    fn update(&'a mut self,(acq_next_img,mut vulkan) : (Ref<'a,AcquireNextImage>,RefMut<'a,Vulkan>)) -> Result<(),Self::Error> {
+    fn update(
+        &'a mut self,
+        (acq_next_img, mut vulkan): (Ref<'a, AcquireNextImage>, RefMut<'a, Vulkan>),
+    ) -> Result<(), Self::Error> {
         if vulkan.render_command_buffers.is_empty() {
             let signal_semaphores = [*vulkan.image_available_semaphore.raw()];
             let swapchains = [vulkan.swapchain];
@@ -33,10 +36,16 @@ impl<'a> System<'a> for ExecuteRenderCommands{
                 .swapchains(&swapchains)
                 .image_indices(&image_indices);
             unsafe {
-                vulkan.core.swapchain_manager.queue_present(vulkan.core.graphics_queue,&present_info)?;
-                vulkan.core.device.queue_wait_idle(vulkan.core.graphics_queue)?;
+                vulkan
+                    .core
+                    .swapchain_manager
+                    .queue_present(vulkan.core.graphics_queue, &present_info)?;
+                vulkan
+                    .core
+                    .device
+                    .queue_wait_idle(vulkan.core.graphics_queue)?;
             }
-            return Ok(())
+            return Ok(());
         }
 
         let image_index = acq_next_img.image_index();
@@ -54,7 +63,11 @@ impl<'a> System<'a> for ExecuteRenderCommands{
         let submit_infos = [submit_info.build()];
 
         unsafe {
-            vulkan.core.device.queue_submit(vulkan.core.graphics_queue,&submit_infos,vk::Fence::null())
+            vulkan.core.device.queue_submit(
+                vulkan.core.graphics_queue,
+                &submit_infos,
+                vk::Fence::null(),
+            )
         }?;
 
         let swapchains = [vulkan.swapchain];
@@ -66,8 +79,14 @@ impl<'a> System<'a> for ExecuteRenderCommands{
             .image_indices(&image_indices);
 
         unsafe {
-            vulkan.core.swapchain_manager.queue_present(vulkan.core.graphics_queue,&present_info)?;
-            vulkan.core.device.queue_wait_idle(vulkan.core.graphics_queue)?;
+            vulkan
+                .core
+                .swapchain_manager
+                .queue_present(vulkan.core.graphics_queue, &present_info)?;
+            vulkan
+                .core
+                .device
+                .queue_wait_idle(vulkan.core.graphics_queue)?;
         }
 
         vulkan.render_command_buffers.clear();

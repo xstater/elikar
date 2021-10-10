@@ -1,21 +1,24 @@
-use elikar::{Elikar, ElikarStates, window};
-use elikar::sdl_renderer::{Renderer, Color};
-use elikar::sdl_renderer::sprite::Sprite;
-use xecs::{System, World};
 use elikar::events::PollEvents;
-use std::cell::{Ref, RefMut};
 use elikar::sdl_renderer::point::Point;
 use elikar::sdl_renderer::rect::Rect;
+use elikar::sdl_renderer::sprite::Sprite;
+use elikar::sdl_renderer::{Color, Renderer};
+use elikar::{window, Elikar, ElikarStates};
+use std::cell::{Ref, RefMut};
 use std::convert::Infallible;
+use xecs::{System, World};
 
 struct QuitSystem;
 impl<'a> System<'a> for QuitSystem {
     type InitResource = ();
-    type Resource = (&'a PollEvents,&'a mut ElikarStates);
+    type Resource = (&'a PollEvents, &'a mut ElikarStates);
     type Dependencies = PollEvents;
     type Error = Infallible;
 
-    fn update(&'a mut self, (events,mut states) : (Ref<'a,PollEvents>,RefMut<'a,ElikarStates>)) -> Result<(),Infallible> {
+    fn update(
+        &'a mut self,
+        (events, mut states): (Ref<'a, PollEvents>, RefMut<'a, ElikarStates>),
+    ) -> Result<(), Infallible> {
         if let Some(_) = events.quit {
             states.quit()
         }
@@ -30,8 +33,8 @@ impl<'a> System<'a> for ShowFPS {
     type Dependencies = ();
     type Error = Infallible;
 
-    fn update(&'a mut self, states : Ref<'a,ElikarStates>) -> Result<(),Infallible> {
-        println!("fps:{}",states.actual_fps());
+    fn update(&'a mut self, states: Ref<'a, ElikarStates>) -> Result<(), Infallible> {
+        println!("fps:{}", states.actual_fps());
         Ok(())
     }
 }
@@ -39,11 +42,14 @@ impl<'a> System<'a> for ShowFPS {
 struct FollowMouse;
 impl<'a> System<'a> for FollowMouse {
     type InitResource = ();
-    type Resource = (&'a PollEvents,&'a World);
+    type Resource = (&'a PollEvents, &'a World);
     type Dependencies = ();
     type Error = Infallible;
 
-    fn update(&'a mut self, (events,world) : (Ref<'a,PollEvents>,Ref<'a,World>)) -> Result<(),Infallible>{
+    fn update(
+        &'a mut self,
+        (events, world): (Ref<'a, PollEvents>, Ref<'a, World>),
+    ) -> Result<(), Infallible> {
         for motion in &events.mouse_motion {
             for sprite in world.query::<&mut Sprite>() {
                 sprite.move_to(motion.position);
@@ -58,17 +64,19 @@ fn main() {
     let renderer = {
         Renderer::builder()
             .accelerated()
-            .build(game.current_stage_ref()
-                .system_data_mut::<window::Manager>()
-                .create_window()
-                .build()
-                .unwrap())
+            .build(
+                game.current_stage_ref()
+                    .system_data_mut::<window::Manager>()
+                    .create_window()
+                    .build()
+                    .unwrap(),
+            )
             .unwrap()
     };
 
-    let mut sprite = Sprite::from_bmp(&renderer,"./logo.bmp").unwrap();
+    let mut sprite = Sprite::from_bmp(&renderer, "./logo.bmp").unwrap();
     sprite.set_angle(180.0);
-    sprite.set_flip(true,true);
+    sprite.set_flip(true, true);
 
     game.current_stage_mut()
         .world_mut()

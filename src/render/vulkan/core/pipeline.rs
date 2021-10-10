@@ -1,39 +1,39 @@
+use crate::render::vulkan::core::{AshRaw, Core, PipelineLayout, RenderPass, Shader};
+use ash::{util, vk};
 use std::ffi::CString;
 use std::fmt::{Display, Formatter};
 use std::fs::File;
 use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use ash::{util, vk};
-use crate::render::vulkan::core::{AshRaw, Core, PipelineLayout, RenderPass, Shader};
 
 pub struct Pipeline {
-    pub(in crate::render) core : Arc<Core>,
-    pub(in crate::render) pipeline : vk::Pipeline
+    pub(in crate::render) core: Arc<Core>,
+    pub(in crate::render) pipeline: vk::Pipeline,
 }
 
 impl Pipeline {
-    pub fn builder() -> PipelineBuilder{
-        PipelineBuilder{
+    pub fn builder() -> PipelineBuilder {
+        PipelineBuilder {
             shaders: vec![],
             vertex_input_bindings: vec![],
             vertex_input_attributes: vec![],
             vertex_input_assembly: Default::default(),
             viewports: vec![],
             scissors: vec![],
-            rasterization: vk::PipelineRasterizationStateCreateInfo{
+            rasterization: vk::PipelineRasterizationStateCreateInfo {
                 depth_clamp_enable: vk::FALSE,
                 rasterizer_discard_enable: vk::FALSE,
                 polygon_mode: vk::PolygonMode::FILL,
                 cull_mode: vk::CullModeFlags::NONE,
                 front_face: vk::FrontFace::CLOCKWISE,
                 line_width: 1.0,
-                .. Default::default()
+                ..Default::default()
             },
-            multisample: vk::PipelineMultisampleStateCreateInfo{
+            multisample: vk::PipelineMultisampleStateCreateInfo {
                 rasterization_samples: vk::SampleCountFlags::TYPE_1,
                 sample_shading_enable: vk::FALSE,
-                .. Default::default()
+                ..Default::default()
             },
             color_blend_attachments: vec![],
             color_blend_state: Default::default(),
@@ -56,61 +56,80 @@ impl AshRaw for Pipeline {
 impl Drop for Pipeline {
     fn drop(&mut self) {
         unsafe {
-            self.core.device.destroy_pipeline(self.pipeline,Option::None)
+            self.core
+                .device
+                .destroy_pipeline(self.pipeline, Option::None)
         }
     }
 }
 
 pub struct PipelineBuilder {
-    shaders : Vec<(vk::ShaderStageFlags,PathBuf)>,
-    vertex_input_bindings : Vec<vk::VertexInputBindingDescription>,
-    vertex_input_attributes : Vec<vk::VertexInputAttributeDescription>,
-    vertex_input_assembly : vk::PipelineInputAssemblyStateCreateInfo,
-    viewports : Vec<vk::Viewport>,
-    scissors : Vec<vk::Rect2D>,
-    rasterization : vk::PipelineRasterizationStateCreateInfo,
-    multisample : vk::PipelineMultisampleStateCreateInfo,
-    color_blend_attachments : Vec<vk::PipelineColorBlendAttachmentState>,
-    color_blend_state : ColorBlendState,
-    pipeline_layout : vk::PipelineLayout,
-    render_pass : vk::RenderPass,
-    dynamic_states : Vec<vk::DynamicState>,
-    subpass : u32,
+    shaders: Vec<(vk::ShaderStageFlags, PathBuf)>,
+    vertex_input_bindings: Vec<vk::VertexInputBindingDescription>,
+    vertex_input_attributes: Vec<vk::VertexInputAttributeDescription>,
+    vertex_input_assembly: vk::PipelineInputAssemblyStateCreateInfo,
+    viewports: Vec<vk::Viewport>,
+    scissors: Vec<vk::Rect2D>,
+    rasterization: vk::PipelineRasterizationStateCreateInfo,
+    multisample: vk::PipelineMultisampleStateCreateInfo,
+    color_blend_attachments: Vec<vk::PipelineColorBlendAttachmentState>,
+    color_blend_state: ColorBlendState,
+    pipeline_layout: vk::PipelineLayout,
+    render_pass: vk::RenderPass,
+    dynamic_states: Vec<vk::DynamicState>,
+    subpass: u32,
 }
 
-#[derive(Debug,Copy,Clone,Default)]
-struct ColorBlendState{
-    enable_logic_op : bool,
-    logic_op : vk::LogicOp,
-    blend_constant : [f32;4]
+#[derive(Debug, Copy, Clone, Default)]
+struct ColorBlendState {
+    enable_logic_op: bool,
+    logic_op: vk::LogicOp,
+    blend_constant: [f32; 4],
 }
 
 impl PipelineBuilder {
-    pub fn shader_from_file<P : AsRef<Path>>(mut self,shader_type : vk::ShaderStageFlags,path : P) -> Self {
-        self.shaders.push((shader_type,path.as_ref().to_path_buf()));
+    pub fn shader_from_file<P: AsRef<Path>>(
+        mut self,
+        shader_type: vk::ShaderStageFlags,
+        path: P,
+    ) -> Self {
+        self.shaders
+            .push((shader_type, path.as_ref().to_path_buf()));
         self
     }
 
-    pub fn input_binding<V>(mut self,binding_index : u32,input_rate : vk::VertexInputRate) -> Self{
-        self.vertex_input_bindings.push(vk::VertexInputBindingDescription{
-            binding: binding_index,
-            stride: std::mem::size_of::<V>() as _,
-            input_rate
-        });
+    pub fn input_binding<V>(mut self, binding_index: u32, input_rate: vk::VertexInputRate) -> Self {
+        self.vertex_input_bindings
+            .push(vk::VertexInputBindingDescription {
+                binding: binding_index,
+                stride: std::mem::size_of::<V>() as _,
+                input_rate,
+            });
         self
     }
 
-    pub fn input_attribute(mut self,location : u32,binding : u32,format : vk::Format,offset : usize) -> Self {
-        self.vertex_input_attributes.push(vk::VertexInputAttributeDescription{
-            location,
-            binding,
-            format,
-            offset : offset as _
-        });
+    pub fn input_attribute(
+        mut self,
+        location: u32,
+        binding: u32,
+        format: vk::Format,
+        offset: usize,
+    ) -> Self {
+        self.vertex_input_attributes
+            .push(vk::VertexInputAttributeDescription {
+                location,
+                binding,
+                format,
+                offset: offset as _,
+            });
         self
     }
 
-    pub fn input_assembly(mut self,enable_primitive_restart : bool,topology : vk::PrimitiveTopology) -> Self {
+    pub fn input_assembly(
+        mut self,
+        enable_primitive_restart: bool,
+        topology: vk::PrimitiveTopology,
+    ) -> Self {
         self.vertex_input_assembly = vk::PipelineInputAssemblyStateCreateInfo::builder()
             .topology(topology)
             .primitive_restart_enable(enable_primitive_restart)
@@ -118,96 +137,112 @@ impl PipelineBuilder {
         self
     }
 
-    pub fn viewport(mut self,x : f32,y : f32,width : f32,height : f32,min_depth : f32,max_depth : f32) -> Self {
-        self.viewports.push(vk::Viewport{
-            x, y,
-            width, height,
-            min_depth, max_depth
+    pub fn viewport(
+        mut self,
+        x: f32,
+        y: f32,
+        width: f32,
+        height: f32,
+        min_depth: f32,
+        max_depth: f32,
+    ) -> Self {
+        self.viewports.push(vk::Viewport {
+            x,
+            y,
+            width,
+            height,
+            min_depth,
+            max_depth,
         });
         self
     }
 
-    pub fn scissor(mut self,x : i32,y : i32,width : u32,height : u32) -> Self {
-        self.scissors.push(vk::Rect2D{
-            offset: vk::Offset2D{ x, y },
-            extent: vk::Extent2D{ width, height }
+    pub fn scissor(mut self, x: i32, y: i32, width: u32, height: u32) -> Self {
+        self.scissors.push(vk::Rect2D {
+            offset: vk::Offset2D { x, y },
+            extent: vk::Extent2D { width, height },
         });
         self
     }
 
     #[allow(unused_mut)]
-    pub fn with_surface_area(mut self,area : &vk::Extent2D) -> Self {
-        self.viewport(0.0,0.0,area.width as _,area.height as _,0.0,1.0)
-            .scissor(0,0,area.width,area.height)
+    pub fn with_surface_area(mut self, area: &vk::Extent2D) -> Self {
+        self.viewport(0.0, 0.0, area.width as _, area.height as _, 0.0, 1.0)
+            .scissor(0, 0, area.width, area.height)
     }
 
-    pub fn rasterization(mut self,info : vk::PipelineRasterizationStateCreateInfo) -> Self {
+    pub fn rasterization(mut self, info: vk::PipelineRasterizationStateCreateInfo) -> Self {
         self.rasterization = info;
         self
     }
 
-    pub fn multisample(mut self,info : vk::PipelineMultisampleStateCreateInfo) -> Self {
+    pub fn multisample(mut self, info: vk::PipelineMultisampleStateCreateInfo) -> Self {
         self.multisample = info;
         self
     }
 
-    pub fn color_blend_attachment(mut self,attachment : vk::PipelineColorBlendAttachmentState) -> Self {
+    pub fn color_blend_attachment(
+        mut self,
+        attachment: vk::PipelineColorBlendAttachmentState,
+    ) -> Self {
         self.color_blend_attachments.push(attachment);
         self
     }
 
-    pub fn color_blend(mut self,enable_logic_op : bool,logic_op : vk::LogicOp,blend_constant : [f32;4]) -> Self{
+    pub fn color_blend(
+        mut self,
+        enable_logic_op: bool,
+        logic_op: vk::LogicOp,
+        blend_constant: [f32; 4],
+    ) -> Self {
         self.color_blend_state = ColorBlendState {
             enable_logic_op,
             logic_op,
-            blend_constant
+            blend_constant,
         };
         self
     }
 
-    pub fn dynamic_state(mut self,state : vk::DynamicState) -> Self {
+    pub fn dynamic_state(mut self, state: vk::DynamicState) -> Self {
         self.dynamic_states.push(state);
         self
     }
 
-    pub fn pipeline_layout(mut self,layout : &PipelineLayout) -> Self {
+    pub fn pipeline_layout(mut self, layout: &PipelineLayout) -> Self {
         self.pipeline_layout = layout.pipeline_layout;
         self
     }
 
-    pub fn render_pass(mut self,render_pass : &RenderPass) -> Self {
+    pub fn render_pass(mut self, render_pass: &RenderPass) -> Self {
         self.render_pass = render_pass.render_pass;
         self
     }
 
-    pub fn subpass(mut self,subpass : u32) -> Self {
+    pub fn subpass(mut self, subpass: u32) -> Self {
         self.subpass = subpass;
         self
     }
 
-    pub(in crate::render) fn build(self,core : Arc<Core>) -> Result<Pipeline,CreatePipelineError>{
+    pub(in crate::render) fn build(self, core: Arc<Core>) -> Result<Pipeline, CreatePipelineError> {
         let mut shaders = vec![];
-        for (shader_type,path) in self.shaders.iter() {
+        for (shader_type, path) in self.shaders.iter() {
             let mut file = File::open(path)?;
             let code = util::read_spv(&mut file)?;
 
-            let info = vk::ShaderModuleCreateInfo::builder()
-                .code(&code);
-            let shader_module = unsafe {
-                core.device.create_shader_module(&info,Option::None)?
-            };
-            shaders.push((*shader_type,Shader::new(core.clone(),shader_module)));
+            let info = vk::ShaderModuleCreateInfo::builder().code(&code);
+            let shader_module = unsafe { core.device.create_shader_module(&info, Option::None)? };
+            shaders.push((*shader_type, Shader::new(core.clone(), shader_module)));
         }
         let function_name = CString::new("main").unwrap();
-        let shader_stages = shaders.iter()
-            .map(|(shader_type,shader)|{
-                vk::PipelineShaderStageCreateInfo{
-                    stage: *shader_type,
-                    module: *shader.raw(),
-                    p_name: function_name.as_ptr(),
-                    .. Default::default()
-                }
-            }).collect::<Vec<_>>();
+        let shader_stages = shaders
+            .iter()
+            .map(|(shader_type, shader)| vk::PipelineShaderStageCreateInfo {
+                stage: *shader_type,
+                module: *shader.raw(),
+                p_name: function_name.as_ptr(),
+                ..Default::default()
+            })
+            .collect::<Vec<_>>();
 
         let input_state = vk::PipelineVertexInputStateCreateInfo::builder()
             .vertex_binding_descriptions(&self.vertex_input_bindings)
@@ -223,8 +258,8 @@ impl PipelineBuilder {
             .blend_constants(self.color_blend_state.blend_constant)
             .attachments(&self.color_blend_attachments);
 
-        let dynamic_state = vk::PipelineDynamicStateCreateInfo::builder()
-            .dynamic_states(&self.dynamic_states);
+        let dynamic_state =
+            vk::PipelineDynamicStateCreateInfo::builder().dynamic_states(&self.dynamic_states);
 
         let pipeline_info = vk::GraphicsPipelineCreateInfo::builder()
             .render_pass(self.render_pass)
@@ -244,14 +279,13 @@ impl PipelineBuilder {
             core.device.create_graphics_pipelines(
                 vk::PipelineCache::null(),
                 &[pipeline_info.build()],
-                Option::None)
-        }.map_err(|(_,err)|err)?;
+                Option::None,
+            )
+        }
+        .map_err(|(_, err)| err)?;
         let pipeline = pipelines.into_iter().next().unwrap();
 
-        Ok(Pipeline{
-            core,
-            pipeline
-        })
+        Ok(Pipeline { core, pipeline })
     }
 }
 
@@ -276,10 +310,12 @@ impl From<io::Error> for CreatePipelineError {
 impl Display for CreatePipelineError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            CreatePipelineError::VulkanError(vk_err) =>
-                write!(f,"Create pipeline failed! vulkan error:{}",vk_err),
-            CreatePipelineError::IoError(io_err) =>
-                write!(f,"Create pipeline failed! IO error:{}",io_err),
+            CreatePipelineError::VulkanError(vk_err) => {
+                write!(f, "Create pipeline failed! vulkan error:{}", vk_err)
+            }
+            CreatePipelineError::IoError(io_err) => {
+                write!(f, "Create pipeline failed! IO error:{}", io_err)
+            }
         }
     }
 }
@@ -292,4 +328,3 @@ impl std::error::Error for CreatePipelineError {
         }
     }
 }
-

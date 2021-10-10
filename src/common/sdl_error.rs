@@ -1,14 +1,14 @@
 extern crate sdl2_sys;
 
-use sdl2_sys::{ SDL_GetError };
+use crate::common::from_sdl_string;
+use sdl2_sys::SDL_GetError;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
-use crate::common::from_sdl_string;
 
-#[derive(Debug,Default,Clone,Hash,Eq,PartialEq)]
+#[derive(Debug, Default, Clone, Hash, Eq, PartialEq)]
 pub struct SdlError(String);
 
-pub type Result<T> = std::result::Result<T,SdlError>;
+pub type Result<T> = std::result::Result<T, SdlError>;
 
 impl SdlError {
     pub fn get() -> SdlError {
@@ -25,7 +25,7 @@ impl SdlError {
 
 impl Display for SdlError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f,"SDL error:{}",self.0)
+        write!(f, "SDL error:{}", self.0)
     }
 }
 

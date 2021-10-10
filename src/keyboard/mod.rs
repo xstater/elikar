@@ -3,63 +3,61 @@ extern crate sdl2_sys;
 use sdl2_sys::*;
 
 mod code;
-pub mod screen;
 pub mod event;
+pub mod screen;
 
-pub use code::Code;
-use std::os::raw::c_char;
-use std::ffi::{CStr};
 use crate::keyboard::screen::ScreenKeyboard;
-use xecs::System;
+pub use code::Code;
 use std::convert::Infallible;
+use std::ffi::CStr;
+use std::os::raw::c_char;
+use xecs::System;
 
-pub struct Keyboard{
-    screen : ScreenKeyboard
+pub struct Keyboard {
+    screen: ScreenKeyboard,
 }
 
 impl Keyboard {
     pub(in crate) fn new() -> Keyboard {
         Keyboard {
-            screen: ScreenKeyboard
+            screen: ScreenKeyboard,
         }
     }
 
-    pub fn name(&self,code : Code) -> String{
-        let str_ptr : *const c_char = unsafe { SDL_GetScancodeName(code.into()) };
-        unsafe{CStr::from_ptr(str_ptr)}
+    pub fn name(&self, code: Code) -> String {
+        let str_ptr: *const c_char = unsafe { SDL_GetScancodeName(code.into()) };
+        unsafe { CStr::from_ptr(str_ptr) }
             .to_str()
-            .unwrap()//unwrap here: UTF8 validation was granted by SDL
+            .unwrap() //unwrap here: UTF8 validation was granted by SDL
             .to_owned()
     }
 
-    pub fn mod_state(&self) -> Mod{
-        Mod::new(unsafe{
-            SDL_GetModState() as u32
-        })
+    pub fn mod_state(&self) -> Mod {
+        Mod::new(unsafe { SDL_GetModState() as u32 })
     }
 
-    pub fn screen_keyboard(&self) -> &ScreenKeyboard{
+    pub fn screen_keyboard(&self) -> &ScreenKeyboard {
         &self.screen
     }
 }
 
-#[derive(Debug,Clone,Copy,PartialEq,PartialOrd,Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Hash)]
 pub struct Mod(u32);
 
-impl Mod{
-    pub(in crate::keyboard) fn new(value : u32) -> Mod{
+impl Mod {
+    pub(in crate::keyboard) fn new(value: u32) -> Mod {
         Mod(value)
     }
 
-    pub fn none(&self) -> bool{
+    pub fn none(&self) -> bool {
         self.0 & SDL_Keymod::KMOD_NONE as u32 == SDL_Keymod::KMOD_NONE as u32
     }
 
-    pub fn left_shift(&self) -> bool{
+    pub fn left_shift(&self) -> bool {
         self.0 & SDL_Keymod::KMOD_LSHIFT as u32 == SDL_Keymod::KMOD_LSHIFT as u32
     }
 
-    pub fn right_shift(&self) -> bool{
+    pub fn right_shift(&self) -> bool {
         self.0 & SDL_Keymod::KMOD_RSHIFT as u32 == SDL_Keymod::KMOD_RSHIFT as u32
     }
 
@@ -67,11 +65,11 @@ impl Mod{
         self.left_shift() || self.right_shift()
     }
 
-    pub fn left_ctrl(&self) -> bool{
+    pub fn left_ctrl(&self) -> bool {
         self.0 & SDL_Keymod::KMOD_LCTRL as u32 == SDL_Keymod::KMOD_LCTRL as u32
     }
 
-    pub fn right_ctrl(&self) -> bool{
+    pub fn right_ctrl(&self) -> bool {
         self.0 & SDL_Keymod::KMOD_RCTRL as u32 == SDL_Keymod::KMOD_RCTRL as u32
     }
 
@@ -79,11 +77,11 @@ impl Mod{
         self.left_ctrl() || self.right_ctrl()
     }
 
-    pub fn left_alt(&self) -> bool{
+    pub fn left_alt(&self) -> bool {
         self.0 & SDL_Keymod::KMOD_LALT as u32 == SDL_Keymod::KMOD_LALT as u32
     }
 
-    pub fn right_alt(&self) -> bool{
+    pub fn right_alt(&self) -> bool {
         self.0 & SDL_Keymod::KMOD_RALT as u32 == SDL_Keymod::KMOD_RALT as u32
     }
 
@@ -91,11 +89,11 @@ impl Mod{
         self.left_alt() || self.right_alt()
     }
 
-    pub fn left_gui(&self) -> bool{
+    pub fn left_gui(&self) -> bool {
         self.0 & SDL_Keymod::KMOD_LGUI as u32 == SDL_Keymod::KMOD_LGUI as u32
     }
 
-    pub fn right_gui(&self) -> bool{
+    pub fn right_gui(&self) -> bool {
         self.0 & SDL_Keymod::KMOD_RGUI as u32 == SDL_Keymod::KMOD_RGUI as u32
     }
 
@@ -103,15 +101,15 @@ impl Mod{
         self.left_gui() || self.right_gui()
     }
 
-    pub fn num(&self) -> bool{
+    pub fn num(&self) -> bool {
         self.0 & SDL_Keymod::KMOD_NUM as u32 == SDL_Keymod::KMOD_NUM as u32
     }
 
-    pub fn caps(&self) -> bool{
+    pub fn caps(&self) -> bool {
         self.0 & SDL_Keymod::KMOD_CAPS as u32 == SDL_Keymod::KMOD_CAPS as u32
     }
 
-    pub fn mode(&self) -> bool{
+    pub fn mode(&self) -> bool {
         self.0 & SDL_Keymod::KMOD_MODE as u32 == SDL_Keymod::KMOD_MODE as u32
     }
 }

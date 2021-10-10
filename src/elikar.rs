@@ -1,33 +1,33 @@
 extern crate sdl2_sys;
 
-use sdl2_sys::*;
-use std::error::Error;
-use std::fmt::{Display, Formatter};
-use crate::common::SdlError;
-use xecs::{System, Stage};
-use std::time::{Instant, Duration};
-use std::collections::HashMap;
-use crate::window;
 use crate::clipboard::Clipboard;
-use crate::sysinfo::SystemInfo;
-use std::any::TypeId;
-use std::convert::Infallible;
+use crate::common::SdlError;
+use crate::events::PollEvents;
 use crate::keyboard::Keyboard;
 use crate::mouse::Mouse;
-use crate::events::PollEvents;
+use crate::sysinfo::SystemInfo;
 use crate::text_input::TextInput;
+use crate::window;
+use sdl2_sys::*;
+use std::any::TypeId;
+use std::collections::HashMap;
+use std::convert::Infallible;
+use std::error::Error;
+use std::fmt::{Display, Formatter};
+use std::time::{Duration, Instant};
+use xecs::{Stage, System};
 
 #[derive(Debug)]
 pub struct ElikarStates {
-    quit : bool,
-    frames_count : usize,
-    start_time : Instant,
-    frame_time : Duration,
-    add_stage_buffer : Option<Vec<(String,Stage)>>,
-    remove_stage_buffer : Option<Vec<String>>,
-    change_current : Option<String>,
-    deactivated_system_buffer : Option<Vec<TypeId>>,
-    activated_system_buffer : Option<Vec<TypeId>>,
+    quit: bool,
+    frames_count: usize,
+    start_time: Instant,
+    frame_time: Duration,
+    add_stage_buffer: Option<Vec<(String, Stage)>>,
+    remove_stage_buffer: Option<Vec<String>>,
+    change_current: Option<String>,
+    deactivated_system_buffer: Option<Vec<TypeId>>,
+    activated_system_buffer: Option<Vec<TypeId>>,
 }
 
 impl<'a> System<'a> for ElikarStates {
@@ -39,44 +39,68 @@ impl<'a> System<'a> for ElikarStates {
 
 #[derive(Debug)]
 pub struct Elikar {
-    current_stage : String,
-    stages : HashMap<String,Stage>
+    current_stage: String,
+    stages: HashMap<String, Stage>,
 }
 
 #[derive(Debug)]
-pub enum SdlInitError{
+pub enum SdlInitError {
     Timer(SdlError),
     Audio(SdlError),
     Video(SdlError),
     Joystick(SdlError),
     Haptic(SdlError),
     GameController(SdlError),
-    Events(SdlError)
+    Events(SdlError),
 }
 
 impl Display for SdlInitError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match &self {
             SdlInitError::Timer(err) => {
-                write!(f,"Initialize SDL Time subsystem failed : {}", err.as_str())
+                write!(f, "Initialize SDL Time subsystem failed : {}", err.as_str())
             }
             SdlInitError::Audio(err) => {
-                write!(f,"Initialize SDL Audio subsystem failed : {}", err.as_str())
+                write!(
+                    f,
+                    "Initialize SDL Audio subsystem failed : {}",
+                    err.as_str()
+                )
             }
             SdlInitError::Video(err) => {
-                write!(f,"Initialize SDL Video subsystem failed : {}", err.as_str())
+                write!(
+                    f,
+                    "Initialize SDL Video subsystem failed : {}",
+                    err.as_str()
+                )
             }
             SdlInitError::Joystick(err) => {
-                write!(f,"Initialize SDL Joystick subsystem failed : {}", err.as_str())
+                write!(
+                    f,
+                    "Initialize SDL Joystick subsystem failed : {}",
+                    err.as_str()
+                )
             }
             SdlInitError::Haptic(err) => {
-                write!(f,"Initialize SDL Haptic subsystem failed : {}", err.as_str())
+                write!(
+                    f,
+                    "Initialize SDL Haptic subsystem failed : {}",
+                    err.as_str()
+                )
             }
             SdlInitError::GameController(err) => {
-                write!(f,"Initialize SDL GameController subsystem failed : {}", err.as_str())
+                write!(
+                    f,
+                    "Initialize SDL GameController subsystem failed : {}",
+                    err.as_str()
+                )
             }
             SdlInitError::Events(err) => {
-                write!(f,"Initialize SDL Events subsystem failed : {}", err.as_str())
+                write!(
+                    f,
+                    "Initialize SDL Events subsystem failed : {}",
+                    err.as_str()
+                )
             }
         }
     }
@@ -91,37 +115,35 @@ impl Error for SdlInitError {
             SdlInitError::Joystick(err) => err,
             SdlInitError::Haptic(err) => err,
             SdlInitError::GameController(err) => err,
-            SdlInitError::Events(err) => err
+            SdlInitError::Events(err) => err,
         })
     }
 }
 
-#[derive(Debug,Default,Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct StageNotFound(String);
 
 impl Display for StageNotFound {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f,"Cannot find any stage named {}",&self.0)
+        write!(f, "Cannot find any stage named {}", &self.0)
     }
 }
 
-impl Error for StageNotFound{}
+impl Error for StageNotFound {}
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub enum RemoveStageError {
     UsingNow,
-    StageNotFound(StageNotFound)
+    StageNotFound(StageNotFound),
 }
 
 impl Display for RemoveStageError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             RemoveStageError::UsingNow => {
-                write!(f,"Stage is current stage so that cannot be removed.")
+                write!(f, "Stage is current stage so that cannot be removed.")
             }
-            RemoveStageError::StageNotFound(stage_not_found) => {
-                stage_not_found.fmt(f)
-            }
+            RemoveStageError::StageNotFound(stage_not_found) => stage_not_found.fmt(f),
         }
     }
 }
@@ -130,7 +152,7 @@ impl Error for RemoveStageError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             RemoveStageError::UsingNow => Option::None,
-            RemoveStageError::StageNotFound(stage_not_found) => Some(stage_not_found)
+            RemoveStageError::StageNotFound(stage_not_found) => Some(stage_not_found),
         }
     }
 }
@@ -159,24 +181,27 @@ impl Elikar {
             return Err(SdlInitError::Events(SdlError::get()));
         }
         let mut stage = Stage::new();
-        stage.add_system(ElikarStates {
-            quit: false,
-            frames_count : 0,
-            start_time : Instant::now(),
-            frame_time: Duration::from_secs(1),
-            add_stage_buffer: Option::None,
-            remove_stage_buffer: Option::None,
-            change_current: Option::None,
-            deactivated_system_buffer: Option::None,
-            activated_system_buffer: Option::None,
-        }).add_system(Mouse::new())
+        stage
+            .add_system(ElikarStates {
+                quit: false,
+                frames_count: 0,
+                start_time: Instant::now(),
+                frame_time: Duration::from_secs(1),
+                add_stage_buffer: Option::None,
+                remove_stage_buffer: Option::None,
+                change_current: Option::None,
+                deactivated_system_buffer: Option::None,
+                activated_system_buffer: Option::None,
+            })
+            .add_system(Mouse::new())
             .add_system(Keyboard::new())
             .add_system(Clipboard::new())
             .add_system(SystemInfo::new())
             .add_system(window::Manager::new())
             .add_system(TextInput::new())
             .add_system(PollEvents::new());
-        stage.deactivate::<ElikarStates>()
+        stage
+            .deactivate::<ElikarStates>()
             .deactivate::<Mouse>()
             .deactivate::<Keyboard>()
             .deactivate::<Clipboard>()
@@ -187,9 +212,9 @@ impl Elikar {
             current_stage: "default".to_owned(),
             stages: {
                 let mut map = HashMap::new();
-                map.insert("default".to_owned(),stage);
+                map.insert("default".to_owned(), stage);
                 map
-            }
+            },
         })
     }
 
@@ -208,16 +233,14 @@ impl Elikar {
     }
 
     pub fn stage_names(&self) -> Vec<String> {
-        self.stages.keys()
-            .cloned()
-            .collect()
+        self.stages.keys().cloned().collect()
     }
 
-    pub fn has_stage(&self,name : &str) -> bool {
+    pub fn has_stage(&self, name: &str) -> bool {
         self.stages.contains_key(name)
     }
 
-    pub fn change_current(&mut self,name : &str) -> Result<(),StageNotFound> {
+    pub fn change_current(&mut self, name: &str) -> Result<(), StageNotFound> {
         if self.has_stage(name) {
             self.current_stage = name.to_owned();
             Ok(())
@@ -226,39 +249,44 @@ impl Elikar {
         }
     }
 
-    pub fn remove_stage(&mut self,name : &str) -> Result<Stage,StageNotFound> {
-        self.stages.remove(name).ok_or(StageNotFound(name.to_owned()))
+    pub fn remove_stage(&mut self, name: &str) -> Result<Stage, StageNotFound> {
+        self.stages
+            .remove(name)
+            .ok_or(StageNotFound(name.to_owned()))
     }
 
-    pub fn add_stage(&mut self,name : &str,mut stage : Stage) {
-        stage.add_system(ElikarStates{
-            quit: false,
-            frames_count: 0,
-            start_time: Instant::now(),
-            frame_time: Duration::from_secs(2),
-            add_stage_buffer: Option::None,
-            remove_stage_buffer: Option::None,
-            change_current: Option::None,
-            deactivated_system_buffer: Option::None,
-            activated_system_buffer: Option::None,
-        }).add_system(Mouse::new())
+    pub fn add_stage(&mut self, name: &str, mut stage: Stage) {
+        stage
+            .add_system(ElikarStates {
+                quit: false,
+                frames_count: 0,
+                start_time: Instant::now(),
+                frame_time: Duration::from_secs(2),
+                add_stage_buffer: Option::None,
+                remove_stage_buffer: Option::None,
+                change_current: Option::None,
+                deactivated_system_buffer: Option::None,
+                activated_system_buffer: Option::None,
+            })
+            .add_system(Mouse::new())
             .add_system(Keyboard::new())
             .add_system(Clipboard::new())
             .add_system(SystemInfo::new())
             .add_system(TextInput::new())
             .add_system(window::Manager::new())
             .add_system(PollEvents::new());
-        stage.deactivate::<ElikarStates>()
+        stage
+            .deactivate::<ElikarStates>()
             .deactivate::<Mouse>()
             .deactivate::<Keyboard>()
             .deactivate::<Clipboard>()
             .deactivate::<SystemInfo>()
             .deactivate::<TextInput>()
             .deactivate::<window::Manager>();
-    self.stages.insert(name.to_owned(), stage);
-}
+        self.stages.insert(name.to_owned(), stage);
+    }
 
-pub fn run(&mut self) {
+    pub fn run(&mut self) {
         let mut frames_count = 0;
         'main_loop: loop {
             let now = Instant::now();
@@ -278,39 +306,41 @@ pub fn run(&mut self) {
             self.current_stage_mut().run();
             // after run
             // activate systems
-            let systems = self.current_stage_ref()
+            let systems = self
+                .current_stage_ref()
                 .system_data_mut::<ElikarStates>()
                 .activated_system_buffer
                 .take();
             if let Some(systems) = systems {
                 for system in systems {
-                    self.current_stage_mut()
-                        .activate_dyn(system);
+                    self.current_stage_mut().activate_dyn(system);
                 }
             }
             // deactivate systems
-            let systems = self.current_stage_ref()
+            let systems = self
+                .current_stage_ref()
                 .system_data_mut::<ElikarStates>()
                 .deactivated_system_buffer
                 .take();
             if let Some(systems) = systems {
                 for system in systems {
-                    self.current_stage_mut()
-                        .deactivate_dyn(system);
+                    self.current_stage_mut().deactivate_dyn(system);
                 }
             }
             // add stage
-            let add_buffer = self.current_stage_ref()
-                    .system_data_mut::<ElikarStates>()
-                    .add_stage_buffer
-                    .take();
+            let add_buffer = self
+                .current_stage_ref()
+                .system_data_mut::<ElikarStates>()
+                .add_stage_buffer
+                .take();
             if let Some(buffer) = add_buffer {
-                for (name,stage) in buffer {
-                    self.add_stage(name.as_str(),stage);
+                for (name, stage) in buffer {
+                    self.add_stage(name.as_str(), stage);
                 }
             }
             // remove stage
-            let remove_buffer = self.current_stage_ref()
+            let remove_buffer = self
+                .current_stage_ref()
                 .system_data_mut::<ElikarStates>()
                 .remove_stage_buffer
                 .take();
@@ -320,7 +350,8 @@ pub fn run(&mut self) {
                 }
             }
             // change current stage
-            let current = self.current_stage_ref()
+            let current = self
+                .current_stage_ref()
                 .system_data_mut::<ElikarStates>()
                 .change_current
                 .take();
@@ -329,12 +360,13 @@ pub fn run(&mut self) {
             }
             frames_count += 1;
             self.current_stage_ref()
-                .system_data_mut::<ElikarStates>().frame_time = now.elapsed();
+                .system_data_mut::<ElikarStates>()
+                .frame_time = now.elapsed();
         }
     }
 }
 
-impl Drop for Elikar{
+impl Drop for Elikar {
     fn drop(&mut self) {
         unsafe {
             SDL_Quit();
@@ -365,17 +397,17 @@ impl ElikarStates {
         self.start_time.elapsed()
     }
 
-    pub fn add_stage(&mut self,name : &str,stage : Stage) {
+    pub fn add_stage(&mut self, name: &str, stage: Stage) {
         if self.add_stage_buffer.is_none() {
             self.add_stage_buffer = Some(vec![]);
         }
         self.add_stage_buffer
             .as_mut()
             .unwrap()
-            .push((name.to_owned(),stage));
+            .push((name.to_owned(), stage));
     }
 
-    pub fn remove_stage(&mut self,name : &str) {
+    pub fn remove_stage(&mut self, name: &str) {
         if self.remove_stage_buffer.is_none() {
             self.remove_stage_buffer = Some(vec![]);
         }
@@ -385,11 +417,11 @@ impl ElikarStates {
             .push(name.to_owned());
     }
 
-    pub fn change_current(&mut self,name : &str) {
+    pub fn change_current(&mut self, name: &str) {
         self.change_current = Some(name.to_owned());
     }
 
-    pub fn activate_system<T : for<'a> System<'a>>(&mut self){
+    pub fn activate_system<T: for<'a> System<'a>>(&mut self) {
         if self.activated_system_buffer.is_none() {
             self.activated_system_buffer = Some(vec![]);
         }
@@ -399,7 +431,7 @@ impl ElikarStates {
             .push(TypeId::of::<T>());
     }
 
-    pub fn deactivate_system<T : for<'a> System<'a>>(&mut self) {
+    pub fn deactivate_system<T: for<'a> System<'a>>(&mut self) {
         if self.deactivated_system_buffer.is_none() {
             self.deactivated_system_buffer = Some(vec![]);
         }
@@ -408,5 +440,4 @@ impl ElikarStates {
             .unwrap()
             .push(TypeId::of::<T>());
     }
-
 }

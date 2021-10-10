@@ -1,17 +1,17 @@
-use std::sync::Arc;
-use crate::render::vulkan::core::{Core, AshRaw};
+use crate::render::vulkan::core::{AshRaw, Core};
 use ash::vk;
+use std::sync::Arc;
 
-pub struct Shader{
-    core : Arc<Core>,
-    shader_module : vk::ShaderModule
+pub struct Shader {
+    core: Arc<Core>,
+    shader_module: vk::ShaderModule,
 }
 
 impl Shader {
-    pub(in crate::render) fn new(core : Arc<Core>,shader_module : vk::ShaderModule) -> Self {
+    pub(in crate::render) fn new(core: Arc<Core>, shader_module: vk::ShaderModule) -> Self {
         Shader {
             core,
-            shader_module
+            shader_module,
         }
     }
 }
@@ -27,7 +27,9 @@ impl AshRaw for Shader {
 impl Drop for Shader {
     fn drop(&mut self) {
         unsafe {
-            self.core.device.destroy_shader_module(self.shader_module,Option::None)
+            self.core
+                .device
+                .destroy_shader_module(self.shader_module, Option::None)
         }
     }
 }

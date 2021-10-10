@@ -12,7 +12,7 @@ use xecs::System;
 pub struct ImGui {
     window_id: WindowId,
     context: imgui::Context,
-    draw_data : Option<*const DrawData>
+    draw_data: Option<*const DrawData>,
 }
 
 impl ImGui {
@@ -34,13 +34,13 @@ impl ImGui {
 
     pub(in crate::imgui) fn draw_data(&self) -> &DrawData {
         let ptr = self.draw_data.unwrap();
-        unsafe {
-            &*ptr
-        }
+        unsafe { &*ptr }
     }
 
-    pub fn draw_frame<F>(&mut self,f : F) 
-        where F : Fn(&Ui<'_>){
+    pub fn draw_frame<F>(&mut self, f: F)
+    where
+        F: Fn(&Ui<'_>),
+    {
         let ui = self.context.frame();
         f(&ui);
         let draw_data = ui.render();
@@ -85,8 +85,7 @@ impl<'a> System<'a> for ImGui {
         let (draw_w, draw_h) = window.vk_drawable_size();
 
         io.display_size = [w as _, h as _];
-        io.display_framebuffer_scale =
-            [draw_w as f32 / w as f32, draw_h as f32 / h as f32];
+        io.display_framebuffer_scale = [draw_w as f32 / w as f32, draw_h as f32 / h as f32];
 
         io.delta_time = states.now_frame_time().as_secs_f32();
 

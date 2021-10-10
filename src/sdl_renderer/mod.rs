@@ -1,26 +1,26 @@
 pub mod point;
-pub mod system;
-pub mod sprite;
 pub mod rect;
+pub mod sprite;
+pub mod system;
 
-use sdl2_sys::*;
-use crate::window::Window;
 use crate::common::{Result, SdlError};
+use crate::window::Window;
+use sdl2_sys::*;
 use std::os::raw::c_int;
-use xblend::{RGBA,rgba};
+use xblend::{rgba, RGBA};
 
 pub type Color = RGBA<u8>;
 
-pub struct Renderer{
-    sdl_renderer : *mut SDL_Renderer,
-    clear_color : Color,
+pub struct Renderer {
+    sdl_renderer: *mut SDL_Renderer,
+    clear_color: Color,
 }
 
 impl Renderer {
-    pub unsafe fn from_ptr(ptr : *mut SDL_Renderer) -> Renderer {
+    pub unsafe fn from_ptr(ptr: *mut SDL_Renderer) -> Renderer {
         Renderer {
             sdl_renderer: ptr,
-            clear_color : rgba!(0,0,0,255)
+            clear_color: rgba!(0, 0, 0, 255),
         }
     }
 
@@ -29,33 +29,31 @@ impl Renderer {
     }
 
     pub fn builder() -> RendererBuilder {
-        RendererBuilder{
+        RendererBuilder {
             index: -1,
-            flags: 0
+            flags: 0,
         }
     }
 
-    pub fn clear(&mut self,color : Color){
+    pub fn clear(&mut self, color: Color) {
         self.clear_color = color;
     }
 }
 
 impl Drop for Renderer {
     fn drop(&mut self) {
-        unsafe {
-            SDL_DestroyRenderer(self.sdl_renderer)
-        }
+        unsafe { SDL_DestroyRenderer(self.sdl_renderer) }
     }
 }
 
-#[derive(Debug,Copy,Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct RendererBuilder {
-    index : c_int,
-    flags : u32
+    index: c_int,
+    flags: u32,
 }
 
 impl RendererBuilder {
-    pub fn index(&mut self,index : i32) -> &mut Self{
+    pub fn index(&mut self, index: i32) -> &mut Self {
         self.index = index;
         self
     }
@@ -63,41 +61,40 @@ impl RendererBuilder {
     pub fn software(self) -> Self {
         RendererBuilder {
             flags: self.flags | SDL_RendererFlags::SDL_RENDERER_SOFTWARE as u32,
-            .. self
+            ..self
         }
     }
 
     pub fn accelerated(self) -> Self {
         RendererBuilder {
             flags: self.flags | SDL_RendererFlags::SDL_RENDERER_ACCELERATED as u32,
-                .. self
+            ..self
         }
     }
 
     pub fn vsync(self) -> Self {
         RendererBuilder {
-            flags : self.flags | SDL_RendererFlags::SDL_RENDERER_PRESENTVSYNC as u32,
-            .. self
+            flags: self.flags | SDL_RendererFlags::SDL_RENDERER_PRESENTVSYNC as u32,
+            ..self
         }
     }
 
     pub fn target_texture(self) -> Self {
         RendererBuilder {
-            flags : self.flags | SDL_RendererFlags::SDL_RENDERER_TARGETTEXTURE as u32,
-            .. self
+            flags: self.flags | SDL_RendererFlags::SDL_RENDERER_TARGETTEXTURE as u32,
+            ..self
         }
     }
 
-    pub fn build(self,window : &Window) -> Result<Renderer> {
-        let renderer_ptr : *mut SDL_Renderer = unsafe {
-            SDL_CreateRenderer(window.window_ptr(), self.index, self.flags)
-        };
+    pub fn build(self, window: &Window) -> Result<Renderer> {
+        let renderer_ptr: *mut SDL_Renderer =
+            unsafe { SDL_CreateRenderer(window.window_ptr(), self.index, self.flags) };
         if renderer_ptr.is_null() {
             Err(SdlError::get())
         } else {
-            Ok(Renderer{
+            Ok(Renderer {
                 sdl_renderer: renderer_ptr,
-                clear_color: rgba!(0,0,0,255)
+                clear_color: rgba!(0, 0, 0, 255),
             })
         }
     }

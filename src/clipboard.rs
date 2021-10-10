@@ -1,14 +1,14 @@
 extern crate sdl2_sys;
 
+use crate::common::{from_sdl_string, Result, SdlError};
 use sdl2_sys::*;
-use std::os::raw::{c_char, c_void, c_int};
-use crate::common::{SdlError, Result, from_sdl_string};
-use std::ffi::CString;
-use xecs::System;
 use std::convert::Infallible;
+use std::ffi::CString;
+use std::os::raw::{c_char, c_int, c_void};
+use xecs::System;
 
 #[derive(Debug)]
-pub struct Clipboard{}
+pub struct Clipboard {}
 
 impl Clipboard {
     pub(in crate) fn new() -> Clipboard {
@@ -19,7 +19,7 @@ impl Clipboard {
         unsafe { SDL_HasClipboardText() == SDL_bool::SDL_TRUE }
     }
 
-    pub fn set(&mut self,text: &str) -> Result<()> {
+    pub fn set(&mut self, text: &str) -> Result<()> {
         // because text is a rust string
         // this unwrap cannot be failed
         let text = CString::new(text).unwrap();

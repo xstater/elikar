@@ -1,21 +1,21 @@
 extern crate sdl2_sys;
 
-use sdl2_sys::SDL_MouseMotionEvent;
 use crate::mouse::ButtonState;
 use crate::window::WindowId;
+use sdl2_sys::SDL_MouseMotionEvent;
 
-#[derive(Debug,Clone,Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct EventInfo {
-    pub timestamp : u32,
-    pub window_id : WindowId,
-    pub which : u32,
-    pub state : ButtonState,
-    pub position : (i32,i32),
-    pub relative : (i32,i32)
+    pub timestamp: u32,
+    pub window_id: WindowId,
+    pub which: u32,
+    pub state: ButtonState,
+    pub position: (i32, i32),
+    pub relative: (i32, i32),
 }
 
 impl From<SDL_MouseMotionEvent> for EventInfo {
-    fn from(sdl_motion : SDL_MouseMotionEvent) -> Self {
+    fn from(sdl_motion: SDL_MouseMotionEvent) -> Self {
         EventInfo {
             timestamp: sdl_motion.timestamp,
             window_id: WindowId::from_u32(sdl_motion.windowID),

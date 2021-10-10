@@ -3,7 +3,7 @@ extern crate sdl2_sys;
 use sdl2_sys::*;
 use std::mem::transmute;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash,)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(u32)]
 pub enum Code {
     Unknown = 0,
@@ -249,24 +249,24 @@ pub enum Code {
     App2 = 284,
     Audiorewind = 285,
     Audiofastforward = 286,
-    SdlNumScancodes = 512
+    SdlNumScancodes = 512,
 }
 
 impl From<SDL_Scancode> for Code {
     fn from(sdl_scancode: SDL_Scancode) -> Self {
         // safety: because sdl_scancode = code
         unsafe {
-            let num : u32 = transmute(sdl_scancode);
+            let num: u32 = transmute(sdl_scancode);
             transmute(num)
         }
     }
 }
 
 impl From<Code> for SDL_Scancode {
-    fn from(code : Code) -> Self {
+    fn from(code: Code) -> Self {
         // safety: because sdl_scancode = code
         unsafe {
-            let num : u32 = transmute(code);
+            let num: u32 = transmute(code);
             transmute(num)
         }
     }

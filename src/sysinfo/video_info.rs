@@ -1,67 +1,72 @@
 extern crate sdl2_sys;
 
+use crate::common::{from_sdl_string, Result, SdlError};
 use sdl2_sys::*;
-use std::os::raw::{c_char, c_int};
 use std::fmt::{Display, Formatter};
+use std::os::raw::{c_char, c_int};
 use std::ptr::null_mut;
-use crate::common::{Result, SdlError, from_sdl_string};
 
-#[derive(Debug,Default,Copy,Clone,PartialOrd,PartialEq)]
-pub struct  DPI{
-    ddpi : f32,
-    hdpi : f32,
-    vdpi : f32
+#[derive(Debug, Default, Copy, Clone, PartialOrd, PartialEq)]
+pub struct DPI {
+    ddpi: f32,
+    hdpi: f32,
+    vdpi: f32,
 }
 
-#[derive(Debug,Default,Copy,Clone,PartialOrd,PartialEq)]
-pub struct DisplayMode{
-    size : (i32,i32),
-    refresh_rate : u32
+#[derive(Debug, Default, Copy, Clone, PartialOrd, PartialEq)]
+pub struct DisplayMode {
+    size: (i32, i32),
+    refresh_rate: u32,
 }
 
-#[derive(Debug,Default,Clone)]
-pub struct Screen{
-    dpi : DPI,
-    bound : (i32,i32,i32,i32),
-    modes : Vec<DisplayMode>,
-    name : String
+#[derive(Debug, Default, Clone)]
+pub struct Screen {
+    dpi: DPI,
+    bound: (i32, i32, i32, i32),
+    modes: Vec<DisplayMode>,
+    name: String,
 }
 
-
-impl Display for DPI{
+impl Display for DPI {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f,"(ddpi:{},hdpi:{},vdpi:{})",self.ddpi,self.hdpi,self.vdpi)
+        write!(
+            f,
+            "(ddpi:{},hdpi:{},vdpi:{})",
+            self.ddpi, self.hdpi, self.vdpi
+        )
     }
 }
 
 impl Display for DisplayMode {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f,"{} x {} @ {}Hz",self.size.0,self.size.1,self.refresh_rate)
+        write!(
+            f,
+            "{} x {} @ {}Hz",
+            self.size.0, self.size.1, self.refresh_rate
+        )
     }
 }
 
-impl Display for Screen{
+impl Display for Screen {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f,"Screen:\n\tname:{}\n\tbound:({},{},{},{})\n\tdpi:{}\n\tdisplay modes:\n",
-            self.name,
-            self.bound.0,
-            self.bound.1,
-            self.bound.2,
-            self.bound.3,
-            self.dpi) ?;
+        write!(
+            f,
+            "Screen:\n\tname:{}\n\tbound:({},{},{},{})\n\tdpi:{}\n\tdisplay modes:\n",
+            self.name, self.bound.0, self.bound.1, self.bound.2, self.bound.3, self.dpi
+        )?;
         for mode in &self.modes {
-            write!(f,"\t\t{}\n",mode) ?;
+            write!(f, "\t\t{}\n", mode)?;
         }
         Ok(())
     }
 }
 
 #[derive(Debug)]
-pub struct VideoInfo{}
+pub struct VideoInfo {}
 
 impl VideoInfo {
     pub(in crate::sysinfo) fn new() -> VideoInfo {
-        VideoInfo{}
+        VideoInfo {}
     }
 
     pub fn all_drivers_name(&self) -> Result<Vec<String>> {
@@ -96,18 +101,26 @@ impl VideoInfo {
                 x: 0,
                 y: 0,
                 w: 0,
-                h: 0
+                h: 0,
             };
             if unsafe { SDL_GetDisplayBounds(i, &mut bound) } < 0 {
-                return Err(SdlError::get())
+                return Err(SdlError::get());
             }
             screen.bound.0 = bound.x;
             screen.bound.1 = bound.y;
             screen.bound.2 = bound.w;
             screen.bound.3 = bound.h;
 
-            if unsafe { SDL_GetDisplayDPI(i, &mut screen.dpi.ddpi, &mut screen.dpi.hdpi, &mut screen.dpi.vdpi) } < 0 {
-                return Err(SdlError::get())
+            if unsafe {
+                SDL_GetDisplayDPI(
+                    i,
+                    &mut screen.dpi.ddpi,
+                    &mut screen.dpi.hdpi,
+                    &mut screen.dpi.vdpi,
+                )
+            } < 0
+            {
+                return Err(SdlError::get());
             }
 
             let mode_num = unsafe { SDL_GetNumDisplayModes(i) };
@@ -117,14 +130,14 @@ impl VideoInfo {
                     w: 0,
                     h: 0,
                     refresh_rate: 0,
-                    driverdata: null_mut()
+                    driverdata: null_mut(),
                 };
                 if unsafe { SDL_GetDisplayMode(i, j, &mut sdlmode) } < 0 {
-                    return Err(SdlError::get())
+                    return Err(SdlError::get());
                 }
                 screen.modes.push(DisplayMode {
                     size: (sdlmode.w, sdlmode.h),
-                    refresh_rate: sdlmode.refresh_rate as u32
+                    refresh_rate: sdlmode.refresh_rate as u32,
                 })
             }
             screens.push(screen);
@@ -132,4 +145,3 @@ impl VideoInfo {
         Ok(screens)
     }
 }
-

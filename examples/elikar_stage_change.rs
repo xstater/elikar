@@ -1,31 +1,31 @@
-use elikar::{Elikar, ElikarStates, window};
-use xecs::{System, Stage};
-use std::cell::{RefMut, Ref};
 use elikar::events::PollEvents;
 use elikar::keyboard::Code;
+use elikar::{window, Elikar, ElikarStates};
+use std::cell::{Ref, RefMut};
 use std::convert::Infallible;
+use xecs::{Stage, System};
 
 struct PrintSystem(String);
-impl<'a> System<'a> for PrintSystem{
+impl<'a> System<'a> for PrintSystem {
     type InitResource = ();
     type Resource = ();
     type Dependencies = ();
     type Error = Infallible;
 
-    fn update(&'a mut self, _ : ()) -> Result<(),Infallible> {
-        println!("PrintSystem:{}",&self.0);
+    fn update(&'a mut self, _: ()) -> Result<(), Infallible> {
+        println!("PrintSystem:{}", &self.0);
         Ok(())
     }
 }
 
 struct ChangeToDefaultStage;
-impl<'a> System<'a> for ChangeToDefaultStage{
+impl<'a> System<'a> for ChangeToDefaultStage {
     type InitResource = ();
     type Resource = &'a mut ElikarStates;
     type Dependencies = ();
     type Error = Infallible;
 
-    fn update(&'a mut self, mut states : RefMut<'a,ElikarStates>) -> Result<(),Self::Error>{
+    fn update(&'a mut self, mut states: RefMut<'a, ElikarStates>) -> Result<(), Self::Error> {
         states.change_current("default");
         Ok(())
     }
@@ -38,11 +38,12 @@ impl<'a> System<'a> for CreateAStage {
     type Dependencies = ();
     type Error = Infallible;
 
-    fn init(&'a mut self, mut states : RefMut<'a,ElikarStates>) -> Result<(),Infallible>{
+    fn init(&'a mut self, mut states: RefMut<'a, ElikarStates>) -> Result<(), Infallible> {
         let mut stage = Stage::new();
-        stage.add_system(PrintSystem("Fuck stage".to_owned()))
+        stage
+            .add_system(PrintSystem("Fuck stage".to_owned()))
             .add_system(ChangeToDefaultStage);
-        states.add_stage("fuck",stage);
+        states.add_stage("fuck", stage);
         Ok(())
     }
 }
@@ -50,11 +51,14 @@ impl<'a> System<'a> for CreateAStage {
 struct QuitSystem;
 impl<'a> System<'a> for QuitSystem {
     type InitResource = ();
-    type Resource = (&'a PollEvents,&'a mut ElikarStates);
+    type Resource = (&'a PollEvents, &'a mut ElikarStates);
     type Dependencies = PollEvents;
     type Error = Infallible;
 
-    fn update(&'a mut self, (events,mut states) : (Ref<'a,PollEvents>,RefMut<'a,ElikarStates>)) -> Result<(),Infallible> {
+    fn update(
+        &'a mut self,
+        (events, mut states): (Ref<'a, PollEvents>, RefMut<'a, ElikarStates>),
+    ) -> Result<(), Infallible> {
         if let Some(_) = events.quit {
             states.quit()
         }
@@ -65,11 +69,14 @@ impl<'a> System<'a> for QuitSystem {
 struct ChangeStage;
 impl<'a> System<'a> for ChangeStage {
     type InitResource = ();
-    type Resource = (&'a PollEvents,&'a mut ElikarStates);
+    type Resource = (&'a PollEvents, &'a mut ElikarStates);
     type Dependencies = PollEvents;
     type Error = Infallible;
 
-    fn update(&'a mut self,(events,mut states) : (Ref<'a,PollEvents>,RefMut<'a,ElikarStates>)) -> Result<(),Infallible>{
+    fn update(
+        &'a mut self,
+        (events, mut states): (Ref<'a, PollEvents>, RefMut<'a, ElikarStates>),
+    ) -> Result<(), Infallible> {
         for info in &events.key_down {
             if info.code == Code::P {
                 states.change_current("fuck")
@@ -79,10 +86,11 @@ impl<'a> System<'a> for ChangeStage {
     }
 }
 
-fn main(){
+fn main() {
     let mut game = Elikar::new().unwrap();
     {
-        let mut manager = game.current_stage_ref()
+        let mut manager = game
+            .current_stage_ref()
             .system_data_mut::<window::Manager>();
         manager.create_window().build().unwrap();
     }
