@@ -6,7 +6,7 @@ use elikar::render::vulkan::{PresentMode, Vulkan};
 use elikar::{window, Elikar, ElikarStates};
 use std::cell::{Ref, RefMut};
 use std::convert::Infallible;
-use xecs::System;
+use xecs::{End, System};
 
 struct Quit;
 impl<'a> System<'a> for Quit {
@@ -80,19 +80,18 @@ struct RenderCrash;
 impl<'a> System<'a> for RenderCrash {
     type InitResource = ();
     type Resource = &'a mut xecs::Errors;
-    type Dependencies = ImGuiRenderer<DrawGui>;
+    type Dependencies = End;
     type Error = Infallible;
 
     fn update(&'a mut self, mut errors: RefMut<'a, xecs::Errors>) -> Result<(), Self::Error> {
-        if let Some(error) = errors.fetch_error::<ImGuiRenderer<DrawGui>>() {
-            panic!("Caught error:{}", error)
+        for error in errors.fetch_all_errors() {
+            panic!("Caught Error : {}",&error);
         }
-
         Ok(())
     }
 }
 
-fn main() {
+fn main(){
     let mut game = Elikar::new().unwrap();
 
     let id = game
@@ -101,6 +100,7 @@ fn main() {
         .create_window()
         .vulkan()
         .title("imgui render test")
+        .resizable()
         .build()
         .unwrap()
         .id();
@@ -127,7 +127,8 @@ fn main() {
         .add_system(ImGui::from_window_id(id))
         .add_system(ImGuiRenderer::<DrawGui>::new())
         .add_system(ImGuiEventSystem::new())
-        .add_system(DrawGui);
+        .add_system(DrawGui)
+        .add_system(RenderCrash);
 
     game.run()
 }
