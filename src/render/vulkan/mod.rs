@@ -21,16 +21,16 @@ macro_rules! offset_of {
 }
 
 pub struct Vulkan {
-    core: Arc<core::Core>,
-    surface: vk::SurfaceKHR,
-    surface_format: vk::SurfaceFormatKHR,
-    surface_extent: vk::Extent2D,
-    swapchain: vk::SwapchainKHR,
-    swapchain_image_views: Vec<core::ImageView>,
-    render_command_buffers: Vec<vk::CommandBuffer>,
-    image_available_semaphore: core::Semaphore,
-    render_finish_semaphore: core::Semaphore,
-    window_id: WindowId,
+    pub(in crate::render) core: Arc<core::Core>,
+    pub(in crate::render)  surface: vk::SurfaceKHR,
+    pub(in crate::render) surface_format: vk::SurfaceFormatKHR,
+    pub(in crate::render) surface_extent: vk::Extent2D,
+    pub(in crate::render) swapchain: vk::SwapchainKHR,
+    pub(in crate::render) swapchain_image_views: Vec<core::ImageView>,
+    pub(in crate::render) render_command_buffers: Vec<vk::CommandBuffer>,
+    pub(in crate::render) image_available_semaphore: core::Semaphore,
+    pub(in crate::render) render_finish_semaphore: core::Semaphore,
+    pub(in crate::render) window_id: WindowId,
 }
 
 impl Vulkan {
