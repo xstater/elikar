@@ -1,4 +1,5 @@
 # Todo List
+* elikar 修正帧率计算功能
 * 为xecs添加一个SystemGroup的功能，将相关的system绑定到一起，减少引擎端用户代码量
 * 为xecs添加动态修改Dependency的功能
 * 修改xecs的报错信息，使其更可读
