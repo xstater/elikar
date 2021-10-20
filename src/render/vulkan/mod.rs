@@ -1,13 +1,13 @@
 pub mod builder;
 pub mod core;
-pub mod systems;
 
 use crate::render::vulkan::builder::VulkanBuilder;
 use crate::window::WindowId;
 use ash::vk;
-use std::convert::Infallible;
 use std::sync::Arc;
 use xecs::System;
+
+use self::core::AshRaw;
 
 #[macro_export]
 macro_rules! offset_of {
@@ -22,7 +22,7 @@ macro_rules! offset_of {
 
 pub struct Vulkan {
     pub(in crate::render) core: Arc<core::Core>,
-    pub(in crate::render)  surface: vk::SurfaceKHR,
+    pub(in crate::render) surface: vk::SurfaceKHR,
     pub(in crate::render) surface_format: vk::SurfaceFormatKHR,
     pub(in crate::render) surface_extent: vk::Extent2D,
     pub(in crate::render) swapchain: vk::SwapchainKHR,
@@ -31,6 +31,7 @@ pub struct Vulkan {
     pub(in crate::render) image_available_semaphore: core::Semaphore,
     pub(in crate::render) render_finish_semaphore: core::Semaphore,
     pub(in crate::render) window_id: WindowId,
+    image_index : u32,
 }
 
 impl Vulkan {
@@ -54,6 +55,13 @@ impl Vulkan {
         &self.swapchain_image_views
     }
 
+    pub fn swapchain_image_view(&self) -> &core::ImageView {
+        unsafe {
+            self.swapchain_image_views
+                .get_unchecked(self.image_index as usize)
+        }
+    }
+
     pub fn render_commands(&self) -> &[vk::CommandBuffer] {
         &self.render_command_buffers
     }
@@ -65,13 +73,93 @@ impl Vulkan {
     pub fn window_id(&self) -> WindowId {
         self.window_id
     }
+    
+    pub fn image_index(&self) -> u32 {
+        self.image_index
+    }
+
+    pub fn present_queue(&mut self) -> Result<(),vk::Result> {
+        let graphics_queue = self.core.graphics_queue;
+        if self.render_command_buffers.is_empty() {
+            let signal_semaphores = [*self.image_available_semaphore.raw()];
+            let swapchains = [self.swapchain];
+            let image_indices = [self.image_index];
+            let present_info = vk::PresentInfoKHR::builder()
+                .wait_semaphores(&signal_semaphores)
+                .swapchains(&swapchains)
+                .image_indices(&image_indices);
+            unsafe {
+                self.core
+                    .swapchain_manager
+                    .queue_present(graphics_queue, &present_info)?;
+                self.core
+                    .device
+                    .queue_wait_idle(graphics_queue)?;
+            }
+            return Ok(());
+        }
+
+        let wait_semaphores = [*self.image_available_semaphore.raw()];
+        let wait_stages = [vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT];
+        let command_buffer = &self.render_command_buffers;
+        let signal_semaphores = [*self.render_finish_semaphore.raw()];
+
+        let submit_info = vk::SubmitInfo::builder()
+            .wait_semaphores(&wait_semaphores)
+            .wait_dst_stage_mask(&wait_stages)
+            .command_buffers(&command_buffer)
+            .signal_semaphores(&signal_semaphores);
+        let submit_infos = [submit_info.build()];
+
+        unsafe {
+            self.core.device.queue_submit(
+                self.core.graphics_queue,
+                &submit_infos,
+                vk::Fence::null(),
+            )
+        }?;
+
+        let swapchains = [self.swapchain];
+        let image_indices = [self.image_index];
+
+        let present_info = vk::PresentInfoKHR::builder()
+            .wait_semaphores(&signal_semaphores)
+            .swapchains(&swapchains)
+            .image_indices(&image_indices);
+
+        unsafe {
+            self .core
+                .swapchain_manager
+                .queue_present(graphics_queue, &present_info)?;
+            self .core
+                .device
+                .queue_wait_idle(graphics_queue)?;
+        }
+
+        self.render_command_buffers.clear();
+
+        Ok(())
+    }
 }
 
 impl<'a> System<'a> for Vulkan {
     type InitResource = ();
     type Resource = ();
     type Dependencies = ();
-    type Error = Infallible;
+    type Error = vk::Result;
+
+    fn update(&'a mut self,_ : ()) -> Result<(),Self::Error>{
+        let (image_index, _) = unsafe {
+            self.core.swapchain_manager.acquire_next_image(
+                self.swapchain,
+                u64::MAX,
+                *self.image_available_semaphore.raw(),
+                vk::Fence::null(),
+            )
+        }?;
+        self.image_index = image_index;
+        Ok(())
+    }
 }
 
 impl Drop for Vulkan {

@@ -36,7 +36,11 @@ impl Pipeline {
                 ..Default::default()
             },
             color_blend_attachments: vec![],
-            color_blend_state: Default::default(),
+            color_blend_state: ColorBlendState{
+                enable_logic_op: false,
+                logic_op: vk::LogicOp::COPY,
+                blend_constant: [0.0,0.0,0.0,0.0],
+            },
             pipeline_layout: vk::PipelineLayout::null(),
             render_pass: vk::RenderPass::null(),
             dynamic_states: vec![],
@@ -191,12 +195,11 @@ impl PipelineBuilder {
 
     pub fn color_blend(
         mut self,
-        enable_logic_op: bool,
         logic_op: vk::LogicOp,
         blend_constant: [f32; 4],
     ) -> Self {
         self.color_blend_state = ColorBlendState {
-            enable_logic_op,
+            enable_logic_op: true,
             logic_op,
             blend_constant,
         };

@@ -87,7 +87,8 @@ impl<'a> System<'a> for ImGui {
         io.display_size = [w as _, h as _];
         io.display_framebuffer_scale = [draw_w as f32 / w as f32, draw_h as f32 / h as f32];
 
-        io.delta_time = states.now_frame_time().as_secs_f32();
+        // io.delta_time = states.now_frame_time().as_secs_f32();
+        io.delta_time = states.last_frame_time().as_secs_f32();
 
         let (x, y) = mouse.position();
         io.mouse_pos = [x as _, y as _];

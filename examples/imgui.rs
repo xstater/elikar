@@ -1,11 +1,13 @@
+use elikar::common::SdlError;
 use elikar::events::PollEvents;
 use elikar::imgui::systems::{ImGuiEventSystem, ImGuiRenderer};
 use elikar::imgui::ImGui;
-use elikar::render::vulkan::systems::{AcquireNextImage, ExecuteRenderCommands};
 use elikar::render::vulkan::{PresentMode, Vulkan};
+use elikar::window::WindowId;
 use elikar::{window, Elikar, ElikarStates};
 use std::cell::{Ref, RefMut};
 use std::convert::Infallible;
+use std::time::{Duration, Instant};
 use xecs::{End, System};
 
 struct Quit;
@@ -25,19 +27,40 @@ impl<'a> System<'a> for Quit {
         Ok(())
     }
 }
-struct PrintFps;
-impl<'a> System<'a> for PrintFps {
-    type InitResource = ();
-    type Resource = (&'a PollEvents, &'a ElikarStates);
-    type Dependencies = PollEvents;
-    type Error = Infallible;
 
-    fn update(
-        &'a mut self,
-        (events, states): (Ref<'a, PollEvents>, Ref<'a, ElikarStates>),
-    ) -> Result<(), Self::Error> {
-        for _ in &events.mouse_motion {
-            println!("fps:{}", states.fps());
+struct ShowFpsOnWindow{
+    time : Instant,
+    window : WindowId,
+    title : String,
+}
+impl ShowFpsOnWindow {
+    pub fn from_window_id(id : WindowId) -> ShowFpsOnWindow {
+        ShowFpsOnWindow{
+            time: Instant::now(),
+            window: id,
+            title : String::new()
+        }
+    }
+}
+impl<'a> System<'a> for ShowFpsOnWindow {
+    type InitResource = &'a window::Manager;
+    type Resource = (&'a mut window::Manager,&'a ElikarStates);
+    type Dependencies = ();
+    type Error = SdlError;
+
+    fn init(&'a mut self,manager : Ref<'a,window::Manager>) -> Result<(),Self::Error>{
+        self.title = manager.window_ref(self.window)
+            .unwrap()
+            .title();
+        Ok(())
+    }
+
+    fn update(&'a mut self,(mut manager,states) : (RefMut<'a,window::Manager>,Ref<'a,ElikarStates>)) -> Result<(),Self::Error>{
+        if self.time.elapsed() > Duration::from_secs(1) {
+            let window = manager.window_mut(self.window).unwrap();
+            let title = format!("{} fps:{}",self.title.as_str(),states.actual_fps());
+            window.set_title(title.as_str());
+            self.time = Instant::now();
         }
         Ok(())
     }
@@ -100,7 +123,7 @@ fn main(){
         .create_window()
         .vulkan()
         .title("imgui render test")
-        .resizable()
+        //.resizable()
         .build()
         .unwrap()
         .id();
@@ -122,8 +145,7 @@ fn main(){
     game.current_stage_mut()
         .add_system(Quit)
         .add_system(vulkan)
-        .add_system(AcquireNextImage::new())
-        .add_system(ExecuteRenderCommands::new())
+        .add_system(ShowFpsOnWindow::from_window_id(id))
         .add_system(ImGui::from_window_id(id))
         .add_system(ImGuiRenderer::<DrawGui>::new())
         .add_system(ImGuiEventSystem::new())

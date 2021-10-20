@@ -4,7 +4,6 @@ use crate::render::vulkan::core;
 use crate::render::vulkan::core::{
     AllocateMemoryError, AshRaw, Buffer, CommandBuffers, Framebuffer,
 };
-use crate::render::vulkan::systems::AcquireNextImage;
 use crate::render::vulkan::Vulkan;
 use ash::vk;
 use imgui::DrawCmd;
@@ -56,9 +55,9 @@ impl<Dependency> ImGuiRenderer<Dependency> {
 
 impl<'a, Dependency: Dependencies> System<'a> for ImGuiRenderer<Dependency> {
     type InitResource = (&'a mut ImGui, &'a mut Vulkan);
-    type Resource = (&'a ImGui, &'a AcquireNextImage, &'a mut Vulkan);
+    type Resource = (&'a ImGui, &'a mut Vulkan);
     // run after acquired image and handled events
-    type Dependencies = (AcquireNextImage, ImGui, Dependency);
+    type Dependencies = (Vulkan, ImGui, Dependency);
     type Error = Error;
 
     fn init(
@@ -230,7 +229,6 @@ impl<'a, Dependency: Dependencies> System<'a> for ImGuiRenderer<Dependency> {
                 alpha_blend_op: vk::BlendOp::ADD,
                 color_write_mask: vk::ColorComponentFlags::all(),
             })
-            .color_blend(false, vk::LogicOp::COPY, [0.0, 0.0, 0.0, 0.0])
             .render_pass(self.render_pass.as_ref().unwrap())
             .subpass(0);
         self.pipeline = Some(vulkan.core().create_pipeline(pipeline_builder)?);
@@ -255,9 +253,8 @@ impl<'a, Dependency: Dependencies> System<'a> for ImGuiRenderer<Dependency> {
 
     fn update(
         &'a mut self,
-        (imgui, acq_img, mut vulkan): (
+        (imgui, mut vulkan): (
             Ref<'a, ImGui>,
-            Ref<'a, AcquireNextImage>,
             RefMut<'a, Vulkan>,
         ),
     ) -> Result<(), Self::Error> {
@@ -272,7 +269,7 @@ impl<'a, Dependency: Dependencies> System<'a> for ImGuiRenderer<Dependency> {
             1.0,
         );
         // vulkan render
-        let image_index = acq_img.image_index();
+        let image_index = vulkan.image_index();
 
         let command_buffer = self.command_buffers.as_ref().unwrap().raw()[image_index as usize];
         let render_pass = *self.render_pass.as_ref().unwrap().raw();

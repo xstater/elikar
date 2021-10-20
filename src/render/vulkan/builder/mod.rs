@@ -371,6 +371,7 @@ impl VulkanBuilder {
             image_available_semaphore,
             render_finish_semaphore,
             window_id: window.id(),
+            image_index: 0,
         })
     }
 }
