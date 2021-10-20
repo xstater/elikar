@@ -1,6 +1,33 @@
 use std::env;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
+
+fn compile_all_shaders(path : &Path,glsl_validator_path : &Path){
+    if path.is_file() {
+        if let Some(extension) = path.extension() {
+            if extension != "glsl" {
+                return;
+            }
+            let dir = path.parent().expect("Read shader parent directory failed");
+            let shader = path.file_name().unwrap();
+            let mut cmd = Command::new(glsl_validator_path);
+            cmd.arg("-V")
+                .arg(shader)
+                .current_dir(dir)
+                .spawn()
+                .unwrap()
+                .wait()
+                .unwrap();
+        }
+    } else if path.is_dir() {
+        let dir = path.read_dir().expect("Cannot read directory");
+        for entry in dir {
+            let entry = entry.unwrap();
+            let path = entry.path();
+            compile_all_shaders(&path, glsl_validator_path)
+        }
+    }
+}
 
 fn main() {
     println!("cargo:rerun-if-changed=shaders/");
@@ -17,27 +44,9 @@ fn main() {
             panic!("Cannot find glslangValidator.exe")
         }
 
-        let shaders_dir = std::fs::read_dir("shaders").expect("Cannot read elikar/shaders");
+        let shaders_path = PathBuf::from("shaders");
 
-        for shader_module in shaders_dir {
-            let shader_module = shader_module.unwrap();
-            let shader_module_path = shader_module.path();
-            let shader_dir = std::fs::read_dir(shader_module_path.as_path())
-                .expect(format!("Cannot read {}", shader_module_path.to_str().unwrap()).as_str());
-            for shader in shader_dir {
-                let shader = shader.unwrap();
-                let shader = shader.file_name();
-
-                let mut cmd = Command::new(glsl_validator_path.as_path());
-                cmd.arg("-V")
-                    .arg(shader)
-                    .current_dir(shader_module_path.as_path())
-                    .spawn()
-                    .unwrap()
-                    .wait()
-                    .unwrap();
-            }
-        }
+        compile_all_shaders(&shaders_path, &glsl_validator_path);
     } else {
         panic!("Elikar can only support windows")
     }
