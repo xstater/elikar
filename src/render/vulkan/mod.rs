@@ -1,5 +1,6 @@
 pub mod builder;
 pub mod core;
+pub mod systems;
 
 use crate::render::vulkan::builder::VulkanBuilder;
 use crate::window::WindowId;
@@ -66,8 +67,15 @@ impl Vulkan {
         &self.render_command_buffers
     }
 
-    pub fn queue_render_command(&mut self, command_buffer: vk::CommandBuffer) {
-        self.render_command_buffers.push(command_buffer)
+    pub fn queue_render_command(&mut self,index : usize,command_buffers: &core::CommandBuffers) {
+        let command_buffer = *unsafe {
+            command_buffers.raw().get_unchecked(index)
+        };
+        self.render_command_buffers.push(command_buffer);
+    }
+
+    pub fn queue_current_render_command(&mut self,command_buffers: &core::CommandBuffers) {
+        self.queue_render_command(self.image_index as usize, command_buffers);
     }
 
     pub fn window_id(&self) -> WindowId {
@@ -78,7 +86,7 @@ impl Vulkan {
         self.image_index
     }
 
-    pub fn present_queue(&mut self) -> Result<(),vk::Result> {
+    pub(in crate::render::vulkan) fn present_queue(&mut self) -> Result<(),vk::Result> {
         let graphics_queue = self.core.graphics_queue;
         if self.render_command_buffers.is_empty() {
             let signal_semaphores = [*self.image_available_semaphore.raw()];
