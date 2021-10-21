@@ -21,8 +21,9 @@ use xecs::{Stage, System};
 pub struct ElikarStates {
     quit: bool,
     frames_count: usize,
-    start_time: Instant,
-    frame_time: Duration,
+    one_sec_timer: Instant,
+    frame_start: Instant,
+    last_frame_time: Duration,
     add_stage_buffer: Option<Vec<(String, Stage)>>,
     remove_stage_buffer: Option<Vec<String>>,
     change_current: Option<String>,
@@ -185,8 +186,9 @@ impl Elikar {
             .add_system(ElikarStates {
                 quit: false,
                 frames_count: 0,
-                start_time: Instant::now(),
-                frame_time: Duration::from_secs(1),
+                one_sec_timer: Instant::now(),
+                frame_start: Instant::now(),
+                last_frame_time: Duration::from_secs(1),
                 add_stage_buffer: Option::None,
                 remove_stage_buffer: Option::None,
                 change_current: Option::None,
@@ -260,8 +262,9 @@ impl Elikar {
             .add_system(ElikarStates {
                 quit: false,
                 frames_count: 0,
-                start_time: Instant::now(),
-                frame_time: Duration::from_secs(2),
+                one_sec_timer: Instant::now(),
+                frame_start: Instant::now(),
+                last_frame_time: Duration::from_secs(1),
                 add_stage_buffer: Option::None,
                 remove_stage_buffer: Option::None,
                 change_current: Option::None,
@@ -293,13 +296,14 @@ impl Elikar {
             {
                 let stage = self.current_stage_ref();
                 let mut states = stage.system_data_mut::<ElikarStates>();
+                states.frame_start = now;
                 if states.quit {
                     break 'main_loop;
                 }
-                if states.start_time.elapsed().as_secs() > 0 {
+                if states.one_sec_timer.elapsed().as_secs_f64() >= 1.0 {
                     states.frames_count = frames_count;
                     frames_count = 0;
-                    states.start_time = Instant::now()
+                    states.one_sec_timer = Instant::now()
                 }
             }
             // run stage
@@ -361,7 +365,7 @@ impl Elikar {
             frames_count += 1;
             self.current_stage_ref()
                 .system_data_mut::<ElikarStates>()
-                .frame_time = now.elapsed();
+                .last_frame_time = now.elapsed();
         }
     }
 }
@@ -384,17 +388,17 @@ impl ElikarStates {
     }
 
     pub fn fps(&self) -> f64 {
-        1.0 / self.frame_time.as_secs_f64()
+        1.0 / self.last_frame_time.as_secs_f64()
     }
 
     // get the time of last frame
     pub fn last_frame_time(&self) -> Duration {
-        self.frame_time
+        self.last_frame_time
     }
 
-    // get the time of from frame start to now
-    pub fn now_frame_time(&self) -> Duration {
-        self.start_time.elapsed()
+    // Get the time from the start of frame
+    pub fn frame_start_time(&self) -> Duration {
+        self.frame_start.elapsed()
     }
 
     pub fn add_stage(&mut self, name: &str, stage: Stage) {
