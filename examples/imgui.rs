@@ -2,6 +2,7 @@ use elikar::common::SdlError;
 use elikar::events::PollEvents;
 use elikar::imgui::systems::{ImGuiEventSystem, ImGuiRenderer};
 use elikar::imgui::ImGui;
+use elikar::render::vulkan::systems::{FrameBegin, FrameEnd};
 use elikar::render::vulkan::{PresentMode, Vulkan};
 use elikar::window::WindowId;
 use elikar::{window, Elikar, ElikarStates};
@@ -75,22 +76,6 @@ impl<'a> System<'a> for DrawGui {
 
     fn update(&'a mut self, mut imgui: RefMut<'a, ImGui>) -> Result<(), Self::Error> {
         imgui.draw_frame(|ui| {
-            // if let Some(token) = ui.begin_menu_bar() {
-            //     if let Some(token) = ui.begin_menu("File") {
-            //         ui.menu("Open",||{
-            //             dbg!("fuck u");
-            //         });
-            //         ui.menu("Exit", ||{
-            //             dbg!("exit");
-            //         });
-            //         token.end();
-            //     }
-            //     token.end();
-            // }
-            // ui.text("fuck");
-            // if ui.button("shit") {
-            //     dbg!("A piece of SHIT");
-            // }
             let mut flag = false;
             ui.show_demo_window(&mut flag);
         });
@@ -142,9 +127,14 @@ fn main(){
         )
         .unwrap();
 
+    let mut frame_begin = FrameBegin::new();
+    frame_begin.set_background_color((1.0,1.0,1.0,1.0));
+
     game.current_stage_mut()
         .add_system(Quit)
         .add_system(vulkan)
+        .add_system(frame_begin)
+        .add_system(FrameEnd::new())
         .add_system(ShowFpsOnWindow::from_window_id(id))
         .add_system(ImGui::from_window_id(id))
         .add_system(ImGuiRenderer::<DrawGui>::new())
