@@ -5,6 +5,7 @@ use std::sync::Arc;
 pub struct Framebuffer {
     pub(in crate::render) core: Arc<Core>,
     pub(in crate::render) framebuffer: vk::Framebuffer,
+    pub(in crate::render) size: (u32,u32)
 }
 
 impl Framebuffer {
@@ -14,6 +15,17 @@ impl Framebuffer {
             render_pass: *render_pass.raw(),
             size: (0, 0),
             layers: 1,
+        }
+    }
+
+    pub fn size(&self) -> (u32,u32) {
+        self.size
+    }
+
+    pub fn size_as_extent(&self) -> vk::Extent2D {
+        vk::Extent2D{
+            width: self.size.0,
+            height: self.size.1
         }
     }
 }
@@ -54,6 +66,12 @@ impl FramebufferBuilder {
         self
     }
 
+    pub fn size_from_extent(mut self,extent : &vk::Extent2D) -> Self {
+        self.size.0 = extent.width;
+        self.size.1 = extent.height;
+        self
+    }
+
     pub fn layers(mut self, layers: u32) -> Self {
         self.layers = layers;
         self
@@ -67,6 +85,6 @@ impl FramebufferBuilder {
             .width(self.size.0)
             .layers(self.layers);
         let framebuffer = unsafe { core.device.create_framebuffer(&info, Option::None) }?;
-        Ok(Framebuffer { core, framebuffer })
+        Ok(Framebuffer { core, framebuffer, size:self.size })
     }
 }
