@@ -5,6 +5,7 @@ use crate::render::vulkan::core::{
     AllocateMemoryError, AshRaw, Buffer, CommandBuffers, Framebuffer,
 };
 use crate::render::vulkan::Vulkan;
+use crate::render::vulkan::systems::FrameBegin;
 use ash::vk;
 use imgui::DrawCmd;
 use nalgebra_glm as glm;
@@ -57,7 +58,7 @@ impl<'a, Dependency: Dependencies> System<'a> for ImGuiRenderer<Dependency> {
     type InitResource = (&'a mut ImGui, &'a mut Vulkan);
     type Resource = (&'a ImGui, &'a mut Vulkan);
     // run after acquired image and handled events
-    type Dependencies = (Vulkan, ImGui, Dependency);
+    type Dependencies = (FrameBegin, ImGui, Dependency);
     type Error = Error;
 
     fn init(
@@ -115,7 +116,7 @@ impl<'a, Dependency: Dependencies> System<'a> for ImGuiRenderer<Dependency> {
             .attachment(vk::AttachmentDescription {
                 format: vulkan.surface_format().format,
                 samples: vk::SampleCountFlags::TYPE_1,
-                load_op: vk::AttachmentLoadOp::CLEAR,
+                load_op: vk::AttachmentLoadOp::DONT_CARE,
                 store_op: vk::AttachmentStoreOp::STORE,
                 stencil_load_op: vk::AttachmentLoadOp::DONT_CARE,
                 stencil_store_op: vk::AttachmentStoreOp::DONT_CARE,
@@ -478,7 +479,7 @@ impl<'a, Dependency: Dependencies> System<'a> for ImGuiRenderer<Dependency> {
             device.cmd_end_render_pass(command_buffer);
             device.end_command_buffer(command_buffer)?;
         }
-        vulkan.queue_render_command(command_buffer);
+        vulkan.queue_current_render_command(self.command_buffers.as_ref().unwrap());
 
         Ok(())
     }
