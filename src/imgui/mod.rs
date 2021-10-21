@@ -37,9 +37,9 @@ impl ImGui {
         unsafe { &*ptr }
     }
 
-    pub fn draw_frame<F>(&mut self, f: F)
+    pub fn draw_frame<F>(&mut self,mut f: F)
     where
-        F: Fn(&Ui<'_>),
+        F: FnMut(&Ui<'_>),
     {
         let ui = self.context.frame();
         f(&ui);
@@ -87,7 +87,6 @@ impl<'a> System<'a> for ImGui {
         io.display_size = [w as _, h as _];
         io.display_framebuffer_scale = [draw_w as f32 / w as f32, draw_h as f32 / h as f32];
 
-        // io.delta_time = states.now_frame_time().as_secs_f32();
         io.delta_time = states.last_frame_time().as_secs_f32();
 
         let (x, y) = mouse.position();
