@@ -2,21 +2,22 @@
 name = "elikar"
 version = "0.1.0"
 authors = ["xstater <l>"]
-edition = "2018"
+edition = "2021"
 build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-sdl2-sys = "0.34.3"
-libc = "0.2.77"
-xecs = "0.3.3"
+sdl2-sys = "0.35"
+libc = "0.2"
+xecs = "0.4"
 xrunits = "0.1.2"
-xblend = "0.1.0"
-ash = "0.33.0"
-rand = "0.8.4"
-nalgebra-glm = "0.15.0"
-imgui = "0.8.0"
+ash = "0.35"
+rand = "0.8"
+nalgebra-glm = "0.16"
+imgui = "0.8.2"
+crossbeam = "0.8"
+futures = { version = "0.3", features = ["executor","thread-pool"] }
 
 [profile.dev]
 opt-level = 2

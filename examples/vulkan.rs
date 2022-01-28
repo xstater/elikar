@@ -26,14 +26,13 @@ use ash::vk::{
     VertexInputBindingDescription, VertexInputRate, Viewport, FALSE, SUBPASS_EXTERNAL,
 };
 use ash::{Device, Entry, Instance};
+use elikar::{Elikar, States};
 use elikar::common::Result as ElikarResult;
 use elikar::common::SdlError;
-use elikar::events::PollEvents;
 use elikar::window::Window;
-use elikar::{window, Elikar, ElikarStates};
+use futures::StreamExt;
 use sdl2_sys::*;
-use std::cell::{Ref, RefMut};
-use std::convert::Infallible;
+use xecs::system::System;
 use std::ffi::{c_void, CStr, CString};
 use std::fs::File;
 use std::mem::align_of;
@@ -41,8 +40,6 @@ use std::ops::BitOr;
 use std::os::raw::c_char;
 use std::ptr::{null, null_mut};
 use std::sync::Arc;
-use xecs::system::End;
-use xecs::System;
 
 macro_rules! offset_of {
     ($base:path, $field:ident) => {{
@@ -187,20 +184,13 @@ unsafe extern "system" fn debug_callback(
 fn main() {
     let mut game = Elikar::new().unwrap();
 
-    let window = {
-        let mut manager = game
-            .current_stage_ref()
-            .system_data_mut::<window::Manager>();
-        manager
-            .create_window()
-            .title("elikar vulkan")
-            .vulkan()
-            .build()
-            .unwrap()
-            .id()
-    };
+    let window = game.window_builder()
+        .title("elikar vulkan")
+        .vulkan()
+        .build()
+        .unwrap();
 
-    let entry = unsafe { Entry::new() }.unwrap();
+    let entry = unsafe { Entry::load() }.unwrap();
 
     // let layers = entry.enumerate_instance_layer_properties().unwrap();
     // let extensions = entry.enumerate_instance_extension_properties().unwrap();
@@ -228,10 +218,10 @@ fn main() {
         .collect::<Vec<_>>();
 
     let mut extensions = {
-        let manager = game
-            .current_stage_ref()
-            .system_data_ref::<window::Manager>();
-        sdl_extensions(manager.window_ref(window).unwrap()).unwrap()
+        let world = game.world();
+        let world = world.read().unwrap();
+        let window = world.query::<&Window>().next().unwrap();
+        sdl_extensions(window).unwrap()
     };
     extensions.push(CString::new("VK_EXT_debug_utils").unwrap());
 
@@ -254,12 +244,14 @@ fn main() {
     let debug_utils = DebugUtils::new(&entry, &instance);
     let debug_utils_messenger_info = DebugUtilsMessengerCreateInfoEXT::builder()
         .message_severity(
-            DebugUtilsMessageSeverityFlagsEXT::empty()
-                .bitor(DebugUtilsMessageSeverityFlagsEXT::ERROR)
-                .bitor(DebugUtilsMessageSeverityFlagsEXT::WARNING)
-                .bitor(DebugUtilsMessageSeverityFlagsEXT::INFO),
+            DebugUtilsMessageSeverityFlagsEXT::ERROR |
+            DebugUtilsMessageSeverityFlagsEXT::WARNING |
+            DebugUtilsMessageSeverityFlagsEXT::ERROR
         )
-        .message_type(DebugUtilsMessageTypeFlagsEXT::all())
+        .message_type(
+            DebugUtilsMessageTypeFlagsEXT::GENERAL |
+            DebugUtilsMessageTypeFlagsEXT::VALIDATION |
+            DebugUtilsMessageTypeFlagsEXT::PERFORMANCE)
         .pfn_user_callback(Some(debug_callback));
     let debug_utils_messenger = unsafe {
         debug_utils.create_debug_utils_messenger(&debug_utils_messenger_info, Option::None)
@@ -288,10 +280,10 @@ fn main() {
 
     // create surface
     let surface = {
-        let manager = game
-            .current_stage_ref()
-            .system_data_ref::<window::Manager>();
-        sdl_surface(manager.window_ref(window).unwrap(), &instance).unwrap()
+        let world = game.world();
+        let world = world.read().unwrap();
+        let window = world.query::<&Window>().next().unwrap();
+        sdl_surface(window, &instance).unwrap()
     };
     let surface_manager = Surface::new(&entry, &instance);
 
@@ -655,7 +647,7 @@ fn main() {
 
     // color blend
     let color_blend_attachment = PipelineColorBlendAttachmentState::builder()
-        .color_write_mask(ColorComponentFlags::all())
+        .color_write_mask(ColorComponentFlags::RGBA)
         .blend_enable(false)
         .src_color_blend_factor(BlendFactor::ONE)
         .dst_color_blend_factor(BlendFactor::ZERO)
@@ -784,43 +776,45 @@ fn main() {
         unsafe { device.create_semaphore(&semaphroe_info, Option::None) }.unwrap();
 
     // main loop
-    struct DrawFrame {
-        device: Arc<Device>,
-        queue: Queue,
-        swapchain: SwapchainKHR,
-        swapchain_manager: Arc<Swapchain>,
-        image_available_semaphore: Semaphore,
-        render_finish_semaphore: Semaphore,
-        command_buffers: Arc<Vec<CommandBuffer>>,
-    }
-    impl<'a> System<'a> for DrawFrame {
-        type InitResource = ();
-        type Resource = (&'a mut ElikarStates, &'a PollEvents);
-        type Dependencies = End;
-        type Error = Infallible;
 
-        fn update(
-            &'a mut self,
-            (mut state, events): (RefMut<'a, ElikarStates>, Ref<'a, PollEvents>),
-        ) -> Result<(), Self::Error> {
-            if events.quit.is_some() {
-                state.quit();
-                return Ok(());
-            }
+    let events = game.events(); 
+    game.spawn_local(async move{
+        let mut quit = events.on_quit();
+        let world = quit.world();
+        if let Some(_) = quit.next().await {
+            let world = world.read().unwrap();
+            let mut states = world.resource_mut::<States>().unwrap();
+            states.quit();
+        }
+    });
+
+    let device_ = Arc::new(device);
+    let swapchain_manager_ = Arc::new(swapchain_manager);
+    let command_buffers_ = Arc::new(command_buffers);
+
+    let device = device_.clone();
+    let swapchain_manager = swapchain_manager_.clone();
+    let command_buffers = command_buffers_.clone();
+    let events = game.events();
+    game.spawn_local(async move{
+        let mut render = events.on_render();
+        let world = render.world();
+
+        while let Some(_) = render.next().await {
             let (image_index, _) = unsafe {
-                self.swapchain_manager.acquire_next_image(
-                    self.swapchain,
+                swapchain_manager.acquire_next_image(
+                    swapchain,
                     u64::MAX,
-                    self.image_available_semaphore,
+                    image_available_semaphore,
                     Fence::null(),
                 )
             }
             .unwrap();
 
-            let wait_semaphroes = [self.image_available_semaphore];
+            let wait_semaphroes = [image_available_semaphore];
             let wait_stages = [PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT];
-            let command_buffer = [*self.command_buffers.get(image_index as usize).unwrap()];
-            let signal_semaphroes = [self.render_finish_semaphore];
+            let command_buffer = [*command_buffers.get(image_index as usize).unwrap()];
+            let signal_semaphroes = [render_finish_semaphore];
 
             let submit_info = SubmitInfo::builder()
                 .wait_semaphores(&wait_semaphroes)
@@ -830,12 +824,12 @@ fn main() {
             let submit_infos = [submit_info.build()];
 
             unsafe {
-                self.device
-                    .queue_submit(self.queue, &submit_infos, Fence::null())
+                device
+                    .queue_submit(queue, &submit_infos, Fence::null())
             }
             .unwrap();
 
-            let swapchains = [self.swapchain];
+            let swapchains = [swapchain];
             let image_indices = [image_index];
 
             let present_info = PresentInfoKHR::builder()
@@ -844,34 +838,26 @@ fn main() {
                 .image_indices(&image_indices);
 
             unsafe {
-                self.swapchain_manager
-                    .queue_present(self.queue, &present_info)
+                swapchain_manager
+                    .queue_present(queue, &present_info)
                     .unwrap();
-                self.device.queue_wait_idle(self.queue).unwrap();
+                device.queue_wait_idle(queue).unwrap();
             }
 
-            println!("fps:{}Hz", state.fps());
-            Ok(())
+            {
+                let world = world.read().unwrap();
+                let states = world.resource_ref::<States>().unwrap();
+                println!("fps:{}Hz", states.fps());
+            }
         }
-    }
-    let device = Arc::new(device);
-    let swapchain_manager = Arc::new(swapchain_manager);
-    let command_buffers = Arc::new(command_buffers);
-    game.current_stage_mut().add_system(DrawFrame {
-        device: device.clone(),
-        queue,
-        swapchain,
-        swapchain_manager: swapchain_manager.clone(),
-        image_available_semaphore,
-        render_finish_semaphore,
-        command_buffers: command_buffers.clone(),
     });
+
 
     game.run();
 
-    // let device = device;
-    // let swapchain_manager = *swapchain_manager;
-    // let command_buffers = *command_buffers;
+    let device = device_.clone();
+    let swapchain_manager = swapchain_manager_.clone();
+    let command_buffers = command_buffers_.clone();
 
     unsafe { device.device_wait_idle() }.unwrap();
 
