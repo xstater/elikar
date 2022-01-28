@@ -1,14 +1,16 @@
-extern crate sdl2_sys;
-
-use std::ffi::CStr;
+use std::{ffi::CStr, marker::PhantomData};
 use xrunits::data::{BuildMebibyte, Mebibyte};
 
 #[derive(Debug)]
-pub struct PlatformInfo {}
+pub struct PlatformInfo {
+    _marker : PhantomData<()>
+}
 
 impl PlatformInfo {
     pub(in crate::sysinfo) fn new() -> PlatformInfo {
-        PlatformInfo {}
+        PlatformInfo {
+            _marker : Default::default()
+        }
     }
 
     #[inline]

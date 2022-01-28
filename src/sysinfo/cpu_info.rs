@@ -1,13 +1,16 @@
-extern crate sdl2_sys;
-
+use std::marker::PhantomData;
 use xrunits::data::{BuildByte, Byte};
 
 #[derive(Debug)]
-pub struct CPUInfo {}
+pub struct CPUInfo {
+    _marker : PhantomData<()>
+}
 
 impl CPUInfo {
     pub(in crate::sysinfo) fn new() -> CPUInfo {
-        CPUInfo {}
+        CPUInfo {
+            _marker : Default::default()
+        }
     }
     #[inline]
     pub fn cpu_cache_line_size(&self) -> Byte {

@@ -1,8 +1,6 @@
 use crate::sysinfo::cpu_info::CPUInfo;
 use crate::sysinfo::platform_info::PlatformInfo;
 use crate::sysinfo::video_info::VideoInfo;
-use std::convert::Infallible;
-use xecs::System;
 
 pub mod cpu_info;
 pub mod platform_info;
@@ -34,9 +32,3 @@ impl SystemInfo {
     }
 }
 
-impl<'a> System<'a> for SystemInfo {
-    type InitResource = ();
-    type Resource = ();
-    type Dependencies = ();
-    type Error = Infallible;
-}

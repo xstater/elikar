@@ -1,5 +1,3 @@
-extern crate sdl2_sys;
-
 use crate::window::Window;
 use sdl2_sys::*;
 

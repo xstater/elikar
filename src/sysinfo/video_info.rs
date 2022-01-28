@@ -1,8 +1,7 @@
-extern crate sdl2_sys;
-
 use crate::common::{from_sdl_string, Result, SdlError};
 use sdl2_sys::*;
 use std::fmt::{Display, Formatter};
+use std::marker::PhantomData;
 use std::os::raw::{c_char, c_int};
 use std::ptr::null_mut;
 
@@ -62,11 +61,15 @@ impl Display for Screen {
 }
 
 #[derive(Debug)]
-pub struct VideoInfo {}
+pub struct VideoInfo {
+    _marker : PhantomData<()>
+}
 
 impl VideoInfo {
     pub(in crate::sysinfo) fn new() -> VideoInfo {
-        VideoInfo {}
+        VideoInfo {
+            _marker : Default::default()
+        }
     }
 
     pub fn all_drivers_name(&self) -> Result<Vec<String>> {

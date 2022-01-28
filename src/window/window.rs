@@ -2,17 +2,7 @@ use crate::common::{from_sdl_string, Result, SdlError};
 use sdl2_sys::*;
 use std::ffi::CString;
 
-#[derive(Debug, Copy, Clone, Eq, Ord, PartialEq, PartialOrd, Hash)]
-pub struct WindowId(u32);
-
-impl WindowId {
-    pub(in crate) fn from_u32(id: u32) -> WindowId {
-        WindowId(id)
-    }
-}
-
 pub struct Window {
-    id: WindowId,
     ptr: *mut SDL_Window,
 }
 
@@ -32,8 +22,8 @@ impl Drop for Window {
 impl Window {
     /// ## Safety
     /// ptr must be a valid pointer
-    pub(in crate) unsafe fn from_ptr(id: WindowId, ptr: *mut SDL_Window) -> Window {
-        Window { id, ptr }
+    pub(in crate) unsafe fn from_ptr(ptr: *mut SDL_Window) -> Window {
+        Window { ptr }
     }
 
     /// ## Safety
@@ -70,6 +60,13 @@ impl Window {
         }
     }
 
+    pub fn id(&self) -> u32 {
+        // ignore the error
+        unsafe {
+            SDL_GetWindowID(self.ptr)
+        }
+    }
+
     pub fn brightness(&self) -> f32 {
         unsafe { SDL_GetWindowBrightness(self.ptr) }
     }
@@ -81,10 +78,6 @@ impl Window {
         } else {
             Err(SdlError::get())
         }
-    }
-
-    pub fn id(&self) -> WindowId {
-        self.id
     }
 
     pub fn opacity(&self) -> Result<f32> {

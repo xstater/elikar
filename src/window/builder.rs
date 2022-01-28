@@ -1,23 +1,25 @@
 extern crate sdl2_sys;
 
 use crate::common::{Result, SdlError};
-use crate::window::manager::Manager;
-use crate::window::window::{Window, WindowId};
+use crate::window::window::Window;
 use sdl2_sys::*;
+use xecs::entity::EntityId;
+use xecs::world::World;
 use std::ffi::CString;
 use std::fmt::{Debug, Formatter};
+use std::sync::{Arc, RwLock};
 
-pub struct Builder<'a> {
+pub struct Builder {
     title: String,
     x: i32,
     y: i32,
     w: i32,
     h: i32,
     flags: u32,
-    manager: &'a mut Manager,
+    world : Arc<RwLock<World>>
 }
 
-impl<'a> Debug for Builder<'a> {
+impl Debug for Builder {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Builder")
             .field("title", &self.title)
@@ -30,8 +32,8 @@ impl<'a> Debug for Builder<'a> {
     }
 }
 
-impl<'a> Builder<'a> {
-    pub(in crate) fn from_manager(manager: &'a mut Manager) -> Builder<'a> {
+impl Builder {
+    pub fn from_world(world : Arc<RwLock<World>>) -> Builder {
         Builder {
             title: "elikar".to_string(),
             x: SDL_WINDOWPOS_UNDEFINED_MASK as i32,
@@ -39,7 +41,7 @@ impl<'a> Builder<'a> {
             w: 1280,
             h: 768,
             flags: SDL_WindowFlags::SDL_WINDOW_SHOWN as u32,
-            manager,
+            world,
         }
     }
 
@@ -151,7 +153,7 @@ impl<'a> Builder<'a> {
         self
     }
 
-    pub fn build(self) -> Result<&'a mut Window> {
+    pub fn build(self) -> Result<EntityId> {
         let title_str = CString::new(self.title.clone()).unwrap();
         let window_ptr: *mut SDL_Window = unsafe {
             SDL_CreateWindow(
@@ -166,14 +168,12 @@ impl<'a> Builder<'a> {
         if window_ptr.is_null() {
             return Err(SdlError::get());
         } else {
-            let id = unsafe { SDL_GetWindowID(window_ptr) };
-            if id == 0 {
-                return Err(SdlError::get());
-            }
-            let id = WindowId::from_u32(id);
-            let window = unsafe { Window::from_ptr(id, window_ptr) };
-            self.manager.add_window(window);
-            Ok(self.manager.window_mut(id).unwrap())
+            let window = unsafe { Window::from_ptr(window_ptr) };
+            let mut world = self.world.write().unwrap();
+            let id = world.create_entity()
+                .attach(window)
+                .into_id();
+            Ok(id)
         }
     }
 }

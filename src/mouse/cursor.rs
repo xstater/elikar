@@ -1,7 +1,5 @@
-extern crate sdl2_sys;
-
+use sdl2_sys::{SDL_CreateSystemCursor, SDL_Cursor, SDL_FreeCursor, SDL_GetDefaultCursor, SDL_SystemCursor};
 use crate::common::{Result, SdlError};
-use sdl2_sys::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum SystemCursor {
@@ -65,3 +63,4 @@ impl Cursor {
         }
     }
 }
+

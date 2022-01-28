@@ -6,9 +6,8 @@ pub mod event;
 use crate::common::{Result, SdlError};
 use crate::mouse::cursor::Cursor;
 use sdl2_sys::*;
-use std::convert::Infallible;
+use std::marker::PhantomData;
 use std::ptr::null_mut;
-use xecs::System;
 
 #[derive(Debug, Clone, Copy, Default, PartialOrd, PartialEq)]
 pub struct ButtonState(u32);
@@ -41,11 +40,16 @@ impl ButtonState {
     }
 }
 
-pub struct Mouse {}
+pub struct Mouse {
+    // To avoid build from outside
+    _marker : PhantomData<u32>
+}
 
 impl Mouse {
     pub(in crate) fn new() -> Mouse {
-        Mouse {}
+        Mouse {
+            _marker : Default::default()
+        }
     }
 
     pub fn capture(&mut self) -> Result<()> {
@@ -135,6 +139,7 @@ impl Mouse {
     pub fn set_cursor(&mut self, cursor: Cursor) {
         unsafe {
             SDL_SetCursor(cursor.ptr);
+            SDL_SetCursor(null_mut());
         }
     }
 
@@ -143,9 +148,3 @@ impl Mouse {
     }
 }
 
-impl<'a> System<'a> for Mouse {
-    type InitResource = ();
-    type Resource = ();
-    type Dependencies = ();
-    type Error = Infallible;
-}

@@ -1,5 +1,3 @@
-extern crate sdl2_sys;
-
 use sdl2_sys::*;
 use std::os::raw::c_int;
 use xrunits::time::{BuildSecond, Second};

@@ -1,17 +1,12 @@
-extern crate sdl2_sys;
-
 use sdl2_sys::*;
+use crate::keyboard::screen::ScreenKeyboard;
+use std::ffi::CStr;
+use std::os::raw::c_char;
+pub use code::Code;
 
 mod code;
 pub mod event;
 pub mod screen;
-
-use crate::keyboard::screen::ScreenKeyboard;
-pub use code::Code;
-use std::convert::Infallible;
-use std::ffi::CStr;
-use std::os::raw::c_char;
-use xecs::System;
 
 pub struct Keyboard {
     screen: ScreenKeyboard,
@@ -114,9 +109,3 @@ impl Mod {
     }
 }
 
-impl<'a> System<'a> for Keyboard {
-    type InitResource = ();
-    type Resource = ();
-    type Dependencies = ();
-    type Error = Infallible;
-}
