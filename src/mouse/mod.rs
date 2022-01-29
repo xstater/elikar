@@ -1,11 +1,9 @@
-extern crate sdl2_sys;
-
 pub mod cursor;
 pub mod event;
 
+use sdl2_sys::{SDL_CaptureMouse, SDL_DISABLE, SDL_ENABLE, SDL_GetCursor, SDL_GetGlobalMouseState, SDL_GetMouseState, SDL_GetRelativeMouseMode, SDL_GetRelativeMouseState, SDL_QUERY, SDL_SetCursor, SDL_SetRelativeMouseMode, SDL_ShowCursor, SDL_WarpMouseGlobal, SDL_bool};
 use crate::common::{Result, SdlError};
 use crate::mouse::cursor::Cursor;
-use sdl2_sys::*;
 use std::marker::PhantomData;
 use std::ptr::null_mut;
 
@@ -139,7 +137,6 @@ impl Mouse {
     pub fn set_cursor(&mut self, cursor: Cursor) {
         unsafe {
             SDL_SetCursor(cursor.ptr);
-            SDL_SetCursor(null_mut());
         }
     }
 

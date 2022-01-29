@@ -36,7 +36,6 @@ use xecs::system::System;
 use std::ffi::{c_void, CStr, CString};
 use std::fs::File;
 use std::mem::align_of;
-use std::ops::BitOr;
 use std::os::raw::c_char;
 use std::ptr::{null, null_mut};
 use std::sync::Arc;
