@@ -1,146 +1,140 @@
-use elikar::common::SdlError;
-use elikar::events::PollEvents;
-use elikar::imgui::systems::{ImGuiEventSystem, ImGuiRenderer};
-use elikar::imgui::ImGui;
-use elikar::render::vulkan::systems::{FrameBegin, FrameEnd};
-use elikar::render::vulkan::{PresentMode, Vulkan};
-use elikar::window::WindowId;
-use elikar::{window, Elikar, ElikarStates};
-use std::cell::{Ref, RefMut};
-use std::convert::Infallible;
-use std::time::{Duration, Instant};
-use xecs::{End, System};
+use elikar::{Elikar, States, common::Spawner, imgui, window::{Window, events::WindowEventType}};
+use futures::{StreamExt, executor::block_on};
+use log::LevelFilter;
+use simple_logger::SimpleLogger;
+use xecs::{query::WithId, system::System};
 
-struct Quit;
-impl<'a> System<'a> for Quit {
-    type InitResource = ();
-    type Resource = (&'a PollEvents, &'a mut ElikarStates);
-    type Dependencies = PollEvents;
-    type Error = Infallible;
 
-    fn update(
-        &'a mut self,
-        (events, mut states): (Ref<'a, PollEvents>, RefMut<'a, ElikarStates>),
-    ) -> Result<(), Self::Error> {
-        if let Some(_) = events.quit {
-            states.quit();
-        }
-        Ok(())
-    }
-}
+fn main() {
+    SimpleLogger::new()
+        .with_level(LevelFilter::Warn)
+        .init().unwrap();
 
-struct ShowFpsOnWindow{
-    time : Instant,
-    window : WindowId,
-    title : String,
-}
-impl ShowFpsOnWindow {
-    pub fn from_window_id(id : WindowId) -> ShowFpsOnWindow {
-        ShowFpsOnWindow{
-            time: Instant::now(),
-            window: id,
-            title : String::new()
-        }
-    }
-}
-impl<'a> System<'a> for ShowFpsOnWindow {
-    type InitResource = &'a window::Manager;
-    type Resource = (&'a mut window::Manager,&'a ElikarStates);
-    type Dependencies = ();
-    type Error = SdlError;
-
-    fn init(&'a mut self,manager : Ref<'a,window::Manager>) -> Result<(),Self::Error>{
-        self.title = manager.window_ref(self.window)
-            .unwrap()
-            .title();
-        Ok(())
-    }
-
-    fn update(&'a mut self,(mut manager,states) : (RefMut<'a,window::Manager>,Ref<'a,ElikarStates>)) -> Result<(),Self::Error>{
-        if self.time.elapsed() > Duration::from_secs(1) {
-            let window = manager.window_mut(self.window).unwrap();
-            let title = format!("{} fps:{}",self.title.as_str(),states.actual_fps());
-            window.set_title(title.as_str());
-            self.time = Instant::now();
-        }
-        Ok(())
-    }
-}
-
-struct DrawGui;
-impl<'a> System<'a> for DrawGui {
-    type InitResource = ();
-    type Resource = &'a mut ImGui;
-    type Dependencies = ImGui;
-    type Error = Infallible;
-
-    fn update(&'a mut self, mut imgui: RefMut<'a, ImGui>) -> Result<(), Self::Error> {
-        imgui.draw_frame(|ui| {
-            let mut flag = false;
-            ui.show_demo_window(&mut flag);
-        });
-
-        Ok(())
-    }
-}
-
-struct RenderCrash;
-impl<'a> System<'a> for RenderCrash {
-    type InitResource = ();
-    type Resource = &'a mut xecs::Errors;
-    type Dependencies = End;
-    type Error = Infallible;
-
-    fn update(&'a mut self, mut errors: RefMut<'a, xecs::Errors>) -> Result<(), Self::Error> {
-        for error in errors.fetch_all_errors() {
-            panic!("Caught Error : {}",&error);
-        }
-        Ok(())
-    }
-}
-
-fn main(){
     let mut game = Elikar::new().unwrap();
-
-    let id = game
-        .current_stage_ref()
-        .system_data_mut::<window::Manager>()
-        .create_window()
+    let world = game.world();
+    
+    let window_id = game.window_builder()
+        .title("imgui")
+        .size(1280, 800)
+        .always_on_top()
+        .resizable()
         .vulkan()
-        .title("imgui render test")
-        //.resizable()
         .build()
-        .unwrap()
-        .id();
-
-    let vulkan = Vulkan::builder()
-        .enable_debug()
-        .present_mode(PresentMode::Immediate)
-        .debug_error()
-        .debug_warning()
-        .app_name("imgui render")
-        .build(
-            game.current_stage_ref()
-                .system_data_ref::<window::Manager>()
-                .window_ref(id)
-                .unwrap(),
-        )
         .unwrap();
 
-    let mut frame_begin = FrameBegin::new();
-    frame_begin.set_background_color((1.0,1.0,1.0,1.0));
+    let instance = wgpu::Instance::new(wgpu::Backends::VULKAN);
+    let surface = {
+        let world = world.read().unwrap();
+        let window = world.query::<&Window>().with_id()
+            .find(|(id,_)|*id == window_id)
+            .map(|(_,window)|window)
+            .unwrap();
+        unsafe { instance.create_surface(&window) }
+    };
 
-    game.current_stage_mut()
-        .add_system(Quit)
-        .add_system(vulkan)
-        .add_system(frame_begin)
-        .add_system(FrameEnd::new())
-        .add_system(ShowFpsOnWindow::from_window_id(id))
-        .add_system(ImGui::from_window_id(id))
-        .add_system(ImGuiRenderer::<DrawGui>::new())
-        .add_system(ImGuiEventSystem::new())
-        .add_system(DrawGui)
-        .add_system(RenderCrash);
+    let adapter = block_on(instance.request_adapter(
+            &wgpu::RequestAdapterOptions{
+                power_preference: wgpu::PowerPreference::HighPerformance,
+                force_fallback_adapter: false,
+                compatible_surface: Some(&surface),
+            }))
+    .unwrap();
 
-    game.run()
+    let (device, queue) = block_on(adapter.request_device(
+            &wgpu::DeviceDescriptor{
+                label: Some("device"),
+                features: wgpu::Features::empty(),
+                limits: wgpu::Limits::default(),
+            },None))
+    .unwrap();
+
+    let config = wgpu::SurfaceConfiguration {
+        usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+        format: surface.get_preferred_format(&adapter).unwrap(),
+        width : 1280,
+        height : 800,
+        present_mode: wgpu::PresentMode::Immediate,
+    };
+    surface.configure(&device, &config);
+
+    //store these in world
+    {
+        let mut world = world.write().unwrap();
+        world.store_resource(device);
+        world.store_resource(queue);
+        world.store_resource(config);
+        world.store_resource(surface);
+    }
+
+    let events = game.events();
+    game.spawn_local(async move{
+        let mut quit = events.on_quit();
+        let world = quit.world();
+        if let Some(_) = quit.next().await {
+            let world = world.read().unwrap();
+            let mut states = world.resource_mut::<States>().unwrap();
+            states.quit()
+        }
+    });
+
+    let events = game.events();
+    game.spawn_local(async move {
+        let mut window_event = events.on_window_events();
+        let world = window_event.world();
+        while let Some(window) = window_event.next().await {
+            let size = match window.event_type {
+                WindowEventType::Resized(w, h) => Some((w,h)),
+                WindowEventType::SizeChanged(w, h) => Some((w,h)),
+                _ => None
+            };
+
+            if let Some((w,h)) = size {
+                if w == 0 || h == 0 { continue; }
+
+                let world = world.read().unwrap();
+                let surface = world.resource_ref::<wgpu::Surface>().unwrap();
+                let device = world.resource_ref::<wgpu::Device>().unwrap();
+                let mut config = world.resource_mut::<wgpu::SurfaceConfiguration>().unwrap();
+                config.width = w;
+                config.height = h;
+                surface.configure(&device, &config)
+            }
+        }
+    });
+
+    let events = game.events();
+    let prepared = imgui::build(&mut game, events);
+
+    game.spawn_local(async move{
+        let mut prepared = prepared;
+        let world = prepared.world();
+
+        let mut name = String::new();
+        let mut age = 18;
+        while let Some(ctx_ref) = prepared.next().await {
+            egui::CentralPanel::default()
+                .show(&ctx_ref,|ui|{
+                    ui.heading("My egui Application");
+                    ui.horizontal(|ui| {
+                        ui.label("Your name: ");
+                        ui.text_edit_singleline(&mut name);
+                    });
+                    ui.add(egui::Slider::new(&mut age, 0..=120).text("age"));
+                    if ui.button("Click each year").clicked() {
+                        dbg!("Added");
+                        age += 1;
+                    }
+                    ui.label(format!("Hello '{}', age {}", name, age));
+                    let fps = {
+                        let world = world.read().unwrap();
+                        let states = world.resource_ref::<States>().unwrap();
+                        states.actual_fps()
+                    };
+                    ui.label(format!("Hello '{}', age {}", name, age));
+                    ui.label(format!("Fps : {} Hz",fps));
+                });
+        }
+    });
+
+    game.run();
 }

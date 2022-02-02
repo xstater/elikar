@@ -15,11 +15,14 @@ xrunits = "0.1.2"
 ash = "0.35"
 rand = "0.8"
 nalgebra-glm = "0.16"
-imgui = "0.8.2"
 crossbeam = "0.8"
 futures = { version = "0.3", features = ["executor","thread-pool"] }
 raw-window-handle = "0.4.2"
 wgpu = "0.12.0"
+log = "0.4"
+simple_logger = "2.1"
+egui = "0.16"
+egui_wgpu_backend = "0.16"
 
 [profile.dev]
 opt-level = 2

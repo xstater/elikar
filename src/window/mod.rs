@@ -1,5 +1,5 @@
 mod builder;
-pub mod event;
+pub mod events;
 mod window;
 mod raw_handle;
 

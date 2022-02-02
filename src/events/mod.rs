@@ -1,5 +1,5 @@
 use std::sync::{Arc, RwLock};
-use crate::{drop_file, keyboard, mouse, window};
+use crate::{drop_file, ime, keyboard, mouse, window};
 use xecs::world::World;
 use self::quit::QuitEvent;
 use sdl2_sys::*;
@@ -26,14 +26,15 @@ impl Events {
         {
             let mut world = world.write().unwrap();
             world.register::<QuitEvent>()
-                .register::<mouse::event::button::ButtonDownInner>()
-                .register::<mouse::event::button::ButtonUpInner>()
-                .register::<mouse::event::motion::MotionInner>()
-                .register::<mouse::event::wheel::WheelInner>()
-                .register::<window::event::WindowEventInner>()
-                .register::<keyboard::event::KeyDownInner>()
-                .register::<keyboard::event::KeyUpInner>()
-                .register::<drop_file::event::DropEventInner>()
+                .register::<mouse::events::button::ButtonDownInner>()
+                .register::<mouse::events::button::ButtonUpInner>()
+                .register::<mouse::events::motion::MotionInner>()
+                .register::<mouse::events::wheel::WheelInner>()
+                .register::<window::events::WindowEventInner>()
+                .register::<keyboard::events::KeyDownInner>()
+                .register::<keyboard::events::KeyUpInner>()
+                .register::<drop_file::events::DropEventInner>()
+                .register::<ime::events::text_input::TextInputInner>()
                 .register::<enter_frame::EnterFrameInner>()
                 .register::<leave_frame::LeaveFrameInner>()
                 .register::<update::UpdateInner>()
@@ -57,50 +58,50 @@ impl Events {
                     }
                 },
                 x if x == SDL_EventType::SDL_MOUSEBUTTONDOWN as u32 => {
-                    let event_info = mouse::event::button::EventInfo::from_sdl_event(&world,unsafe { sdl_event.button });
-                    for event in world.query::<&mouse::event::button::ButtonDownInner>() {
+                    let event_info = mouse::events::button::EventInfo::from_sdl_event(&world,unsafe { sdl_event.button });
+                    for event in world.query::<&mouse::events::button::ButtonDownInner>() {
                         event.tx.send(event_info).unwrap();
                         event.waker.wake_by_ref();
                     }
                 },
                 x if x == SDL_EventType::SDL_MOUSEBUTTONUP as u32 => {
-                    let event_info = mouse::event::button::EventInfo::from_sdl_event(&world,unsafe { sdl_event.button });
-                    for event in world.query::<&mouse::event::button::ButtonUpInner>() {
+                    let event_info = mouse::events::button::EventInfo::from_sdl_event(&world,unsafe { sdl_event.button });
+                    for event in world.query::<&mouse::events::button::ButtonUpInner>() {
                         event.tx.send(event_info).unwrap();
                         event.waker.wake_by_ref();
                     }
                 },
                 x if x == SDL_EventType::SDL_MOUSEMOTION as u32 => {
-                    let event_info = mouse::event::motion::EventInfo::from_sdl_event(&world,unsafe { sdl_event.motion });
-                    for event in world.query::<&mouse::event::motion::MotionInner>() {
+                    let event_info = mouse::events::motion::EventInfo::from_sdl_event(&world,unsafe { sdl_event.motion });
+                    for event in world.query::<&mouse::events::motion::MotionInner>() {
                         event.tx.send(event_info).unwrap();
                         event.waker.wake_by_ref();
                     }
                 },
                 x if x == SDL_EventType::SDL_MOUSEWHEEL as u32 => {
-                    let event_info = mouse::event::wheel::EventInfo::from_sdl_event(&world, unsafe { sdl_event.wheel });
-                    for event in world.query::<&mouse::event::wheel::WheelInner>() {
+                    let event_info = mouse::events::wheel::EventInfo::from_sdl_event(&world, unsafe { sdl_event.wheel });
+                    for event in world.query::<&mouse::events::wheel::WheelInner>() {
                         event.tx.send(event_info).unwrap();
                         event.waker.wake_by_ref();
                     }
                 },
                 x if x == SDL_EventType::SDL_KEYDOWN as u32 => {
-                    let event_info = keyboard::event::EventInfo::from_sdl_event(&world, unsafe { sdl_event.key });
-                    for event in world.query::<&keyboard::event::KeyDownInner>() {
+                    let event_info = keyboard::events::EventInfo::from_sdl_event(&world, unsafe { sdl_event.key });
+                    for event in world.query::<&keyboard::events::KeyDownInner>() {
                         event.tx.send(event_info).unwrap();
                         event.waker.wake_by_ref();
                     }
                 },
                 x if x == SDL_EventType::SDL_KEYUP as u32 => {
-                    let event_info = keyboard::event::EventInfo::from_sdl_event(&world, unsafe { sdl_event.key });
-                    for event in world.query::<&keyboard::event::KeyUpInner>() {
+                    let event_info = keyboard::events::EventInfo::from_sdl_event(&world, unsafe { sdl_event.key });
+                    for event in world.query::<&keyboard::events::KeyUpInner>() {
                         event.tx.send(event_info).unwrap();
                         event.waker.wake_by_ref();
                     }
                 },
                 x if x == SDL_EventType::SDL_WINDOWEVENT as u32 => {
-                    let event_info = window::event::EventInfo::from_sdl_event(&world, unsafe { sdl_event.window });
-                    for event in world.query::<&window::event::WindowEventInner>() {
+                    let event_info = window::events::EventInfo::from_sdl_event(&world, unsafe { sdl_event.window });
+                    for event in world.query::<&window::events::WindowEventInner>() {
                         event.tx.send(event_info).unwrap();
                         event.waker.wake_by_ref();
                     }
@@ -108,53 +109,72 @@ impl Events {
                 x if x == SDL_EventType::SDL_DROPBEGIN as u32 => {
                 },
                 x if x == SDL_EventType::SDL_DROPFILE as u32 => {
-                    let event_info = drop_file::event::EventInfo::from_sdl_event(&world,unsafe { sdl_event.drop });
-                    for event in world.query::<&drop_file::event::DropEventInner>() {
+                    let event_info = drop_file::events::EventInfo::from_sdl_event(&world,unsafe { sdl_event.drop });
+                    for event in world.query::<&drop_file::events::DropEventInner>() {
                         event.tx.send(event_info.clone()).unwrap();
                         event.waker.wake_by_ref()
                     }
                 },
                 x if x == SDL_EventType::SDL_DROPCOMPLETE as u32 => {
                 },
+                x if x == SDL_EventType::SDL_TEXTEDITING as u32 => {
+                    dbg!("text editing");
+                },
+                x if x == SDL_EventType::SDL_TEXTINPUT as u32 => {
+                    let event_info = ime::events::text_input::EventInfo::from_sdl_event(&world, unsafe{ sdl_event.text });
+                    dbg!(&event_info);
+                    for event in world.query::<&ime::events::text_input::TextInputInner>() {
+                        event.tx.send(event_info.clone()).unwrap();
+                        event.waker.wake_by_ref();
+                    }
+                },
                 _ => {}
             }
         }
+    }
+
+    pub fn world(&self) -> Arc<RwLock<World>> {
+        self.world.clone()
     }
 
     pub fn on_quit(&self) -> Quit {
         Quit::from_world(self.world.clone())
     }
 
-    pub fn on_mouse_down(&self) -> mouse::event::button::ButtonDown {
-        mouse::event::button::ButtonDown::from_world(self.world.clone())
+    pub fn on_mouse_down(&self) -> mouse::events::button::ButtonDown {
+        mouse::events::button::ButtonDown::from_world(self.world.clone())
     }
 
-    pub fn on_mouse_up(&self) -> mouse::event::button::ButtonUp{
-        mouse::event::button::ButtonUp::from_world(self.world.clone())
+    pub fn on_mouse_up(&self) -> mouse::events::button::ButtonUp{
+        mouse::events::button::ButtonUp::from_world(self.world.clone())
     }
 
-    pub fn on_mouse_motion(&self) -> mouse::event::motion::Motion {
-        mouse::event::motion::Motion::from_world(self.world.clone())
+    pub fn on_mouse_motion(&self) -> mouse::events::motion::Motion {
+        mouse::events::motion::Motion::from_world(self.world.clone())
     }
 
-    pub fn on_mouse_wheel(&self) -> mouse::event::wheel::Wheel {
-        mouse::event::wheel::Wheel::from_world(self.world.clone())
+    pub fn on_mouse_wheel(&self) -> mouse::events::wheel::Wheel {
+        mouse::events::wheel::Wheel::from_world(self.world.clone())
     }
 
-    pub fn on_key_down(&self) -> keyboard::event::KeyDown {
-        keyboard::event::KeyDown::from_world(self.world.clone())
+    pub fn on_key_down(&self) -> keyboard::events::KeyDown {
+        keyboard::events::KeyDown::from_world(self.world.clone())
     }
 
-    pub fn on_key_up(&self) -> keyboard::event::KeyUp {
-        keyboard::event::KeyUp::from_world(self.world.clone())
+    pub fn on_key_up(&self) -> keyboard::events::KeyUp {
+        keyboard::events::KeyUp::from_world(self.world.clone())
     }
 
-    pub fn on_window_events(&self) -> window::event::WindowEvent {
-        window::event::WindowEvent::from_world(self.world.clone())
+    pub fn on_window_events(&self) -> window::events::WindowEvent {
+        window::events::WindowEvent::from_world(self.world.clone())
     }
 
-    pub fn on_drop_file(&self) -> drop_file::event::DropEvent {
-        drop_file::event::DropEvent::from_world(self.world.clone())
+    pub fn on_drop_file(&self) -> drop_file::events::DropEvent {
+        drop_file::events::DropEvent::from_world(self.world.clone())
+    }
+
+    pub fn on_text_input(&self) -> ime::events::text_input::TextInput {
+        ime::events::text_input::TextInput::from_world(self.world.clone())
     }
 
 

@@ -1,10 +1,11 @@
 use crate::clipboard::Clipboard;
-use crate::common::SdlError;
+use crate::common::{SdlError, Spawner};
 use crate::events::Events;
 use crate::events::enter_frame::EnterFrameInner;
 use crate::events::leave_frame::LeaveFrameInner;
 use crate::events::render::RenderInner;
 use crate::events::update::UpdateInner;
+use crate::ime::IME;
 use crate::keyboard::Keyboard;
 use crate::mouse::Mouse;
 use crate::sysinfo::SystemInfo;
@@ -141,6 +142,7 @@ impl Elikar {
         world.store_resource(Keyboard::new());
         world.store_resource(Clipboard::new());
         world.store_resource(SystemInfo::new());
+        world.store_resource(IME::new());
 
         let world = Arc::new(RwLock::new(world));
         let events = Events::from_world(world.clone());
@@ -164,18 +166,10 @@ impl Elikar {
         window::Builder::from_world(self.world.clone())
     }
 
-    pub fn spawn_local<F>(&mut self,f : F)
-    where F : Future<Output = ()> + 'static{
-        self.local_pool.spawner().spawn_local(f).unwrap();
-    }
-
-    pub fn spawn<F>(&mut self,f : F)
-    where F : Future<Output = ()> + Send + 'static {
-        self.thread_pool.spawn(f).unwrap();
-    }
-
     pub fn run(mut self) {
         let events = self.events();
+        // as least run all future once to register their waker to World
+        self.local_pool.run_until_stalled();
         let mut frame = 1;
         'mainloop : loop {
             let start_time = Instant::now();
@@ -241,6 +235,18 @@ impl Elikar {
             }
             frame += 1;
         }
+    }
+}
+
+impl Spawner for Elikar {
+    fn spawn<F>(&mut self,f : F)
+    where F : Future<Output = ()> + Send + 'static {
+        self.thread_pool.spawn(f).unwrap();
+    }
+
+    fn spawn_local<F>(&mut self,f : F)
+    where F : Future<Output = ()> + 'static {
+        self.local_pool.spawner().spawn_local(f).unwrap();
     }
 }
 

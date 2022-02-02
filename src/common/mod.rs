@@ -1,8 +1,10 @@
 mod sdl_error;
+mod spawner;
 
 pub use sdl_error::{Result, SdlError};
 use std::ffi::CStr;
 use std::os::raw::c_char;
+pub use spawner::Spawner;
 
 /// ## Safety
 /// sdl_string must be valid.

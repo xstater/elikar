@@ -1,7 +1,8 @@
 use std::borrow::Cow;
-
-use elikar::{Elikar, States, window::{Window, event::WindowEventType}};
+use elikar::{Elikar, States, common::Spawner, window::{Window, event::WindowEventType}};
 use futures::{StreamExt, executor::block_on};
+use log::LevelFilter;
+use simple_logger::SimpleLogger;
 use wgpu::{Backends, Instance};
 use xecs::{query::WithId, system::System};
 
@@ -9,6 +10,10 @@ const WIDTH:u32 = 1280;
 const HEIGHT:u32 = 768;
 
 fn main() {
+    SimpleLogger::new()
+        .with_level(LevelFilter::Warn)
+        .init().unwrap();
+
     let mut game = Elikar::new().unwrap();
     let world = game.world();
 
@@ -18,7 +23,7 @@ fn main() {
         .build()
         .unwrap();
 
-    let instance = Instance::new(Backends::PRIMARY);
+    let instance = Instance::new(Backends::VULKAN);
     let surface = {
         let world = world.read().unwrap();
         let window = world.query::<&Window>().with_id()

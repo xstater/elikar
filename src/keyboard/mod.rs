@@ -1,25 +1,25 @@
 use sdl2_sys::*;
-use crate::keyboard::screen::ScreenKeyboard;
 use std::ffi::CStr;
+use std::marker::PhantomData;
 use std::os::raw::c_char;
 pub use code::Code;
 
 mod code;
-pub mod event;
-pub mod screen;
+pub mod events;
 
 pub struct Keyboard {
-    screen: ScreenKeyboard,
+    // To avoid be constructed by user
+    _marker : PhantomData<()>
 }
 
 impl Keyboard {
     pub(in crate) fn new() -> Keyboard {
         Keyboard {
-            screen: ScreenKeyboard,
+            _marker : Default::default()
         }
     }
 
-    pub fn name(&self, code: Code) -> String {
+    pub fn key_name(&self, code: Code) -> String {
         let str_ptr: *const c_char = unsafe { SDL_GetScancodeName(code.into()) };
         unsafe { CStr::from_ptr(str_ptr) }
             .to_str()
@@ -29,10 +29,6 @@ impl Keyboard {
 
     pub fn mod_state(&self) -> Mod {
         Mod::new(unsafe { SDL_GetModState() as u32 })
-    }
-
-    pub fn screen_keyboard(&self) -> &ScreenKeyboard {
-        &self.screen
     }
 }
 

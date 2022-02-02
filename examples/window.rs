@@ -1,4 +1,4 @@
-use elikar::{Elikar, States};
+use elikar::{Elikar, States, common::Spawner};
 use futures::StreamExt;
 use xecs::system::System;
 

@@ -27,7 +27,7 @@ use ash::vk::{
 };
 use ash::{Device, Entry, Instance};
 use elikar::{Elikar, States};
-use elikar::common::Result as ElikarResult;
+use elikar::common::{Result as ElikarResult, Spawner};
 use elikar::common::SdlError;
 use elikar::window::Window;
 use futures::StreamExt;

@@ -1,5 +1,5 @@
 pub mod cursor;
-pub mod event;
+pub mod events;
 
 use sdl2_sys::{SDL_CaptureMouse, SDL_DISABLE, SDL_ENABLE, SDL_GetCursor, SDL_GetGlobalMouseState, SDL_GetMouseState, SDL_GetRelativeMouseMode, SDL_GetRelativeMouseState, SDL_QUERY, SDL_SetCursor, SDL_SetRelativeMouseMode, SDL_ShowCursor, SDL_WarpMouseGlobal, SDL_bool};
 use crate::common::{Result, SdlError};
