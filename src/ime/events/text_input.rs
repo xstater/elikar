@@ -1,10 +1,8 @@
 use std::{pin::Pin, sync::{Arc, RwLock}, task::{Context, Poll, Waker}};
-
 use crossbeam::channel::{Receiver, Sender, unbounded};
 use futures::Stream;
 use sdl2_sys::SDL_TextInputEvent;
 use xecs::{entity::EntityId, query::WithId, system::System, world::World};
-
 use crate::{common::from_sdl_string, window::Window};
 
 #[derive(Debug,Clone)]

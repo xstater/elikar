@@ -1,2 +1,2 @@
 # Elikar
-A Game Engine owned by EflreinOnline 
+A rust ECS game engine

@@ -1,5 +1,5 @@
 use std::marker::PhantomData;
-use sdl2_sys::{SDL_HasScreenKeyboardSupport, SDL_IsScreenKeyboardShown, SDL_Rect, SDL_SetTextInputRect, SDL_StartTextInput, SDL_StopTextInput, SDL_bool};
+use sdl2_sys::{SDL_HasScreenKeyboardSupport, SDL_IsScreenKeyboardShown, SDL_IsTextInputActive, SDL_Rect, SDL_SetTextInputRect, SDL_StartTextInput, SDL_StopTextInput, SDL_bool};
 use crate::window::Window;
 
 pub mod events;
@@ -16,31 +16,21 @@ impl IME {
         }
     }
 
-    pub fn start_text_input(&mut self) -> InputBox<'_> {
-        InputBox::from_ime(self)
-    }
-
-    pub fn has_screen_keyboard_support(&self) -> bool {
-        unsafe { SDL_HasScreenKeyboardSupport() == SDL_bool::SDL_TRUE }
-    }
-
-    pub fn is_screen_keyboard_shown(&self, window: &Window) -> bool {
-        let window_ptr = unsafe { window.window_ptr() };
-        return unsafe { SDL_IsScreenKeyboardShown(window_ptr) == SDL_bool::SDL_TRUE };
-    }
-}
-
-pub struct InputBox<'a>{
-    _ime : &'a mut IME
-}
-
-impl<'a> InputBox<'a> {
-    fn from_ime(ime : &'a mut IME) -> Self {
+    pub fn start(&mut self) {
         unsafe {
-            SDL_StartTextInput()
-        };
-        InputBox {
-            _ime : ime,
+            SDL_StartTextInput();
+        }
+    }
+
+    pub fn stop(&mut self) {
+        unsafe {
+            SDL_StopTextInput();
+        }
+    }
+
+    pub fn is_active(&self) -> bool {
+        unsafe {
+            SDL_IsTextInputActive() == SDL_bool::SDL_TRUE
         }
     }
 
@@ -55,12 +45,14 @@ impl<'a> InputBox<'a> {
             SDL_SetTextInputRect(&mut rect)
         };
     }
-}
 
-impl<'a> Drop for InputBox<'a> {
-    fn drop(&mut self) {
-        unsafe {
-            SDL_StopTextInput();
-        }
+    pub fn has_screen_keyboard_support(&self) -> bool {
+        unsafe { SDL_HasScreenKeyboardSupport() == SDL_bool::SDL_TRUE }
+    }
+
+    pub fn is_screen_keyboard_shown(&self, window: &Window) -> bool {
+        let window_ptr = unsafe { window.window_ptr() };
+        return unsafe { SDL_IsScreenKeyboardShown(window_ptr) == SDL_bool::SDL_TRUE };
     }
 }
+

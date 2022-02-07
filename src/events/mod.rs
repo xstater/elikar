@@ -35,6 +35,7 @@ impl Events {
                 .register::<keyboard::events::KeyUpInner>()
                 .register::<drop_file::events::DropEventInner>()
                 .register::<ime::events::text_input::TextInputInner>()
+                .register::<ime::events::text_editing::TextEditingInner>()
                 .register::<enter_frame::EnterFrameInner>()
                 .register::<leave_frame::LeaveFrameInner>()
                 .register::<update::UpdateInner>()
@@ -112,13 +113,17 @@ impl Events {
                     let event_info = drop_file::events::EventInfo::from_sdl_event(&world,unsafe { sdl_event.drop });
                     for event in world.query::<&drop_file::events::DropEventInner>() {
                         event.tx.send(event_info.clone()).unwrap();
-                        event.waker.wake_by_ref()
+                        event.waker.wake_by_ref();
                     }
                 },
                 x if x == SDL_EventType::SDL_DROPCOMPLETE as u32 => {
                 },
                 x if x == SDL_EventType::SDL_TEXTEDITING as u32 => {
-                    dbg!("text editing");
+                    let event_info = ime::events::text_editing::EventInfo::from_sdl_event(&world,unsafe{ sdl_event.edit });
+                    for event in world.query::<&ime::events::text_editing::TextEditingInner>() {
+                        event.tx.send(event_info.clone()).unwrap();
+                        event.waker.wake_by_ref();
+                    }
                 },
                 x if x == SDL_EventType::SDL_TEXTINPUT as u32 => {
                     let event_info = ime::events::text_input::EventInfo::from_sdl_event(&world, unsafe{ sdl_event.text });
@@ -171,6 +176,10 @@ impl Events {
 
     pub fn on_drop_file(&self) -> drop_file::events::DropEvent {
         drop_file::events::DropEvent::from_world(self.world.clone())
+    }
+
+    pub fn on_text_editing(&self) -> ime::events::text_editing::TextEditing {
+        ime::events::text_editing::TextEditing::from_world(self.world.clone())
     }
 
     pub fn on_text_input(&self) -> ime::events::text_input::TextInput {

@@ -1,9 +1,14 @@
 [package]
 name = "elikar"
 version = "0.1.0"
-authors = ["xstater <l>"]
+authors = ["xstater:a166224@163.com"]
 edition = "2021"
-build = "build.rs"
+license = "MIT"
+description = "A rust ECS game engine"
+readme = "README.md"
+repository = "https://github.com/xstater/elikar/"
+keywords = ["gamedev","ecs","game-engine"]
+categories = ["game-development","game-engines"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -12,25 +17,10 @@ sdl2-sys = "0.35"
 libc = "0.2"
 xecs = "0.4"
 xrunits = "0.1.2"
-ash = "0.35"
-rand = "0.8"
-nalgebra-glm = "0.16"
 crossbeam = "0.8"
 futures = { version = "0.3", features = ["executor","thread-pool"] }
 raw-window-handle = "0.4.2"
-wgpu = "0.12.0"
 log = "0.4"
-simple_logger = "2.1"
-egui = "0.16"
-egui_wgpu_backend = "0.16"
-
-[profile.dev]
-opt-level = 2
-
-[profile.release]
-opt-level = 2
-debug = true
-lto = false
 
 [lib]
 name = "elikar"

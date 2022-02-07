@@ -131,6 +131,7 @@ impl Elikar {
         if unsafe { SDL_InitSubSystem(SDL_INIT_EVENTS) } != 0 {
             return Err(SdlInitError::Events(SdlError::get()));
         }
+
         let mut world = World::new();
 
         // Pre-register some compoenents
