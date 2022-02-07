@@ -1,6 +1,6 @@
 [package]
 name = "elikar"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["xstater:a166224@163.com"]
 edition = "2021"
 license = "MIT"
@@ -22,6 +22,3 @@ futures = { version = "0.3", features = ["executor","thread-pool"] }
 raw-window-handle = "0.4.2"
 log = "0.4"
 
-[lib]
-name = "elikar"
-crate-type = ["rlib","dylib"]
