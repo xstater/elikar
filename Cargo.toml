@@ -4,11 +4,11 @@ version = "0.1.2"
 authors = ["xstater:a166224@163.com"]
 edition = "2021"
 license = "MIT"
-description = "A rust ECS game engine"
+description = "A rust asynchronous ECS game engine"
 readme = "README.md"
 repository = "https://github.com/xstater/elikar/"
-keywords = ["gamedev","ecs","game-engine"]
-categories = ["game-development","game-engines"]
+keywords = ["gamedev","ecs","game-engine","asynchronous"]
+categories = ["game-development","game-engines","asynchronous","concurrency"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
