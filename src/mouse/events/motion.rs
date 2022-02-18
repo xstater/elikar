@@ -62,7 +62,7 @@ impl Stream for Motion {
         if self.rx.is_none() {
             let (tx,rx) = unbounded();
             let id = {
-                let mut world = self.world.write().unwrap();
+                let world = self.world.read().unwrap();
                 let waker = cx.waker().clone();
                 world.create_entity()
                     .attach(MotionInner{ tx, waker })
@@ -87,7 +87,7 @@ impl System for Motion {
 
 impl Drop for Motion{
     fn drop(&mut self) {
-        let mut world = self.world.write().unwrap();
+        let world = self.world.read().unwrap();
         if let Some((id,_)) = self.rx {
             world.remove_entity(id)
         }

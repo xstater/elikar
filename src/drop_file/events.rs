@@ -63,7 +63,7 @@ impl Stream for DropEvent{
         if self.rx.is_none() {
             let (tx,rx) = unbounded();
             let id = {
-                let mut world = self.world.write().unwrap();
+                let world = self.world.read().unwrap();
                 let waker = cx.waker().clone();
                 world.create_entity()
                     .attach(DropEventInner{ tx, waker })
@@ -88,7 +88,7 @@ impl System for DropEvent {
 
 impl Drop for DropEvent{
     fn drop(&mut self) {
-        let mut world = self.world.write().unwrap();
+        let world = self.world.write().unwrap();
         if let Some((id,_)) = self.rx {
             world.remove_entity(id)
         }

@@ -73,7 +73,7 @@ impl Stream for KeyDown{
         if self.rx.is_none() {
             let (tx,rx) = unbounded();
             let id = {
-                let mut world = self.world.write().unwrap();
+                let world = self.world.read().unwrap();
                 let waker = cx.waker().clone();
                 world.create_entity()
                     .attach(KeyDownInner{ tx, waker })
@@ -98,7 +98,7 @@ impl System for KeyDown {
 
 impl Drop for KeyDown{
     fn drop(&mut self) {
-        let mut world = self.world.write().unwrap();
+        let world = self.world.read().unwrap();
         if let Some((id,_)) = self.rx {
             world.remove_entity(id)
         }
@@ -136,7 +136,7 @@ impl Stream for KeyUp {
         if self.rx.is_none() {
             let (tx,rx) = unbounded();
             let id = {
-                let mut world = self.world.write().unwrap();
+                let world = self.world.read().unwrap();
                 let waker = cx.waker().clone();
                 world.create_entity()
                     .attach(KeyUpInner{ tx, waker })
@@ -161,7 +161,7 @@ impl System for KeyUp{
 
 impl Drop for KeyUp{
     fn drop(&mut self) {
-        let mut world = self.world.write().unwrap();
+        let world = self.world.read().unwrap();
         if let Some((id,_)) = self.rx {
             world.remove_entity(id)
         }

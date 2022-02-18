@@ -63,7 +63,7 @@ impl Stream for TextEditing{
         if self.rx.is_none() {
             let (tx,rx) = unbounded();
             let id = {
-                let mut world = self.world.write().unwrap();
+                let world = self.world.read().unwrap();
                 let waker = cx.waker().clone();
                 world.create_entity()
                     .attach(TextEditingInner{ tx, waker })
@@ -88,7 +88,7 @@ impl System for TextEditing{
 
 impl Drop for TextEditing{
     fn drop(&mut self) {
-        let mut world = self.world.write().unwrap();
+        let world = self.world.read().unwrap();
         if let Some((id,_)) = self.rx {
             world.remove_entity(id)
         }

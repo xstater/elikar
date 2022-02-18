@@ -169,7 +169,7 @@ impl Builder {
             return Err(SdlError::get());
         } else {
             let window = unsafe { Window::from_ptr(window_ptr) };
-            let mut world = self.world.write().unwrap();
+            let world = self.world.read().unwrap();
             let id = world.create_entity()
                 .attach(window)
                 .into_id();

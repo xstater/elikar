@@ -91,7 +91,7 @@ impl Stream for ButtonDown {
         if self.rx.is_none() {
             let (tx,rx) = unbounded();
             let id = {
-                let mut world = self.world.write().unwrap();
+                let world = self.world.read().unwrap();
                 let waker = cx.waker().clone();
                 world.create_entity()
                     .attach(ButtonDownInner{ tx, waker })
@@ -116,7 +116,7 @@ impl System for ButtonDown {
 
 impl Drop for ButtonDown {
     fn drop(&mut self) {
-        let mut world = self.world.write().unwrap();
+        let world = self.world.read().unwrap();
         if let Some((id,_)) = self.rx {
             world.remove_entity(id)
         }
@@ -154,7 +154,7 @@ impl Stream for ButtonUp{
         if self.rx.is_none() {
             let (tx,rx) = unbounded();
             let id = {
-                let mut world = self.world.write().unwrap();
+                let world = self.world.read().unwrap();
                 let waker = cx.waker().clone();
                 world.create_entity()
                     .attach(ButtonUpInner{ tx, waker })
@@ -179,7 +179,7 @@ impl System for ButtonUp{
 
 impl Drop for ButtonUp{
     fn drop(&mut self) {
-        let mut world = self.world.write().unwrap();
+        let world = self.world.read().unwrap();
         if let Some((id,_)) = self.rx {
             world.remove_entity(id)
         }
