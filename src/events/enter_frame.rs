@@ -1,6 +1,7 @@
-use std::{pin::Pin, sync::{Arc, RwLock}, task::{Context, Poll, Waker}};
+use std::{pin::Pin, sync::Arc, task::{Context, Poll, Waker}};
 use crossbeam::channel::{Receiver, Sender, unbounded};
 use futures::Stream;
+use parking_lot::RwLock;
 use xecs::{entity::EntityId, system::System, world::World};
 
 pub(in crate) struct EnterFrameInner {
@@ -29,7 +30,7 @@ impl Stream for EnterFrame {
         if self.rx.is_none() {
             let (tx,rx) = unbounded();
             let id = {
-                let world = self.world.read().unwrap();
+                let world = self.world.read();
                 let waker = cx.waker().clone();
                 world.create_entity()
                     .attach(EnterFrameInner {
@@ -56,7 +57,7 @@ impl System for EnterFrame{
 
 impl Drop for EnterFrame{
     fn drop(&mut self) {
-        let world = self.world.read().unwrap();
+        let world = self.world.read();
         if let Some((id,_)) = self.rx {
             world.remove_entity(id)
         }

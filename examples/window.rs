@@ -19,8 +19,8 @@ fn main() {
         let world = quit.world();
         if let Some(_) = quit.next().await {
             println!("Quit");
-            let world = world.read().unwrap();
-            let mut states = world.resource_mut::<States>().unwrap();
+            let world = world.read();
+            let mut states = world.resource_write::<States>().unwrap();
             states.quit();
         }
     });

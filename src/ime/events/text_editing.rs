@@ -1,7 +1,7 @@
-use std::{pin::Pin, sync::{Arc, RwLock}, task::{Context, Poll, Waker}};
-
+use std::{pin::Pin, sync::Arc, task::{Context, Poll, Waker}};
 use crossbeam::channel::{Receiver, Sender, unbounded};
 use futures::Stream;
+use parking_lot::RwLock;
 use sdl2_sys::SDL_TextEditingEvent;
 use xecs::{entity::EntityId, query::WithId, system::System, world::World};
 
@@ -63,7 +63,7 @@ impl Stream for TextEditing{
         if self.rx.is_none() {
             let (tx,rx) = unbounded();
             let id = {
-                let world = self.world.read().unwrap();
+                let world = self.world.read();
                 let waker = cx.waker().clone();
                 world.create_entity()
                     .attach(TextEditingInner{ tx, waker })
@@ -88,7 +88,7 @@ impl System for TextEditing{
 
 impl Drop for TextEditing{
     fn drop(&mut self) {
-        let world = self.world.read().unwrap();
+        let world = self.world.read();
         if let Some((id,_)) = self.rx {
             world.remove_entity(id)
         }

@@ -1,13 +1,12 @@
-extern crate sdl2_sys;
-
 use crate::common::{Result, SdlError};
 use crate::window::window::Window;
+use parking_lot::RwLock;
 use sdl2_sys::*;
 use xecs::entity::EntityId;
 use xecs::world::World;
 use std::ffi::CString;
 use std::fmt::{Debug, Formatter};
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 
 pub struct Builder {
     title: String,
@@ -169,7 +168,7 @@ impl Builder {
             return Err(SdlError::get());
         } else {
             let window = unsafe { Window::from_ptr(window_ptr) };
-            let world = self.world.read().unwrap();
+            let world = self.world.read();
             let id = world.create_entity()
                 .attach(window)
                 .into_id();

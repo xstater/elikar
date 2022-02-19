@@ -4,9 +4,9 @@ use elikar::Elikar;
 fn main() {
     let game = Elikar::new().unwrap();
     let world = game.world();
-    let world = world.read().unwrap();
+    let world = world.read();
     let mut clipboard = world
-        .resource_mut::<Clipboard>().unwrap();
+        .resource_write::<Clipboard>().unwrap();
 
     println!("{}", clipboard.has());
     println!("{}", clipboard.get().unwrap());

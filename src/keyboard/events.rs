@@ -1,8 +1,8 @@
-use std::{pin::Pin, sync::{Arc, RwLock}, task::{Context, Poll, Waker}};
-
+use std::{pin::Pin, sync::Arc, task::{Context, Poll, Waker}};
 use crate::{keyboard::{Code, Mod}, window::Window};
 use crossbeam::channel::{Receiver, Sender, unbounded};
 use futures::Stream;
+use parking_lot::RwLock;
 use sdl2_sys::{SDL_KeyboardEvent, SDL_PRESSED};
 use xecs::{entity::EntityId, query::WithId, system::System, world::World};
 
@@ -73,7 +73,7 @@ impl Stream for KeyDown{
         if self.rx.is_none() {
             let (tx,rx) = unbounded();
             let id = {
-                let world = self.world.read().unwrap();
+                let world = self.world.read();
                 let waker = cx.waker().clone();
                 world.create_entity()
                     .attach(KeyDownInner{ tx, waker })
@@ -98,7 +98,7 @@ impl System for KeyDown {
 
 impl Drop for KeyDown{
     fn drop(&mut self) {
-        let world = self.world.read().unwrap();
+        let world = self.world.read();
         if let Some((id,_)) = self.rx {
             world.remove_entity(id)
         }
@@ -136,7 +136,7 @@ impl Stream for KeyUp {
         if self.rx.is_none() {
             let (tx,rx) = unbounded();
             let id = {
-                let world = self.world.read().unwrap();
+                let world = self.world.read();
                 let waker = cx.waker().clone();
                 world.create_entity()
                     .attach(KeyUpInner{ tx, waker })
@@ -161,7 +161,7 @@ impl System for KeyUp{
 
 impl Drop for KeyUp{
     fn drop(&mut self) {
-        let world = self.world.read().unwrap();
+        let world = self.world.read();
         if let Some((id,_)) = self.rx {
             world.remove_entity(id)
         }

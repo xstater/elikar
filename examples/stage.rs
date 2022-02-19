@@ -13,8 +13,8 @@ fn main() {
         let mut quit = events.on_quit();
         let world = quit.world();
         if let Some(_) = quit.next().await {
-            let world = world.read().unwrap();
-            let mut states = world.resource_mut::<States>().unwrap();
+            let world = world.read();
+            let mut states = world.resource_write::<States>().unwrap();
             states.quit();
         }
     });

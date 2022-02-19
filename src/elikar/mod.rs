@@ -13,11 +13,13 @@ use crate::window;
 use futures::Future;
 use futures::executor::{LocalPool, ThreadPool};
 use futures::task::{LocalSpawnExt, SpawnExt};
+use log::{error, info, trace};
+use parking_lot::RwLock;
 use sdl2_sys::*;
 use xecs::world::World;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 pub use self::states::States;
 
@@ -110,13 +112,16 @@ impl Error for SdlInitError {
 
 impl Elikar {
     pub fn new() -> Result<Elikar, SdlInitError> {
+        info!(target: "Elikar","Initializing Elikar");
         // if unsafe { SDL_InitSubSystem(SDL_INIT_TIMER) } != 0 {
         //     return Err(SdlInitError::Timer(get_error()));
         // }
         // if unsafe { SDL_InitSubSystem(SDL_INIT_AUDIO) } != 0 {
         //     return Err(SdlInitError::Audio(get_error()));
         // }
+        trace!(target: "Elikar","Initializing SDL video subsystem");
         if unsafe { SDL_InitSubSystem(SDL_INIT_VIDEO) } != 0 {
+            error!(target: "Elikar","Initialize SDL video subsystem failed");
             return Err(SdlInitError::Video(SdlError::get()));
         }
         // if unsafe { SDL_InitSubSystem(SDL_INIT_JOYSTICK) } != 0 {
@@ -128,22 +133,26 @@ impl Elikar {
         // if unsafe { SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) } != 0 {
         //     return Err(SdlInitError::GameController(get_error()));
         // }
+        trace!(target: "Elikar","Initializing SDL events subsystem");
         if unsafe { SDL_InitSubSystem(SDL_INIT_EVENTS) } != 0 {
+            error!(target: "Elikar","Initialize SDL events subsystem failed");
             return Err(SdlInitError::Events(SdlError::get()));
         }
 
         let mut world = World::new();
 
         // Pre-register some compoenents
+        trace!(target: "Elikar","Register elikar compoenents");
         world.register::<window::Window>();
 
         // Pre-store some resource
-        world.store_resource(States::new());
-        world.store_resource(Mouse::new());
-        world.store_resource(Keyboard::new());
-        world.store_resource(Clipboard::new());
-        world.store_resource(SystemInfo::new());
-        world.store_resource(IME::new());
+        trace!(target: "Elikar","Register elikar resources");
+        world.register_resource(States::new());
+        world.register_resource(Mouse::new());
+        world.register_resource(Keyboard::new());
+        world.register_resource(Clipboard::new());
+        world.register_resource(SystemInfo::new());
+        world.register_resource(IME::new());
 
         let world = Arc::new(RwLock::new(world));
         let events = Events::from_world(world.clone());
@@ -168,6 +177,7 @@ impl Elikar {
     }
 
     pub fn run(mut self) {
+        info!(target: "Elikar","Start running");
         let events = self.events();
         // as least run all future once to register their waker to World
         self.local_pool.run_until_stalled();
@@ -176,8 +186,8 @@ impl Elikar {
             let start_time = Instant::now();
             // Quit checking
             {
-                let world = self.world.read().unwrap();
-                if world.resource_ref::<States>()
+                let world = self.world.read();
+                if world.resource_read::<States>()
                     .expect("Elikar run(): Game states was moved unexpectly")
                     .quit {
                     break 'mainloop;
@@ -185,7 +195,7 @@ impl Elikar {
             }
             // enter frame
             {
-                let world = self.world.read().unwrap();
+                let world = self.world.read();
                 for inner in world.query::<&EnterFrameInner>() {
                     inner.tx.send(frame).unwrap();
                     inner.waker.wake_by_ref();
@@ -197,7 +207,7 @@ impl Elikar {
             self.local_pool.run_until_stalled();
             // Update
             {
-                let world = self.world.read().unwrap();
+                let world = self.world.read();
                 for inner in world.query::<&UpdateInner>() {
                     inner.tx.send(()).unwrap();
                     inner.waker.wake_by_ref();
@@ -206,7 +216,7 @@ impl Elikar {
             self.local_pool.run_until_stalled();
             // Render
             {
-                let world = self.world.read().unwrap();
+                let world = self.world.read();
                 for inner in world.query::<&RenderInner>() {
                     inner.tx.send(()).unwrap();
                     inner.waker.wake_by_ref();
@@ -215,7 +225,7 @@ impl Elikar {
             self.local_pool.run_until_stalled();
             // leave frame
             {
-                let world = self.world.read().unwrap();
+                let world = self.world.read();
                 for inner in world.query::<&LeaveFrameInner>() {
                     inner.tx.send(frame).unwrap();
                     inner.waker.wake_by_ref();
@@ -224,8 +234,8 @@ impl Elikar {
             self.local_pool.run_until_stalled();
             // update elikar state
             {
-                let world = self.world.read().unwrap();
-                let mut states = world.resource_mut::<States>().unwrap();
+                let world = self.world.read();
+                let mut states = world.resource_write::<States>().unwrap();
                 states.frame_counter += 1;
                 if states.sec_timer.elapsed() > Duration::from_secs(1) {
                     states.frames_in_sec = states.frame_counter;
@@ -242,11 +252,13 @@ impl Elikar {
 impl Spawner for Elikar {
     fn spawn<F>(&mut self,f : F)
     where F : Future<Output = ()> + Send + 'static {
+        info!(target: "Elikar","Spawn an async task");
         self.thread_pool.spawn(f).unwrap();
     }
 
     fn spawn_local<F>(&mut self,f : F)
     where F : Future<Output = ()> + 'static {
+        info!(target: "Elikar","Spawn a lock task");
         self.local_pool.spawner().spawn_local(f).unwrap();
     }
 }
@@ -254,6 +266,7 @@ impl Spawner for Elikar {
 impl Drop for Elikar {
     fn drop(&mut self) {
         unsafe {
+            info!(target:"Elikar","Quit Elikar");
             SDL_Quit();
         }
     }

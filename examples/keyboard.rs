@@ -14,8 +14,8 @@ fn main() {
         while let Some(key) = key_down.next().await {
             println!("{:?}",key);
             if key.code == Code::Escape {
-                let world = world.read().unwrap();
-                world.resource_mut::<States>().unwrap().quit();
+                let world = world.read();
+                world.resource_write::<States>().unwrap().quit();
                 break;
             }
         }

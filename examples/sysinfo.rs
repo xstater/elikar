@@ -4,8 +4,8 @@ use elikar::Elikar;
 fn main() {
     let game = Elikar::new().unwrap();
     let world = game.world();
-    let world = world.read().unwrap();
-    let system_info = world.resource_ref::<SystemInfo>().unwrap();
+    let world = world.read();
+    let system_info = world.resource_read::<SystemInfo>().unwrap();
     let platform = system_info.platform();
     let cpu = system_info.cpu();
     let video = system_info.video();

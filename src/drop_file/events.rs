@@ -1,8 +1,9 @@
 use crossbeam::channel::{Receiver, Sender, unbounded};
 use futures::Stream;
+use parking_lot::RwLock;
 use sdl2_sys::{SDL_DropEvent, SDL_free};
 use xecs::{entity::EntityId, query::WithId, system::System, world::World};
-use std::{ffi::CStr, path::PathBuf, pin::Pin, sync::{Arc, RwLock}, task::{Context, Poll, Waker}};
+use std::{ffi::CStr, path::PathBuf, pin::Pin, sync::Arc, task::{Context, Poll, Waker}};
 use crate::window::Window;
 
 #[derive(Debug, Clone)]
@@ -63,7 +64,7 @@ impl Stream for DropEvent{
         if self.rx.is_none() {
             let (tx,rx) = unbounded();
             let id = {
-                let world = self.world.read().unwrap();
+                let world = self.world.read();
                 let waker = cx.waker().clone();
                 world.create_entity()
                     .attach(DropEventInner{ tx, waker })
@@ -88,7 +89,7 @@ impl System for DropEvent {
 
 impl Drop for DropEvent{
     fn drop(&mut self) {
-        let world = self.world.write().unwrap();
+        let world = self.world.write();
         if let Some((id,_)) = self.rx {
             world.remove_entity(id)
         }

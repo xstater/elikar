@@ -3,6 +3,9 @@ use futures::StreamExt;
 use xecs::system::System;
 
 fn main() {
+    use simple_logger::SimpleLogger;
+    SimpleLogger::new().init().unwrap();
+
     let mut game = Elikar::new().unwrap();
 
     game.window_builder().build().unwrap();
@@ -12,10 +15,9 @@ fn main() {
         let mut quit = events.on_quit();
         let world = quit.world();
         if let Some(_) = quit.next().await {
-            world.read().unwrap()
-                .resource_mut::<States>()
-                .unwrap()
-                .quit();
+            let world = world.read();
+            let mut states = world.resource_write::<States>() .unwrap();
+            states.quit();
         }
     });
 

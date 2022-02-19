@@ -1,5 +1,6 @@
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use crate::{drop_file, ime, keyboard, mouse, window};
+use parking_lot::RwLock;
 use xecs::world::World;
 use self::quit::QuitEvent;
 use sdl2_sys::*;
@@ -24,7 +25,7 @@ pub struct Events {
 impl Events {
     pub(in crate) fn from_world(world : Arc<RwLock<World>>) -> Events {
         {
-            let mut world = world.write().unwrap();
+            let mut world = world.write();
             world.register::<QuitEvent>()
                 .register::<mouse::events::button::ButtonDownInner>()
                 .register::<mouse::events::button::ButtonUpInner>()
@@ -49,7 +50,7 @@ impl Events {
     pub(in crate) fn poll(&self) {
         let mut sdl_event = SDL_Event{ type_ : 0 };
         while unsafe { SDL_PollEvent(&mut sdl_event) } == 1 {
-            let world = self.world.read().unwrap();
+            let world = self.world.read();
             match unsafe { sdl_event.type_ } {
                 x if x == SDL_EventType::SDL_QUIT as u32 => {
                     for quit_event in world.query::<&QuitEvent>() {
