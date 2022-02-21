@@ -128,7 +128,6 @@ impl Events {
                 },
                 x if x == SDL_EventType::SDL_TEXTINPUT as u32 => {
                     let event_info = ime::events::text_input::EventInfo::from_sdl_event(&world, unsafe{ sdl_event.text });
-                    dbg!(&event_info);
                     for event in world.query::<&ime::events::text_input::TextInputInner>() {
                         event.tx.send(event_info.clone()).unwrap();
                         event.waker.wake_by_ref();
