@@ -1,5 +1,6 @@
 use crate::common::{from_sdl_string, Result, SdlError};
 use sdl2_sys::*;
+use xecs::component::Component;
 use std::ffi::CString;
 
 pub struct Window {
@@ -12,6 +13,8 @@ unsafe impl Send for Window {}
 /// ## Safety:
 /// Window does not use any interior mutability;
 unsafe impl Sync for Window {}
+
+impl Component for Window {}
 
 impl Drop for Window {
     fn drop(&mut self) {

@@ -1,5 +1,6 @@
 use crate::common::{from_sdl_string, Result, SdlError};
 use sdl2_sys::*;
+use xecs::resource::Resource;
 use std::ffi::CString;
 use std::marker::PhantomData;
 use std::os::raw::{c_char, c_int, c_void};
@@ -9,6 +10,8 @@ pub struct Clipboard {
     // To avoid construct from outside
     _marker : PhantomData<()>
 }
+
+impl Resource for Clipboard {}
 
 impl Clipboard {
     pub(in crate) fn new() -> Clipboard {

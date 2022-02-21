@@ -2,6 +2,7 @@ pub mod cursor;
 pub mod events;
 
 use sdl2_sys::{SDL_CaptureMouse, SDL_DISABLE, SDL_ENABLE, SDL_GetCursor, SDL_GetGlobalMouseState, SDL_GetMouseState, SDL_GetRelativeMouseMode, SDL_GetRelativeMouseState, SDL_QUERY, SDL_SetCursor, SDL_SetRelativeMouseMode, SDL_ShowCursor, SDL_WarpMouseGlobal, SDL_bool};
+use xecs::resource::Resource;
 use crate::common::{Result, SdlError};
 use crate::mouse::cursor::Cursor;
 use std::marker::PhantomData;
@@ -42,6 +43,8 @@ pub struct Mouse {
     // To avoid build from outside
     _marker : PhantomData<u32>
 }
+
+impl Resource for Mouse {}
 
 impl Mouse {
     pub(in crate) fn new() -> Mouse {
