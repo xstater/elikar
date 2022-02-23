@@ -3,7 +3,7 @@ use crossbeam::channel::{Receiver, Sender, unbounded};
 use futures::Stream;
 use parking_lot::RwLock;
 use sdl2_sys::SDL_MouseButtonEvent;
-use xecs::{component::Component, entity::EntityId, query::WithId, system::System, world::World};
+use xecs::{entity::EntityId, query::WithId, system::System, world::World};
 use crate::window::Window;
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
@@ -71,8 +71,6 @@ pub(in crate) struct ButtonDownInner {
     pub(in crate) waker : Waker
 }
 
-impl Component for ButtonDownInner {}
-
 pub struct ButtonDown {
     world : Arc<RwLock<World>>,
     rx : Option<(EntityId,Receiver<EventInfo>)>
@@ -135,8 +133,6 @@ pub(in crate) struct ButtonUpInner {
     pub(in crate) tx : Sender<EventInfo>,
     pub(in crate) waker : Waker
 }
-
-impl Component for ButtonUpInner {}
 
 pub struct ButtonUp {
     world : Arc<RwLock<World>>,

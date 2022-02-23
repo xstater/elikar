@@ -3,8 +3,7 @@ use crossbeam::channel::{Receiver, Sender, unbounded};
 use futures::Stream;
 use parking_lot::RwLock;
 use sdl2_sys::SDL_TextEditingEvent;
-use xecs::{component::Component, entity::EntityId, query::WithId, system::System, world::World};
-
+use xecs::{entity::EntityId, query::WithId, system::System, world::World};
 use crate::{common::from_sdl_string, window::Window};
 
 #[derive(Debug,Clone)]
@@ -41,8 +40,6 @@ pub(in crate) struct TextEditingInner{
     pub(in crate) tx : Sender<EventInfo>,
     pub(in crate) waker : Waker
 }
-
-impl Component for TextEditingInner {}
 
 pub struct TextEditing{
     world : Arc<RwLock<World>>,

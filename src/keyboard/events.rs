@@ -4,7 +4,7 @@ use crossbeam::channel::{Receiver, Sender, unbounded};
 use futures::Stream;
 use parking_lot::RwLock;
 use sdl2_sys::{SDL_KeyboardEvent, SDL_PRESSED};
-use xecs::{component::Component, entity::EntityId, query::WithId, system::System, world::World};
+use xecs::{entity::EntityId, query::WithId, system::System, world::World};
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Hash)]
 pub enum State {
@@ -51,8 +51,6 @@ pub(in crate) struct KeyDownInner {
     pub(in crate) tx : Sender<EventInfo>,
     pub(in crate) waker : Waker
 }
-
-impl Component for KeyDownInner {}
 
 pub struct KeyDown {
     world : Arc<RwLock<World>>,
@@ -116,8 +114,6 @@ pub(in crate) struct KeyUpInner {
     pub(in crate) tx : Sender<EventInfo>,
     pub(in crate) waker : Waker
 }
-
-impl Component for KeyUpInner {}
 
 pub struct KeyUp{
     world : Arc<RwLock<World>>,

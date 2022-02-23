@@ -3,7 +3,7 @@ use crossbeam::channel::{Receiver, Sender, unbounded};
 use futures::Stream;
 use parking_lot::RwLock;
 use sdl2_sys::*;
-use xecs::{component::Component, entity::EntityId, query::WithId, system::System, world::World};
+use xecs::{entity::EntityId, query::WithId, system::System, world::World};
 use crate::window::Window;
 
 #[derive(Debug, Copy, Clone)]
@@ -104,8 +104,6 @@ pub(in crate) struct WindowEventInner{
     pub(in crate) tx : Sender<EventInfo>,
     pub(in crate) waker : Waker
 }
-
-impl Component for WindowEventInner {}
 
 pub struct WindowEvent{
     world : Arc<RwLock<World>>,

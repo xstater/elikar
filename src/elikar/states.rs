@@ -1,5 +1,4 @@
 use std::time::{Duration, Instant};
-use xecs::resource::Resource;
 
 pub struct States {
     pub(in super) quit : bool,
@@ -8,8 +7,6 @@ pub struct States {
     pub(in super) sec_timer : Instant,
     pub(in super) last_frame_time : Duration
 }
-
-impl Resource for States {}
 
 impl States {
     pub(in super) fn new() -> Self {

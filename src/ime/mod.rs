@@ -1,6 +1,5 @@
 use std::marker::PhantomData;
 use sdl2_sys::{SDL_HasScreenKeyboardSupport, SDL_IsScreenKeyboardShown, SDL_IsTextInputActive, SDL_Rect, SDL_SetTextInputRect, SDL_StartTextInput, SDL_StopTextInput, SDL_bool};
-use xecs::resource::Resource;
 use crate::window::Window;
 
 pub mod events;
@@ -9,8 +8,6 @@ pub struct IME {
     // To avoid be constructed by user
     _marker : PhantomData<()>
 }
-
-impl Resource for IME {}
 
 impl IME {
     pub(in crate) fn new() -> Self {

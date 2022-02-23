@@ -4,7 +4,7 @@ use crossbeam::channel::{Receiver, Sender, unbounded};
 use futures::Stream;
 use parking_lot::RwLock;
 use sdl2_sys::SDL_MouseMotionEvent;
-use xecs::{component::Component, entity::EntityId, query::WithId, system::System, world::World};
+use xecs::{entity::EntityId, query::WithId, system::System, world::World};
 
 #[derive(Debug, Clone, Copy)]
 pub struct EventInfo {
@@ -40,8 +40,6 @@ pub(in crate) struct MotionInner{
     pub(in crate) tx : Sender<EventInfo>,
     pub(in crate) waker : Waker
 }
-
-impl Component for MotionInner {}
 
 pub struct Motion {
     world : Arc<RwLock<World>>,

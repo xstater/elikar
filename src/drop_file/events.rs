@@ -2,7 +2,7 @@ use crossbeam::channel::{Receiver, Sender, unbounded};
 use futures::Stream;
 use parking_lot::RwLock;
 use sdl2_sys::{SDL_DropEvent, SDL_free};
-use xecs::{component::Component, entity::EntityId, query::WithId, system::System, world::World};
+use xecs::{entity::EntityId, query::WithId, system::System, world::World};
 use std::{ffi::CStr, path::PathBuf, pin::Pin, sync::Arc, task::{Context, Poll, Waker}};
 use crate::window::Window;
 
@@ -43,7 +43,6 @@ pub(in crate) struct DropEventInner {
     pub(in crate) waker : Waker
 }
 
-impl Component for DropEventInner {}
 
 pub struct DropEvent {
     world : Arc<RwLock<World>>,

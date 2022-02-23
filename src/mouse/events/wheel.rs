@@ -3,7 +3,7 @@ use crossbeam::channel::{Receiver, Sender, unbounded};
 use futures::Stream;
 use parking_lot::RwLock;
 use sdl2_sys::{SDL_MouseWheelDirection, SDL_MouseWheelEvent};
-use xecs::{component::Component, entity::EntityId, query::WithId, system::System, world::World};
+use xecs::{entity::EntityId, query::WithId, system::System, world::World};
 use crate::window::Window;
 
 #[derive(Debug, Clone, Copy)]
@@ -41,8 +41,6 @@ pub(in crate) struct WheelInner {
     pub(in crate) tx : Sender<EventInfo>,
     pub(in crate) waker : Waker
 }
-
-impl Component for WheelInner {}
 
 pub struct Wheel{
     world : Arc<RwLock<World>>,

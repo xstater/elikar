@@ -1,5 +1,4 @@
 use sdl2_sys::*;
-use xecs::resource::Resource;
 use std::ffi::CStr;
 use std::marker::PhantomData;
 use std::os::raw::c_char;
@@ -12,8 +11,6 @@ pub struct Keyboard {
     // To avoid be constructed by user
     _marker : PhantomData<()>
 }
-
-impl Resource for Keyboard {}
 
 impl Keyboard {
     pub(in crate) fn new() -> Keyboard {

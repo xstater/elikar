@@ -1,4 +1,3 @@
-use xecs::resource::Resource;
 use crate::sysinfo::cpu_info::CPUInfo;
 use crate::sysinfo::platform_info::PlatformInfo;
 use crate::sysinfo::video_info::VideoInfo;
@@ -13,8 +12,6 @@ pub struct SystemInfo {
     platform: PlatformInfo,
     video: VideoInfo,
 }
-
-impl Resource for SystemInfo {}
 
 impl SystemInfo {
     pub(in crate) fn new() -> SystemInfo {
