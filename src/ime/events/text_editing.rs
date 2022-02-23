@@ -3,8 +3,8 @@ use crossbeam::channel::{Receiver, Sender, unbounded};
 use futures::Stream;
 use parking_lot::RwLock;
 use sdl2_sys::SDL_TextEditingEvent;
-use xecs::{entity::EntityId, query::WithId, system::System, world::World};
-use crate::{common::from_sdl_string, window::Window};
+use xecs::{entity::EntityId,system::System, world::World};
+use crate::common::from_sdl_string;
 
 #[derive(Debug,Clone)]
 pub struct EventInfo {
@@ -17,11 +17,7 @@ pub struct EventInfo {
 
 
 impl EventInfo {
-    pub(in crate) fn from_sdl_event(world : &World,event: SDL_TextEditingEvent) -> Self {
-        let window_id = world.query::<&Window>().with_id().find(|(_,window)|{
-            window.id() == event.windowID
-        }).map(|(id,_)|id)
-        .expect("Text Editing Event:A text editing event was sent from a non-existing window.");
+    pub(in crate) fn from_sdl_event(window_id : EntityId,event: SDL_TextEditingEvent) -> Self {
         EventInfo {
             timestamp: event.timestamp,
             window_id,

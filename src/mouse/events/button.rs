@@ -3,8 +3,7 @@ use crossbeam::channel::{Receiver, Sender, unbounded};
 use futures::Stream;
 use parking_lot::RwLock;
 use sdl2_sys::SDL_MouseButtonEvent;
-use xecs::{entity::EntityId, query::WithId, system::System, world::World};
-use crate::window::Window;
+use xecs::{entity::EntityId, system::System, world::World};
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
 pub enum Button {
@@ -37,11 +36,7 @@ const BUTTON_ID_X1: u8 = 4;
 const BUTTON_ID_X2: u8 = 5;
 
 impl EventInfo {
-    pub(in crate) fn from_sdl_event(world : &World,event: SDL_MouseButtonEvent) -> Self {
-        let window_id = world.query::<&Window>().with_id().find(|(_,window)|{
-            window.id() == event.windowID
-        }).map(|(id,_)|id)
-        .expect("Mouse Button Event:A mouse button event was sent from a non-existing window.");
+    pub(in crate) fn from_sdl_event(window_id : EntityId,event: SDL_MouseButtonEvent) -> Self {
         EventInfo {
             timestamp: event.timestamp,
             window_id,
