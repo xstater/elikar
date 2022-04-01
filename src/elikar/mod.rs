@@ -9,7 +9,7 @@ use crate::ime::IME;
 use crate::keyboard::Keyboard;
 use crate::mouse::Mouse;
 use crate::sysinfo::SystemInfo;
-use crate::window;
+use crate::{quit, time, window};
 use futures::Future;
 use futures::executor::{LocalPool, ThreadPool};
 use futures::task::{LocalSpawnExt, SpawnExt};
@@ -20,10 +20,10 @@ use xecs::world::World;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
-pub use self::states::States;
 
-mod states;
+mod world;
+
+pub use world::ElikarWorld;
 
 pub struct Elikar {
     local_pool : LocalPool,
@@ -147,12 +147,13 @@ impl Elikar {
 
         // Pre-store some resource
         trace!(target: "Elikar","Register elikar resources");
-        world.register_resource(States::new());
         world.register_resource(Mouse::new());
         world.register_resource(Keyboard::new());
         world.register_resource(Clipboard::new());
         world.register_resource(SystemInfo::new());
         world.register_resource(IME::new());
+        world.register_resource(quit::Quit::new());
+        world.register_resource(time::Time::new());
 
         let world = Arc::new(RwLock::new(world));
         let events = Events::from_world(world.clone());
@@ -168,6 +169,10 @@ impl Elikar {
         self.world.clone()
     }
 
+    pub fn elikar_world(&self) -> ElikarWorld<'_> {
+        ElikarWorld::new(self.world.read())
+    }
+
     pub fn events(&self) -> Events {
         self.events.clone()
     }
@@ -181,18 +186,16 @@ impl Elikar {
         let events = self.events();
         // as least run all future once to register their waker to World
         self.local_pool.run_until_stalled();
-        let mut frame = 1;
         'mainloop : loop {
-            let start_time = Instant::now();
-            // Quit checking
-            {
-                let world = self.world.read();
-                if world.resource_read::<States>()
-                    .expect("Elikar run(): Game states was moved unexpectly")
-                    .quit {
+            // Quit checking & Get frame counter
+            let frame = {
+                let world = self.elikar_world();
+                if world.need_quit() {
                     break 'mainloop;
                 }
-            }
+                let frame = world.time().frame_counter() as u32;
+                frame
+            };
             // enter frame
             {
                 let world = self.world.read();
@@ -234,17 +237,9 @@ impl Elikar {
             self.local_pool.run_until_stalled();
             // update elikar state
             {
-                let world = self.world.read();
-                let mut states = world.resource_write::<States>().unwrap();
-                states.frame_counter += 1;
-                if states.sec_timer.elapsed() > Duration::from_secs(1) {
-                    states.frames_in_sec = states.frame_counter;
-                    states.frame_counter = 0;
-                    states.sec_timer = Instant::now();
-                }
-                states.last_frame_time = start_time.elapsed();
+                let world = self.elikar_world();
+                world.time_mut().tick();
             }
-            frame += 1;
         }
     }
 }
@@ -258,7 +253,7 @@ impl Spawner for Elikar {
 
     fn spawn_local<F>(&mut self,f : F)
     where F : Future<Output = ()> + 'static {
-        info!(target: "Elikar","Spawn a lock task");
+        info!(target: "Elikar","Spawn a local task");
         self.local_pool.spawner().spawn_local(f).unwrap();
     }
 }

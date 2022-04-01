@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use crate::{drop_file, ime, keyboard, mouse, window::{self, find_window}};
+use crate::{ElikarWorld, drop_file, ime, keyboard, mouse, window::{self, find_window}};
 use parking_lot::RwLock;
 use xecs::world::World;
 use self::quit::QuitEvent;
@@ -170,6 +170,10 @@ impl Events {
 
     pub fn world(&self) -> Arc<RwLock<World>> {
         self.world.clone()
+    }
+
+    pub fn elikar_world(&self) -> ElikarWorld<'_> {
+        ElikarWorld::new(self.world.read())
     }
 
     pub fn on_quit(&self) -> Quit {

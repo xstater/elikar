@@ -11,3 +11,5 @@ pub mod msgbox;
 pub mod power;
 pub mod sysinfo;
 pub mod window;
+pub mod time;
+pub mod quit;

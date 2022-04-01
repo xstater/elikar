@@ -1,6 +1,5 @@
-use elikar::{Elikar, States, common::Spawner};
+use elikar::{Elikar, common::Spawner};
 use futures::StreamExt;
-use xecs::system::System;
 
 fn main() {
     let mut game = Elikar::new().unwrap();
@@ -16,12 +15,9 @@ fn main() {
     let events = game.events();
     game.spawn(async move{
         let mut quit = events.on_quit();
-        let world = quit.world();
         if let Some(_) = quit.next().await {
             println!("Quit");
-            let world = world.read();
-            let mut states = world.resource_write::<States>().unwrap();
-            states.quit();
+            events.elikar_world().quit();
         }
     });
 

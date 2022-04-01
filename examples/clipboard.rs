@@ -1,12 +1,9 @@
-use elikar::clipboard::Clipboard;
 use elikar::Elikar;
 
 fn main() {
     let game = Elikar::new().unwrap();
-    let world = game.world();
-    let world = world.read();
-    let mut clipboard = world
-        .resource_write::<Clipboard>().unwrap();
+    let world = game.elikar_world();
+    let mut clipboard = world.clipboard_mut();
 
     println!("{}", clipboard.has());
     println!("{}", clipboard.get().unwrap());

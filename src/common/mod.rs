@@ -6,6 +6,7 @@ use std::ffi::CStr;
 use std::os::raw::c_char;
 pub use spawner::Spawner;
 
+
 /// ## Safety
 /// sdl_string must be valid.
 /// ## Panics
@@ -13,3 +14,4 @@ pub use spawner::Spawner;
 pub(in crate) unsafe fn from_sdl_string(sdl_string: *const c_char) -> String {
     CStr::from_ptr(sdl_string).to_str().unwrap().to_owned()
 }
+

@@ -1,11 +1,9 @@
-use elikar::sysinfo::SystemInfo;
 use elikar::Elikar;
 
 fn main() {
     let game = Elikar::new().unwrap();
-    let world = game.world();
-    let world = world.read();
-    let system_info = world.resource_read::<SystemInfo>().unwrap();
+    let world = game.elikar_world();
+    let system_info = world.system_info();
     let platform = system_info.platform();
     let cpu = system_info.cpu();
     let video = system_info.video();
