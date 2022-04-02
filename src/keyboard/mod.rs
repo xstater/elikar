@@ -2,6 +2,7 @@ use sdl2_sys::*;
 use std::ffi::CStr;
 use std::marker::PhantomData;
 use std::os::raw::c_char;
+use std::slice::from_raw_parts;
 pub use code::Code;
 
 mod code;
@@ -29,6 +30,29 @@ impl Keyboard {
 
     pub fn mod_state(&self) -> Mod {
         Mod::new(unsafe { SDL_GetModState() as u32 })
+    }
+
+    pub fn pressed(&self,code : Code) -> bool {
+        let mut length = 0;
+        let slice_ptr = unsafe {
+            SDL_GetKeyboardState(&mut length)
+        } as *const bool;
+        let slice = unsafe { from_raw_parts(slice_ptr, length as _) };
+        slice[code as u32 as usize]
+    }
+
+    pub fn all_pressed(&self,codes : &[Code]) -> bool {
+        let mut length = 0;
+        let slice_ptr = unsafe {
+            SDL_GetKeyboardState(&mut length)
+        } as *const bool;
+        let slice = unsafe { from_raw_parts(slice_ptr, length as _) };
+        for code in codes {
+            if !slice[*code as u32 as usize] {
+                return false;
+            }
+        }
+        return true;
     }
 }
 
