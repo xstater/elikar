@@ -12,4 +12,4 @@ pub mod power;
 pub mod sysinfo;
 pub mod window;
 pub mod time;
-pub mod quit;
+mod quit;
