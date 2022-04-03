@@ -19,7 +19,7 @@ parking_lot = "0.12"
 xecs = "0.5"
 xrunits = "0.1.2"
 crossbeam = "0.8"
-futures = { version = "0.3", features = ["executor","thread-pool"] }
+futures = { version = "0.3", features = ["executor"] }
 raw-window-handle = "0.4.2"
 log = "0.4"
 tokio = { version = "1.17", features = ["full"] }
