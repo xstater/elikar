@@ -54,4 +54,12 @@ impl Time {
     pub fn frame_counter(&self) -> usize {
         self.frame_counter
     }
+
+    pub fn timer(&self) -> Timer {
+        todo!()
+    }
+}
+
+pub struct Timer {
+
 }
