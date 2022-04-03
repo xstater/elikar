@@ -1,10 +1,15 @@
-use crate::sysinfo::cpu_info::CPUInfo;
-use crate::sysinfo::platform_info::PlatformInfo;
-use crate::sysinfo::video_info::VideoInfo;
+mod cpu_info;
+mod platform_info;
+mod video_info;
 
-pub mod cpu_info;
-pub mod platform_info;
-pub mod video_info;
+pub use cpu_info::CPUInfo;
+pub use platform_info::PlatformInfo;
+pub use video_info::{
+    DPI,
+    DisplayMode,
+    Screen,
+    VideoInfo
+};
 
 #[derive(Debug)]
 pub struct SystemInfo {

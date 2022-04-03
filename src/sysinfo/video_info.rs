@@ -7,23 +7,23 @@ use std::ptr::null_mut;
 
 #[derive(Debug, Default, Copy, Clone, PartialOrd, PartialEq)]
 pub struct DPI {
-    ddpi: f32,
-    hdpi: f32,
-    vdpi: f32,
+    pub ddpi: f32,
+    pub hdpi: f32,
+    pub vdpi: f32,
 }
 
 #[derive(Debug, Default, Copy, Clone, PartialOrd, PartialEq)]
 pub struct DisplayMode {
-    size: (i32, i32),
-    refresh_rate: u32,
+    pub size: (i32, i32),
+    pub refresh_rate: u32,
 }
 
 #[derive(Debug, Default, Clone)]
 pub struct Screen {
-    dpi: DPI,
-    bound: (i32, i32, i32, i32),
-    modes: Vec<DisplayMode>,
-    name: String,
+    pub dpi: DPI,
+    pub bound: (i32, i32, i32, i32),
+    pub modes: Vec<DisplayMode>,
+    pub name: String,
 }
 
 impl Display for DPI {
