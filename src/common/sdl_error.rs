@@ -1,5 +1,3 @@
-extern crate sdl2_sys;
-
 use crate::common::from_sdl_string;
 use sdl2_sys::SDL_GetError;
 use std::error::Error;
@@ -20,6 +18,10 @@ impl SdlError {
 
     pub fn as_str(&self) -> &str {
         self.0.as_str()
+    }
+
+    pub fn to_string(self) -> String {
+        self.0
     }
 }
 
