@@ -1,11 +1,14 @@
-pub mod cursor;
+mod cursor;
 pub mod events;
 
 use sdl2_sys::{SDL_CaptureMouse, SDL_DISABLE, SDL_ENABLE, SDL_GetCursor, SDL_GetGlobalMouseState, SDL_GetMouseState, SDL_GetRelativeMouseMode, SDL_GetRelativeMouseState, SDL_QUERY, SDL_SetCursor, SDL_SetRelativeMouseMode, SDL_ShowCursor, SDL_WarpMouseGlobal, SDL_bool};
 use crate::common::{Result, SdlError};
-use crate::mouse::cursor::Cursor;
 use std::marker::PhantomData;
 use std::ptr::null_mut;
+pub use cursor::{
+    Cursor,
+    SystemCursor
+};
 
 #[derive(Debug, Clone, Copy, Default, PartialOrd, PartialEq)]
 pub struct ButtonState(u32);
