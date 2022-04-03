@@ -15,16 +15,15 @@ fn main() {
         .unwrap();
 
     let events = game.events(); 
-    game.spawn_local(async move{
+    game.spawn(async move{
         let mut quit = events.on_quit();
         if let Some(_) = quit.next().await {
-            let world = events.elikar_world();
-            world.quit_mut().quit();
+            events.elikar_world().quit();
         }
     });
 
     let events = game.events(); 
-    game.spawn_local(async move{
+    game.spawn(async move{
         let mut mouse_down = events.on_mouse_down();
         while let Some(button) = mouse_down.next().await {
             println!("button down:{:?}",button);
@@ -34,14 +33,14 @@ fn main() {
         }
     });
     let events = game.events(); 
-    game.spawn_local(async move{
+    game.spawn(async move{
         let mut motion = events.on_mouse_motion();
         while let Some(motion) = motion.next().await {
             println!("motion: {:?}",motion);
         }
     });
     let events = game.events();
-    game.spawn_local(async move {
+    game.spawn(async move {
         let mut wheel = events.on_mouse_wheel();
         while let Some(wheel) = wheel.next().await {
             println!("wheel: {:?}",wheel);

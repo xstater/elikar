@@ -1,5 +1,5 @@
 use crate::clipboard::Clipboard;
-use crate::common::{SdlError, Spawner};
+use crate::common::{Handle, SdlError, Spawner};
 use crate::events::Events;
 use crate::events::enter_frame::EnterFrameInner;
 use crate::events::leave_frame::LeaveFrameInner;
@@ -10,12 +10,14 @@ use crate::keyboard::Keyboard;
 use crate::mouse::Mouse;
 use crate::sysinfo::SystemInfo;
 use crate::{quit, time, window};
-use futures::Future;
-use futures::executor::{LocalPool, ThreadPool};
-use futures::task::{LocalSpawnExt, SpawnExt};
+use futures::{Future, FutureExt};
+use futures::executor::LocalPool;
+use futures::task::LocalSpawnExt;
 use log::{error, info, trace};
 use parking_lot::RwLock;
 use sdl2_sys::*;
+use tokio::runtime::Runtime;
+use tokio_util::context::TokioContext;
 use xecs::world::World;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
@@ -27,7 +29,7 @@ pub use world::ElikarWorld;
 
 pub struct Elikar {
     local_pool : LocalPool,
-    thread_pool : ThreadPool,
+    tokio_runtime : Runtime,
     events : Events,
     world : Arc<RwLock<World>>,
 }
@@ -157,9 +159,13 @@ impl Elikar {
 
         let world = Arc::new(RwLock::new(world));
         let events = Events::from_world(world.clone());
+        let runtime = tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .unwrap();
         Ok(Elikar {
             local_pool: LocalPool::new(),
-            thread_pool: ThreadPool::new().unwrap(),
+            tokio_runtime: runtime,
             events,
             world,
         })
@@ -245,16 +251,22 @@ impl Elikar {
 }
 
 impl Spawner for Elikar {
-    fn spawn<F>(&mut self,f : F)
+    fn spawn<F>(&mut self,f : F) -> Handle
     where F : Future<Output = ()> + Send + 'static {
         info!(target: "Elikar","Spawn an async task");
-        self.thread_pool.spawn(f).unwrap();
+        let handle = self.tokio_runtime.spawn(f);
+        Handle::tokio(handle)
     }
 
-    fn spawn_local<F>(&mut self,f : F)
+    fn spawn_local<F>(&mut self,f : F) -> Handle
     where F : Future<Output = ()> + 'static {
         info!(target: "Elikar","Spawn a local task");
-        self.local_pool.spawner().spawn_local(f).unwrap();
+        let (f,abort_handle) = futures::future::abortable(f);
+        let rt_handle = self.tokio_runtime.handle().clone();
+        let task_handle = self.local_pool.spawner()
+            .spawn_local_with_handle(TokioContext::new(f.map(|_|()),rt_handle))
+            .unwrap();
+        Handle::futures(abort_handle, task_handle)
     }
 }
 
