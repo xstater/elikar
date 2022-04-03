@@ -1,8 +1,8 @@
-use elikar::{Elikar, common::Spawner, keyboard::Code};
+use elikar::{common::Spawner, keyboard::Code};
 use futures::StreamExt;
 
 fn main() {
-    let mut game = Elikar::new().unwrap();
+    let mut game = elikar::init().unwrap();
 
     game.window_builder().build().unwrap();
     

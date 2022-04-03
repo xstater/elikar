@@ -1,11 +1,11 @@
-use elikar::{Elikar, common::Spawner};
+use elikar::common::Spawner;
 use futures::StreamExt;
 
 fn main() {
     use simple_logger::SimpleLogger;
     SimpleLogger::new().init().unwrap();
 
-    let mut game = Elikar::new().unwrap();
+    let mut game = elikar::init().unwrap();
 
     game.window_builder().build().unwrap();
 

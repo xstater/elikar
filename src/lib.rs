@@ -1,6 +1,4 @@
 pub mod common;
-pub mod elikar;
-pub use elikar::*;
 pub mod clipboard;
 pub mod drop_file;
 pub mod events;
@@ -13,3 +11,13 @@ pub mod sysinfo;
 pub mod window;
 pub mod time;
 mod quit;
+mod elikar;
+pub use elikar::{
+    Elikar,
+    ElikarWorld,
+    SdlInitError
+};
+
+pub fn init() -> Result<Elikar,SdlInitError> {
+    Elikar::new()
+}

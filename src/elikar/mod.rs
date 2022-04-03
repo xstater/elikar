@@ -113,7 +113,7 @@ impl Error for SdlInitError {
 
 
 impl Elikar {
-    pub fn new() -> Result<Elikar, SdlInitError> {
+    pub(in crate) fn new() -> Result<Elikar, SdlInitError> {
         info!(target: "Elikar","Initializing Elikar");
         // if unsafe { SDL_InitSubSystem(SDL_INIT_TIMER) } != 0 {
         //     return Err(SdlInitError::Timer(get_error()));
