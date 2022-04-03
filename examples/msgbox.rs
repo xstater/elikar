@@ -1,9 +1,7 @@
-extern crate elikar;
+use elikar::msgbox::{ButtonDefaultKey, alert};
 
 fn main() {
-    use elikar::msgbox::*;
-
-    elikar::msgbox::MsgboxBuilder::information()
+    elikar::msgbox::information()
         .title("死妈测试")
         .message("你妈死了 ?")
         .add_button(ButtonDefaultKey::Return, "Yes", || {

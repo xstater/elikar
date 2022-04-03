@@ -1,5 +1,3 @@
-extern crate sdl2_sys;
-
 use crate::common::{Result, SdlError};
 use sdl2_sys::*;
 use std::ffi::CString;
@@ -19,7 +17,7 @@ pub enum ButtonDefaultKey {
     Escape,
 }
 
-pub struct ButtonInfo {
+struct ButtonInfo {
     default_key: ButtonDefaultKey,
     id: usize,
     text: String,
@@ -35,36 +33,6 @@ pub struct MsgboxBuilder {
 }
 
 impl MsgboxBuilder {
-    pub fn error() -> MsgboxBuilder {
-        MsgboxBuilder {
-            box_type: Type::Error,
-            title: String::new(),
-            message: String::new(),
-            next_button_id: 0,
-            buttons: Vec::new(),
-        }
-    }
-
-    pub fn warning() -> MsgboxBuilder {
-        MsgboxBuilder {
-            box_type: Type::Warning,
-            title: String::new(),
-            message: String::new(),
-            next_button_id: 0,
-            buttons: Vec::new(),
-        }
-    }
-
-    pub fn information() -> MsgboxBuilder {
-        MsgboxBuilder {
-            box_type: Type::Information,
-            title: String::new(),
-            message: String::new(),
-            next_button_id: 0,
-            buttons: Vec::new(),
-        }
-    }
-
     pub fn title(self, t: &str) -> Self {
         Self {
             title: t.to_owned(),
@@ -149,8 +117,38 @@ impl MsgboxBuilder {
     }
 }
 
+pub fn error() -> MsgboxBuilder {
+    MsgboxBuilder {
+        box_type: Type::Error,
+        title: String::new(),
+        message: String::new(),
+        next_button_id: 0,
+        buttons: Vec::new(),
+    }
+}
+
+pub fn warning() -> MsgboxBuilder {
+    MsgboxBuilder {
+        box_type: Type::Warning,
+        title: String::new(),
+        message: String::new(),
+        next_button_id: 0,
+        buttons: Vec::new(),
+    }
+}
+
+pub fn information() -> MsgboxBuilder {
+    MsgboxBuilder {
+        box_type: Type::Information,
+        title: String::new(),
+        message: String::new(),
+        next_button_id: 0,
+        buttons: Vec::new(),
+    }
+}
+
 pub fn alert(title: &str, message: &str) {
-    MsgboxBuilder::warning()
+    warning()
         .title(title)
         .message(message)
         .add_button(ButtonDefaultKey::Return, "Ok", || {})
@@ -169,15 +167,35 @@ impl<T> UnwrapErrorMsgbox for Option<T> {
     fn unwrap_error_msgbox(self) -> Self::Item {
         match self {
             Option::None => {
-                MsgboxBuilder::error()
-                    .title("Error")
-                    .message("Unwrap")
+                error()
+                    .title("Unwrap Option")
+                    .message("Option is None, unwrap failed")
                     .add_button(ButtonDefaultKey::Return, "Ok", || {})
                     .build()
                     .unwrap();
-                panic!("unwrap");
+                panic!("Unwrap Option");
             }
             Option::Some(t) => t,
         }
     }
 }
+
+impl<T,E : std::error::Error> UnwrapErrorMsgbox for std::result::Result<T,E> {
+    type Item = T;
+
+    fn unwrap_error_msgbox(self) -> Self::Item {
+        match self {
+            Ok(t) => t,
+            Err(err) => {
+                error()
+                    .title("Unwrap Result")
+                    .message(format!("{}",err).as_str())
+                    .add_button(ButtonDefaultKey::Return, "Ok", || {})
+                    .build()
+                    .unwrap();
+                panic!("Unwrap Result:{}",err);
+            }
+        }
+    }
+}
+
