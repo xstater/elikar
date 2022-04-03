@@ -1,4 +1,4 @@
-use elikar::common::Spawner;
+use elikar::Spawner;
 use futures::StreamExt;
 
 fn main() {

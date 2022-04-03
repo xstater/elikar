@@ -1,4 +1,3 @@
-pub mod common;
 pub mod clipboard;
 pub mod drop_file;
 pub mod events;
@@ -12,12 +11,19 @@ pub mod window;
 pub mod time;
 mod quit;
 mod elikar;
+mod common;
 pub use elikar::{
     Elikar,
     ElikarWorld,
     SdlInitError
 };
+pub use common::{
+    Handle,
+    SdlError,
+    Spawner,
+    Result
+};
 
-pub fn init() -> Result<Elikar,SdlInitError> {
+pub fn init() -> std::result::Result<Elikar,SdlInitError> {
     Elikar::new()
 }

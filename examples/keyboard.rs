@@ -1,4 +1,4 @@
-use elikar::{common::Spawner, keyboard::Code};
+use elikar::{Spawner, keyboard::Code};
 use futures::StreamExt;
 
 fn main() {

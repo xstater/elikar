@@ -1,5 +1,5 @@
 use std::thread::current;
-use elikar::common::Spawner;
+use elikar::Spawner;
 use futures::stream::StreamExt;
 
 fn main() {
