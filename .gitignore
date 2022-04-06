@@ -12,5 +12,8 @@ Cargo.lock
 # ignore idea project
 .idea
 
+# ignore the vscode project
+.vscode
+
 # ignore the SDL2.dll
 SDL2.dll
