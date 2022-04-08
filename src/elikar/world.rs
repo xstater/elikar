@@ -1,5 +1,5 @@
 use parking_lot::RwLockReadGuard;
-use xecs::{resource::{ResourceRead, ResourceWrite}, world::World};
+use xecs::{ResourceRead, ResourceWrite,World};
 use crate::{clipboard::Clipboard, ime::IME, keyboard::Keyboard, mouse::Mouse, quit::Quit, sysinfo::SystemInfo, time::Time};
 
 /// fastly get resources of elikar

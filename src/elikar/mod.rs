@@ -18,7 +18,7 @@ use parking_lot::RwLock;
 use sdl2_sys::*;
 use tokio::runtime::Runtime;
 use tokio_util::context::TokioContext;
-use xecs::world::World;
+use xecs::World;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;

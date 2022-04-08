@@ -3,7 +3,7 @@ use crossbeam::channel::{Receiver, Sender, unbounded};
 use futures::Stream;
 use parking_lot::RwLock;
 use sdl2_sys::{SDL_MouseWheelDirection, SDL_MouseWheelEvent};
-use xecs::{entity::EntityId, system::System, world::World};
+use xecs::{EntityId, System, World};
 
 #[derive(Debug, Clone, Copy)]
 pub struct EventInfo {

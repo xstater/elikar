@@ -6,7 +6,7 @@ mod raw_handle;
 pub use builder::Builder;
 pub use window::Window;
 
-use xecs::{entity::EntityId, query::WithId, world::World};
+use xecs::{EntityId, World, query::WithId};
 
 pub(in crate) fn find_window(world : &World,window_id : u32) -> Option<EntityId> {
     world.query::<&Window>().with_id()

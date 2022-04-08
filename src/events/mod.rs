@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use crate::{ElikarWorld, drop_file, ime, keyboard, mouse, window::{self, find_window}};
 use parking_lot::RwLock;
-use xecs::world::World;
+use xecs::World;
 use self::quit::QuitEvent;
 use sdl2_sys::*;
 
