@@ -6,6 +6,7 @@ edition = "2021"
 license = "MIT"
 description = "A rust asynchronous ECS game engine"
 readme = "README.md"
+documentation = "https://docs.rs/elikar"
 repository = "https://github.com/xstater/elikar/"
 keywords = ["gamedev","ecs","game-engine","asynchronous"]
 categories = ["game-development","game-engines","asynchronous","concurrency"]
